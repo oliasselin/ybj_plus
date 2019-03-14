@@ -1,0 +1,93 @@
+#!/bin/bash
+
+number_of_nodes=1
+number_of_tasks=2
+
+sourdir=/scratch/05518/oasselin/test/source/
+datadir=/scratch/05518/oasselin/test/output/
+
+mkdir -p $sourdir
+mkdir -p $datadir
+
+cd $sourdir
+
+
+cat > EXEC_STEP << EXEC
+#!/bin/sh 
+#----------------------------------------------------
+# Sample Slurm job script
+#   for TACC Stampede2 KNL nodes
+#
+#   *** MPI Job on Normal Queue ***
+# 
+# Last revised: 20 Oct 2017
+#
+# Notes:
+#
+#   -- Launch this script by executing
+#      "sbatch knl.mpi.slurm" on Stampede2 login node.
+#
+#   -- Use ibrun to launch MPI codes on TACC systems.
+#      Do not use mpirun or mpiexec.
+#
+#   -- Max recommended MPI tasks per KNL node: 64-68
+#      (start small, increase gradually).
+#
+#   -- If you're running out of memory, try running
+#      fewer tasks per node to give each task more memory.
+#
+#----------------------------------------------------
+
+#SBATCH -J test                       # Job name
+#SBATCH -o $HOME/monitor/test.o%j     # Name of stdout output file
+#SBATCH -e $HOME/monitor/test.e%j     # Name of stderr error file
+#SBATCH -p development                # Queue (partition) name
+#SBATCH -N $number_of_nodes           # Total # of nodes 
+#SBATCH -n $number_of_tasks           # Total # of mpi tasks
+#SBATCH -t 00:00:30                   # Run time (hh:mm:ss)
+#SBATCH --mail-user=oasselin@ucsd.edu
+##SBATCH --mail-type=all              # Send email at begin and end of job
+#SBATCH -A TG-OCE180004               # Allocation name (req'd if you have more than 1)
+
+################ EXECUTE #######################                                                                                               
+cd $datadir
+cp $sourdir/exec_qg $datadir
+ibrun ./exec_qg 
+
+                                                                                                                                                        
+EXEC
+
+
+#
+#--- Compile ---#
+#
+cat > COMPILE_STEP << COMPILE
+#!/bin/bash                                                                                                                                               
+                                                                                                                                                       
+
+cd $sourdir
+cp $HOME/waqg/*.f90 .
+
+PARA=parameters.f90
+MAIN=main_waqg.f90
+FFT=fft.f90
+MPI=mpi.f90
+INIT=init.f90
+DERI=derivatives.f90
+FILE=files.f90
+DIAG=diagnostics.f90
+ELLI=elliptic.f90
+SPEC=special.f90
+
+
+#Compile with MPIf90                                                                                                                                       
+mpif90 -mkl parameters.f90 mpi.f90 fft.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 main_waqg.f90 -o exec_qg
+
+
+COMPILE
+
+chmod 755 COMPILE_STEP
+./COMPILE_STEP
+##chmod 755 EXEC_STEP                                                                                                                                       
+sbatch EXEC_STEP
+##./EXEC_STEP                                                                                                                                               

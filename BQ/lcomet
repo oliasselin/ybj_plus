@@ -1,0 +1,74 @@
+#!/bin/bash
+
+number_of_nodes=4
+number_of_tasks=64
+ntasks_per_node=16
+#number_of_nodes=1
+#number_of_tasks=8
+#ntasks_per_node=8
+
+sourdir=/oasis/scratch/comet/oasselin/temp_project/YBJp/BO/m2_U0.25_n256_moreslices/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/YBJp/BO/m2_U0.25_n256_moreslices/output/
+
+mkdir -p $sourdir
+mkdir -p $datadir
+
+cd $sourdir
+
+
+cat > EXEC_STEP << EXEC
+#!/bin/sh 
+
+#SBATCH --job-name="test1"
+#SBATCH --output="/home/oasselin/monitor/test1.o"
+#SBATCH --error="/home/oasselin/monitor/test1.e"
+#SBATCH --partition=compute
+#SBATCH --nodes=$number_of_nodes
+#SBATCH --ntasks-per-node=$ntasks_per_node
+#SBATCH --export=ALL
+#SBATCH -t 00:15:00
+
+#This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
+#ibrun in verbose mode will give binding detail
+
+cd $datadir                                                                                                                                                                            
+cp $sourdir/exec_full $datadir   
+ibrun -v ./exec_full
+
+                                                                                                                                                        
+EXEC
+
+
+#
+#--- Compile ---#
+#
+cat > COMPILE_STEP << COMPILE
+#!/bin/bash                                                                                                                                               
+                                                                                                                                                       
+
+cd $sourdir
+cp $HOME/boussinesq/*.f90 .
+
+PARA=parameters.f90
+MAIN=main_full.f90
+FFT=fft.f90
+MPI=mpi.f90
+INIT=init.f90
+DERI=derivatives.f90
+FILE=files.f90
+DIAG=diagnostics.f90
+ELLI=elliptic.f90
+SPEC=special.f90
+
+
+#Compile with MPIf90                                                                                                                                       
+mpif90 -mkl parameters.f90 mpi.f90 fft.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 main_full.f90 -o exec_full
+
+
+COMPILE
+
+chmod 755 COMPILE_STEP
+./COMPILE_STEP
+##chmod 755 EXEC_STEP                                                                                                                                       
+sbatch EXEC_STEP
+##./EXEC_STEP                                                                                                                                               

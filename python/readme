@@ -1,0 +1,3 @@
+Files beginning with compute* are scripts that take data from the scratch folder and generate data to be plotted with the other .py scripts.
+
+The names of the scripts.py match the name of the figure labels in the latex of the paper.
