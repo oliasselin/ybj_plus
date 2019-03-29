@@ -86,7 +86,7 @@ for m in m_list:
             print nts*(ncases-1),idx,idx-nts*(ncases-1)
 
             if(idx>=nts*(ncases-1)):
-                ax.set_xlabel('Bu(1,1) = '+bu_list[idx-nts*(ncases-1)]+'\n Ro = '+ro_list[idx-nts*(ncases-1)],fontsize=10,rotation=0,labelpad=5)
+                ax.set_xlabel('Bu$^{1,1}$ = '+bu_list[idx-nts*(ncases-1)]+'\n Ro = '+ro_list[idx-nts*(ncases-1)],fontsize=10,rotation=0,labelpad=5)
 
             ax.set_ylabel(labels[int(idx/nts)],fontsize=12,rotation=0,labelpad=20)
 
@@ -103,6 +103,6 @@ for m in m_list:
 #                plt.text(-0.1,0,'10 IP')
 #                plt.text(-1,0.15,'50 IP')
 #                fig.suptitle('WKE at the surface, m = '+m+', U = '+u,y=1,fontsize=16)
-        plt.show()
-#        plt.savefig('plots/wke_m'+m+'.eps')
+#        plt.show()
+        plt.savefig('plots/wke_m'+m+'.eps')
 
