@@ -4,8 +4,8 @@ number_of_nodes=4
 number_of_tasks=64
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/YBJp/YBJp/m2_U0.25_n256_moreslices/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/YBJp/YBJp/m2_U0.25_n256_moreslices/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/YBJp/revision1/YBJp/m8_U0.25_n256_c0.01/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/YBJp/revision1/YBJp/m8_U0.25_n256_c0.01/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -44,7 +44,7 @@ cat > COMPILE_STEP << COMPILE
                                                                                                                                                        
 
 cd $sourdir
-cp $HOME/YBJ/*.f90 .
+cp $HOME/ybjp/YBJ/*.f90 .
 
 PARA=parameters.f90
 MAIN=main_waqg.f90
