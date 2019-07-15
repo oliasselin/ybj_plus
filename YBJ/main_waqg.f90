@@ -99,11 +99,6 @@ PROGRAM main
 
   equivalence(u_rotr,u_rot)
 
-  integer :: unit_wke = 123451236
-  open (unit=unit_wke,file='wke.dat',action="write",status="replace")
-
-
-
   !********************** Initializing... *******************************!
 
 
@@ -121,9 +116,12 @@ PROGRAM main
   call fft_r2c(psir,psik,n3h1)
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
+  call sumB(BRk,BIk)
 
   AIk = (0.D0,0.D0)
   BIk = (0.D0,0.D0)
+  CRk = (0.D0,0.D0)
+  CIk = (0.D0,0.D0)
    qk = (0.D0,0.D0)
 
   call compute_velo(uk,vk,wk,bk,psik) 
@@ -145,6 +143,10 @@ PROGRAM main
 
  do id_field=1,nfields                                            
     if(out_slice ==1)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
+ end do
+
+ do id_field=1,nfields2                                            
+    if(out_slice ==1)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
  end do
  
  do iz=1,num_spec
@@ -421,6 +423,9 @@ if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak
  do id_field=1,nfields
     if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
  end do
+! do id_field=1,nfields2
+!    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
+! end do
 
  do iz=1,num_spec
     if(out_hspecw ==1  .and. mod(iter,freq_hspecw)==0 ) call hspec_waves(BRk,BIk,CRk,CIk,iz)
@@ -428,21 +433,6 @@ if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak
 
  if(out_we ==1   .and. mod(iter,freq_we   )==0)  call wave_energy(BRk,BIk,CRk,CIk)
  if(out_conv ==1 .and. mod(iter,freq_conv )==0)  call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
-
-
-
-
- !***** Print time series of WKE at the core of the bottom left vortex *****!
-
- call fft_c2r(BRk,BRr,n3h0)
- call fft_c2r(BIk,BIr,n3h0)
-
- if(mype==(npe-1)) then
-    write(unit_wke,fmt=*) time,time/(twopi*Ro),0.5*(BRr(n1/4,n2/4,n3h0)**2+BIr(n1/4,n2/4,n3h0)**2)*U_scale*U_scale
- end if
-
- call fft_r2c(BRr,BRk,n3h0)
- call fft_r2c(BIr,BIk,n3h0)
 
  !**************************************************************************!
 

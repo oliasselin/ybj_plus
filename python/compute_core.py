@@ -3,20 +3,17 @@ import os
 import numpy as np
 
 
-m_list=['1']
-u_list=['0.25']#['0.05','0.15','0.25']
-res_list=['_n256']
-
-
-hres=64
+hres=256
 vres=256
-Uw_scale=2.5e-5
+
+
 themax=int((hres/2)*(hres/2+0.5))   #bottom left quarter
 
 
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'YBJp/'
+folder = 'leif/'
+run = 'test2'
 
 #Create folder for plots if it doesn't exists                                                                                                                                           
 if not os.path.exists('data/'+folder+'wke_blq/'):
@@ -26,23 +23,20 @@ if not os.path.exists('data/'+folder+'wke_blq/'):
 timestep = 0.1  #Points per inertial period                                                                                                                                             
 tmax = 501
 
-L = 50000
-f = 1e-4
-Bu11=0.25
+L_scale = 222000/(2.*np.pi)
+cor     = 1.24e-4
+U_scale = 0.1
+
+
+
 
 for m in m_list:
     for u in u_list:
         for res in res_list:
 
-            Ro = float(u)/(f*L)
-            eps = int(m)**2*Ro/Bu11
-            freq= 2*np.pi*Bu11
-            freqp=4*np.pi*Bu11/(2*int(m)**2+Bu11)
-            print "Ro,eps,freq,freqp=",Ro,eps,freq,freqp
+            Ro = float(U_scale)/(f*L_scale)
 
-            WKE0 = 0.5*Uw_scale**2*(np.cos(int(m)*np.pi/vres)**2)
 
-            run = 'm'+m+'_U'+u+res+'_moreslices'
             wke = np.zeros((tmax,4))
             wke_exp = np.zeros((tmax,3))
     

@@ -2,7 +2,7 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=64, n2=64, n3=256
+    integer, parameter :: n1=256, n2=256, n3=256
     integer, parameter :: npe=64
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
@@ -19,23 +19,21 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = twopi*5e4                          !Horizontal domain size (in m)
-    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
+    double precision, parameter :: dom_x = 100000                             !Horizontal domain size (in m)
+    double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
 
     real, parameter :: ktrunc_x = twopi/L1 * float(n1)/3.           ! dimensional truncation wavenumber (x)
     real, parameter :: ktrunc_z = twopi/L3 * float(n3)/3.           ! dimensional truncation wavenumber (x)
 
-    !C's and N's
-    integer, parameter :: n_one = 1, n_two = 2
-    integer, parameter :: barotropic = 1         !if = 1, then the streamfunction is barotropic.
-    double precision, parameter :: c_one = 1./( n_one*n_one - n_one*n_two*tanh(twopi*n_one)/tanh(twopi*n_two) )
-    double precision, parameter :: c_two = 1./( n_two*n_two - n_one*n_two*tanh(twopi*n_two)/tanh(twopi*n_one) )
-
     integer, parameter :: fixed_flow = 1        !1: Skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set A and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     
+    !Gaussian wave initial condition
+    double precision, parameter :: delta_a = 50.
+    double precision, parameter :: xi_a = dom_z/(L3*delta_a)
+
 
     !Tags to specify run!
     !-------------------!
@@ -146,30 +144,15 @@ MODULE parameters
     double precision, save :: pi_0s(n3h2)                    !Staggered version of pi_0 (useful in two_exp BS
     double precision, save :: pi_0st(n3)                     !Staggered version of transposed pi_0 (useful in two_exp BS
 
-
-
-    !I choose:
-    !x N=0.03 s^-1 (to get N_troposphere ~ 0.01 right)
-    !f=0.0001 s^-1 (real value of earth)
-    !H=20 000m / 2pi
-    !L=H/Ar 
-    !U=1m/s 
-    ! => Fr = pi/3
-    ! => Ro = pi Ar
-    !Keep in mind that: N/f = 1/Ar * (Ro/Fr).
-
-    integer, parameter :: mmm = 2                                                                                                                                                                                                                                                                                                                                                                         
-
-
     !Primary parameters!
     !------------------!
 
     double precision, parameter :: H_scale=dom_z/L3          !Actual H in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
-    double precision, parameter :: cor=1e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
-    double precision, parameter :: N0 = (25./8.)*twopi*cor!/sqrt(3.)
-    double precision, parameter :: U_scale = 0.25                                                                                                                         !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
-    double precision, parameter :: Uw_scale=2.5e-5                       !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
+    double precision, parameter :: cor=1.24e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
+    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
+    double precision, parameter :: U_scale = 0.5                                                                                                                         !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
+    double precision, parameter :: Uw_scale= 0.1                       !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
     double precision, parameter :: Ar2 = (H_scale/L_scale)**2                                   !(1./64.)**2!(1./10.)**2 !0.01     !Aspect ratio squared = (H/L)^2     
     double precision, parameter :: Ro  = U_scale/(cor*L_scale)                                  !Rossby number  U/fL
     double precision, parameter :: Fr  = U_scale/(N0*H_scale)                                   !Froude number  U/N(z0)H
@@ -185,14 +168,14 @@ MODULE parameters
     integer :: iter=0
     integer :: itermax=1000000000
     real :: maxtime=100                      
-    double precision, parameter :: delt=0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+    double precision, parameter :: delt=Ro/50.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
     double precision, parameter :: gamma=1e-2                                  !Robert filter parameter
 
     !Other successful viscosity: 5e-2 * (10./ktrunc_x ) **2. 
     !PERFECT VISCOSITY: 0.01 * (64./(1.*n1)) **(4./3.)
     !In reality, nuh is 1/Re and nuz is 1/(Ar2*Re) with 1/Re = UL/nu
 
-    double precision, parameter :: coeff =0.!0.4!0.4!0.1!0.075
+    double precision, parameter :: coeff =0.01!0.4!0.4!0.1!0.075
     double precision, parameter :: coeffz=0.!coeff!/10.!/1000!/10.
 
     integer, parameter :: ilap = 8                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
@@ -255,22 +238,20 @@ MODULE parameters
     !For slices                                                                                                                     
     integer, parameter :: stag=1,unstag=2
     integer, parameter :: where_bz=unstag
-    integer, parameter :: num_spec = 1!10
+    integer, parameter :: num_spec = 10
 
-    integer, parameter :: height(num_spec)=n3![1, n3/8,  n3/4,  3*n3/8, n3/2, 5*n3/8, 3*n3/4, 7*n3/8,  n3-2 , n3]
+    integer, parameter :: height(num_spec)=[1, n3/8,  n3/4,  3*n3/8, n3/2, 5*n3/8, 3*n3/4, 7*n3/8,  n3-2 , n3]
     !                                       0   1      2       3      4      5       6        7      8      9    
 
     !Slices
     integer, parameter :: max_slices = 999     
-    integer, parameter :: nfields  = 1         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
-    integer, parameter :: nfields2 = 5         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
+    integer, parameter :: nfields  = 4         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
+    integer, parameter :: nfields2 = 7         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
     integer :: count_slice(nfields) = 0       !number of slices
     integer :: count_slice2(nfields2) = 0       !number of slices
-    integer :: zval=n3/2                      !z-level at which we wish to plo a slice                                                                                                                               
-    integer :: yval=n2/4
-    integer :: xval=n1/4
-    integer :: hlvl(nfields)=0![0,0,0,0]                                   
-    integer :: hlvl2(nfields2)=[1,1,1,1,0]                                   
+    integer :: yval(n1)
+    integer :: hlvl(nfields)=[0,0,0,0]                                   
+    integer :: hlvl2(nfields2)=[2,2,1,1,2,1,1]                                   
 
     integer, parameter :: bot_height = 0!1
     integer, parameter :: mid_height = 0!n3/2
