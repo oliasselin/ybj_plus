@@ -41,11 +41,11 @@ g_vort = np.rot90(np.reshape(f_vort,(hres,hres)),k=1)
 
 path_u  = scratch_location+folder+run+'/output/slice2htop1 0.dat'
 f_u = np.loadtxt(path_u)
-g_u = np.rot90(np.reshape(f_u,(hres,hres)),k=1) 
+g_u = np.rot90(np.reshape(f_u,(hres,hres)),k=0) 
 
 path_v  = scratch_location+folder+run+'/output/slice2htop2 0.dat'
 f_v = np.loadtxt(path_v)
-g_v = np.rot90(np.reshape(f_v,(hres,hres)),k=1) 
+g_v = np.rot90(np.reshape(f_v,(hres,hres)),k=0) 
 
 
 #X = np.linspace(0,hres)

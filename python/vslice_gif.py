@@ -3,12 +3,18 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
 
-ts_list=np.arange(0,201,1)
+ts_list=np.arange(66,67,1)
 
 
-field='wke'
-vmin = 0.#0.001#-0.0008
-vmax = 0.001#0.0008
+field='dudz'
+
+if(field=='dudz'):
+    vmin = -0.0008
+    vmax = 0.0008
+else:
+    vmin = 0.#0.001#-0.0008
+    vmax = 0.001#0.0008
+
 aspect=0.4
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
@@ -18,7 +24,7 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'attempt3_ro50'
+run = 'N2_2e5'#'attempt3_ro50'#'ml_100'
 
 plot_slice=1
 colormap='RdBu_r' 
@@ -35,33 +41,29 @@ tylabels=np.arange(0,depth+1,depth/nyticks)
 ticksy_loc=np.arange(0,gp_depth,(gp_depth-1.)/nyticks)
 
 
-
-xrange_km = 10
+xyrange_km = 10
+xrange_km  = xyrange_km*np.cos(np.deg2rad(45))
 Dx_km=100
-gp_del= int(hres*xrange_km/Dx_km) 
+gp_del= int(round(hres*xrange_km/Dx_km)) 
 x0 = int(hres/2-gp_del) 
 x1 = int(hres/2+gp_del) 
 
 
 nxticks=4
-txlabels=np.arange(-xrange_km,xrange_km+1,(2*xrange_km)/nxticks)
+txlabels=np.arange(-xyrange_km,xyrange_km+1,(2*xyrange_km)/nxticks)
 ticksx_loc=np.arange(0,2*gp_del,(2*gp_del-1.)/nxticks)
 
 
 #Create folder for plots if it doesn't exists
-if not os.path.exists('plots/'+run+'/gif/'+field+'/'):
-    os.makedirs('plots/'+run+'/gif/'+field+'/')
+if not os.path.exists('plots/'+run+'/'+field+'/'):
+    os.makedirs('plots/'+run+'/'+field+'/')
 
+u = np.zeros((gp_depth,x1-x0))
+#v = np.zeros((gp_depth,x1-x0))
+dudz = np.zeros((gp_depth,x1-x0))
+#dvdz = np.zeros((gp_depth,x1-x0))
 
 for ts in ts_list:
-
-
-    g_wke = np.zeros((vres,hres))    
-    g_lar = np.zeros((vres,hres))    
-    g_lai = np.zeros((vres,hres))    
-    
-    dudz = np.zeros((gp_depth,x1-x0))
-    dvdz = np.zeros((gp_depth,x1-x0))
     
     spaces_ts = (3-len(str(ts)))*' '
     path_wke  = scratch_location+folder+run+'/output/slicev1'+spaces_ts+str(ts)+'.dat'
@@ -75,26 +77,22 @@ for ts in ts_list:
         time=ts*timestep #time in inertial periods
         print 'Time = ',time,' inertial periods.'
         
-        f_wke = np.loadtxt(path_wke)                 #Loads the full file as a 1-dim array                                                      
-        f_lar = np.loadtxt(path_lar)                 #Loads the full file as a 1-dim array                                                      
-        f_lai = np.loadtxt(path_lai)                 #Loads the full file as a 1-dim array                                                      
-        
-        g_wke[:,:]   = np.rot90(np.reshape(f_wke,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                
-        g_lar[:,:]   = np.rot90(np.reshape(f_lar,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                
-        g_lai[:,:]   = np.rot90(np.reshape(f_lai,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                
-        
-        
-        wke = g_wke[0:gp_depth,x0:x1]          
-        lar = g_lar[0:gp_depth,x0:x1]          
-        lai = g_lai[0:gp_depth,x0:x1]          
-        
-        u =  lar*np.cos(time*2.*np.pi) + lai*np.sin(time*2.*np.pi)
-        v = -lar*np.sin(time*2.*np.pi) + lai*np.cos(time*2.*np.pi)
-        
 
-        for iz in range(0,len(u[:,0])-1):
-            dudz[iz,:] = (u[iz,:]-u[iz+1,:])/dz
-            dvdz[iz,:] = (v[iz,:]-v[iz+1,:])/dz
+        if(field == 'wke'):
+            g_wke   = np.rot90(np.reshape(np.loadtxt(path_wke),(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                
+            wke = g_wke[0:gp_depth,x0:x1]          
+
+        elif(field == 'dudz'):
+
+            g_lar   = np.rot90(np.reshape(np.loadtxt(path_lar),(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                
+            g_lai   = np.rot90(np.reshape(np.loadtxt(path_lai),(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                
+
+            u =  g_lar[0:gp_depth,x0:x1]*np.cos(time*2.*np.pi) + g_lai[0:gp_depth,x0:x1]*np.sin(time*2.*np.pi)
+#            v = -g_lar[0:gp_depth,x0:x1]*np.sin(time*2.*np.pi) + g_lai[0:gp_depth,x0:x1]*np.cos(time*2.*np.pi)
+                
+            for iz in range(0,len(u[:,0])-1):
+                dudz[iz,:] = (u[iz,:]-u[iz+1,:])/dz
+#                dvdz[iz,:] = (v[iz,:]-v[iz+1,:])/dz
     
 
     if(plot_slice==1):
@@ -129,12 +127,13 @@ for ts in ts_list:
                 cbar = grid.cbar_axes[0].colorbar(im,ticks=[0.,vmax/2.,vmax])                        
 
 
-            cbar = ax.cax.colorbar(im)
-            cbar = grid.cbar_axes[0].colorbar(im)
+#            cbar = ax.cax.colorbar(im)
+#            cbar = grid.cbar_axes[0].colorbar(im)
         
             ax.text(-7, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
             ax.text(gp_del, gp_depth+10,r'$x_{cs}$ (km)',rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
             zeros_ts = (3-len(str(ts)))*'0'
-            plt.savefig('plots/'+run+'/gif/'+field+'/'+field+zeros_ts+str(ts)+'.png',bbox_inches='tight')
+            plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.eps',bbox_inches='tight')
+#            plt.close()
     

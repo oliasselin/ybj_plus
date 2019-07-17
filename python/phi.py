@@ -14,7 +14,7 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'attempt3_ro50'
+run = 'Dx_200'
 
 #Create folder for plots if it doesn't exists
 if not os.path.exists('plots/'+run+'/'):
@@ -24,9 +24,9 @@ if not os.path.exists('plots/'+run+'/'):
 #Defining the transect and converting distance in grid points
 leif_dist = 9 #km 
 leif_dist_x = leif_dist*np.cos(np.deg2rad(45)) #Projection on the x-axis assuming 45 deg angle
-Dx = 100      #km domain size in the horizontal
+Dx = 200#100      #km domain size in the horizontal
 gpdist = int(hres*leif_dist_x/Dx)
-x0_km   = 5 #Distance away from the center
+x0_km   = 0 #Distance away from the center
 gpx0    = hres/2+int(hres*x0_km/Dx)
 
 c_loc = gpx0-int(gpdist/2)          #location in x for the cyclone
@@ -38,7 +38,7 @@ v_ave = 1
 leif_vave = 50 #m
 Dz = 3000
 gpave =  int(vres*leif_vave/Dz)
-depth_top = 400 #in m              
+depth_top = 0 #in m              
 gpdepth = int(vres*depth_top/Dz)
 
 ticks = np.arange(0.,-12*np.pi-1.,-4*np.pi)
@@ -46,8 +46,8 @@ ticks_labels = ['$0$','$-4\pi$','$-8\pi$','$-12\pi$']
 
 
 #Time range (time should be in fractions of inertial period. Fraction = timestep var above)
-ts_min=150
-ts_max=201#100
+ts_min=0
+ts_max=51#100
 
 #Declare vars
 ua = np.zeros(ts_max-ts_min)    
@@ -64,8 +64,6 @@ for ts in range(ts_min,ts_max):
 
     its=ts-ts_min
 
-    print its,ts
-
     spaces_ts = (3-len(str(ts)))*' '
     path_wke  = scratch_location+folder+run+'/output/slicev1'+spaces_ts+str(ts)+'.dat'
     path_lar  = scratch_location+folder+run+'/output/slicev2'+spaces_ts+str(ts)+'.dat'
@@ -76,6 +74,8 @@ for ts in range(ts_min,ts_max):
     if os.path.isfile(path_wke):
 
         time[its]=ts*timestep #time in inertial periods
+
+        print "Acquiring wave velocity data for t = ",time[its]," (index=",its,")"
 
         f_wke = np.loadtxt(path_wke)                 #Loads the full file as a 1-dim array                                                      
         f_lar = np.loadtxt(path_lar)                 #Loads the full file as a 1-dim array                                                      
@@ -166,8 +166,8 @@ if(plot_phi==1):
     plt.xlim(int(ts_min*timestep),int(ts_max*timestep))
 
 
-    plt.show()
-#    plt.savefig('plots/'+run+'/phi_d'+str(depth_top)+'.eps')
+#    plt.show()
+    plt.savefig('plots/'+run+'/phi_d'+str(depth_top)+'.eps')
 
 if(plot_u==1):
     plt.plot(time,uc,'-*b',label='u cyclonic')

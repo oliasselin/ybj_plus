@@ -10,7 +10,7 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'attempt3_ro50'
+run = 'Dx_200'
 
 plot_slice=1
 colormap='RdBu_r' 
@@ -18,7 +18,7 @@ ncases=1
 nts=1
 
 aspect=0.4
-depth = 800  #m
+depth = 3000#800  #m
 Dz= 3000
 gp_depth = int(vres*depth/Dz)
 dz= Dz/vres
@@ -27,8 +27,8 @@ nyticks=4
 tylabels=np.arange(0,depth+1,depth/nyticks)
 ticksy_loc=np.arange(0,gp_depth,(gp_depth-1.)/nyticks)
 
-xrange_km = 10
-Dx_km=100
+xrange_km = 100#50#10
+Dx_km=200#100
 gp_del= int(hres*xrange_km/Dx_km) 
 x0 = int(hres/2-gp_del) 
 x1 = int(hres/2+gp_del) 
@@ -43,8 +43,8 @@ ticksx_loc=np.arange(0,2*gp_del,(2*gp_del-1.)/nxticks)
 
 
 #Time range (time should be in fractions of inertial period. Fraction = timestep var above)                                                                                                                   
-ts_min=150
-ts_max=201
+ts_min=100
+ts_max=151
 
 #Declare vars 
 u = np.zeros((gp_depth,gp_xrange,ts_max-ts_min))
