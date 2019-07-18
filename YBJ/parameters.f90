@@ -88,8 +88,8 @@ MODULE parameters
     !Base-state!
     !----------!
 
-    integer, parameter :: tropopause=1, exponential=2, constant_N=3
-    integer, parameter :: stratification = constant_N
+    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4
+    integer, parameter :: stratification = double_gaussian!constant_N
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -102,7 +102,17 @@ MODULE parameters
     double precision, parameter :: N2_scale = 0.75D0   !N^2 ~ exp(N2_scale*(z-z0) 
 
     !Stratification = constant_N!
- !   double precision, parameter :: N0  =  twopi*1e-3  !0.002          !Actual N is s^-1, not squared.    
+!    double precision, parameter :: N0 = sqrt(5.e-6) !(25./8.)*twopi*cor!/sqrt(3.)
+
+    !Stratification = double_gaussian!
+    double precision, parameter ::  N0        = 0.009023730234586 
+    double precision, parameter ::  N02_dg    = 0.011957184903585
+    double precision, parameter ::  N12_dg    = 0.987728763634230
+    double precision, parameter ::  N22_dg    = 0.114406828801100
+    double precision, parameter ::  z1_dg     = twopi
+    double precision, parameter ::  z2_dg     = 5.215043804959056
+    double precision, parameter ::  sigma1_dg = 0.139436722755870
+    double precision, parameter ::  sigma2_dg = 0.439822971502571
 
    ! USEFUL INDEX !                                                                                                                          
    ! ------------ !                                                                                                                         
@@ -150,7 +160,6 @@ MODULE parameters
     double precision, parameter :: H_scale=dom_z/L3          !Actual H in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
     double precision, parameter :: cor=1.24e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
-    double precision, parameter :: N0 = sqrt(5.e-6) !(25./8.)*twopi*cor!/sqrt(3.)
     double precision, parameter :: U_scale = 0.5                                                                                                                         !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: Uw_scale= 0.1                       !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
     double precision, parameter :: Ar2 = (H_scale/L_scale)**2                                   !(1./64.)**2!(1./10.)**2 !0.01     !Aspect ratio squared = (H/L)^2     

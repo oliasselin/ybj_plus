@@ -3,8 +3,8 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
 
-plot_phi=1
-plot_u  =0 
+plot_phi=0
+plot_u  =1
 
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
@@ -13,8 +13,8 @@ hres=256
 vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/'
-run = 'Dx_200'
+folder = 'leif/'#'leif/double_gaussian/'
+run = 'ml_100'#'test'
 
 #Create folder for plots if it doesn't exists
 if not os.path.exists('plots/'+run+'/'):
@@ -24,7 +24,7 @@ if not os.path.exists('plots/'+run+'/'):
 #Defining the transect and converting distance in grid points
 leif_dist = 9 #km 
 leif_dist_x = leif_dist*np.cos(np.deg2rad(45)) #Projection on the x-axis assuming 45 deg angle
-Dx = 200#100      #km domain size in the horizontal
+Dx = 100      #km domain size in the horizontal
 gpdist = int(hres*leif_dist_x/Dx)
 x0_km   = 0 #Distance away from the center
 gpx0    = hres/2+int(hres*x0_km/Dx)
@@ -142,8 +142,18 @@ path_vort  = scratch_location+folder+run+'/output/slice2v7 0.dat'
 f_vort = np.loadtxt(path_vort)
 g_vort = np.rot90(np.reshape(f_vort,(vres,hres)),k=2) 
 
-vort_a = g_vort[0,a_loc]
-vort_c = g_vort[0,c_loc]
+#vort_a = g_vort[0,a_loc]
+#vort_c = g_vort[0,c_loc]
+
+if(v_ave==1):
+    vort_a = np.average(g_vort[gpdepth:(gpdepth+gpave),a_loc])
+    vort_c = np.average(g_vort[gpdepth:(gpdepth+gpave),c_loc])
+
+else:
+    vort_a = g_vort[gpdepth,a_loc]
+    vort_c = g_vort[gpdepth,c_loc]
+
+
 
 print "Vorticity/f at the a and c spots:",vort_a,vort_c
 print "Fit of phi  at the a and c spots:",zeta_eff_a,zeta_eff_c
@@ -153,9 +163,12 @@ print "Fit of phi  at the a and c spots:",zeta_eff_a,zeta_eff_c
 labela = '%.2f' % f_eff_a
 labelc = '%.2f' % f_eff_c
 
+vorta = '%.2f' % float(vort_a/2.)
+vortc = '%.2f' % float(vort_c/2.)
+
 if(plot_phi==1):
-    plt.plot(time,np.arctan(vc/uc)-stairs_c,'-*b',label=labelc+'f')
-    plt.plot(time,np.arctan(va/ua)-stairs_a,'-*r',label=labela+'f')
+    plt.plot(time,np.arctan(vc/uc)-stairs_c,'-*b',label=labelc+'$f$, $\zeta_c/2=$'+vortc+'$f$')
+    plt.plot(time,np.arctan(va/ua)-stairs_a,'-*r',label=labela+'$f$, $\zeta_a/2=$'+vorta+'$f$')
     plt.xlabel(r'Time (inertial periods)')
     plt.ylabel(r'$\phi_u$ (rad)')
     plt.yticks(ticks,ticks_labels)
@@ -179,5 +192,5 @@ if(plot_u==1):
     plt.legend(loc='best')
     plt.xlim(int(ts_min*timestep),int(ts_max*timestep))
     
-    plt.show()
-#    plt.savefig('plots/'+run+'/u_d'+str(depth_top)+'.eps')
+#    plt.show()
+    plt.savefig('plots/'+run+'/u_d'+str(depth_top)+'.eps')

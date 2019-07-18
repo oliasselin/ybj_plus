@@ -3,10 +3,10 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
 
-ts_list=np.arange(66,67,1)
+ts_list=np.arange(1,201,1)
 
 
-field='dudz'
+field='wke'
 
 if(field=='dudz'):
     vmin = -0.0008
@@ -23,8 +23,8 @@ hres=256
 vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/'
-run = 'N2_2e5'#'attempt3_ro50'#'ml_100'
+folder = 'leif/double_gaussian/'
+run = 'test'#'attempt3_ro50'#'ml_100'
 
 plot_slice=1
 colormap='RdBu_r' 

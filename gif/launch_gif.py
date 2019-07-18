@@ -2,8 +2,8 @@ from make_a_gif import make_a_gif
 
 scratch_location='/oasis/scratch/comet/oasselin/temp_project/'
 home_location='/home/oasselin/'
-folder = 'leif/'
-run_list = ['N2_5e6','N2_2e5']
+folder = 'leif/double_gaussian/'
+run_list = ['test']
 field_list = ['1']
 #field_list = ['7']
 #sli_list = ['vw']
