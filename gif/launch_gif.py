@@ -3,7 +3,7 @@ from make_a_gif import make_a_gif
 scratch_location='/oasis/scratch/comet/oasselin/temp_project/'
 home_location='/home/oasselin/'
 folder = 'leif/double_gaussian/'
-run_list = ['test']
+run_list = ['test_ml']
 field_list = ['1']
 #field_list = ['7']
 #sli_list = ['vw']

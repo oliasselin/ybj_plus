@@ -1292,8 +1292,7 @@ end subroutine hspec
        end if
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
-    elseif(id_field==4) then
-       
+    elseif(id_field==4) then       
        do izh0=1,n3h0
           do ikx=1,iktx
              kx=kxa(ikx)
@@ -1327,7 +1326,101 @@ end subroutine hspec
              end do
           end do
        end do
-       
+
+
+
+
+       !LAR_x
+    elseif(id_field==5) then
+       Rmemk = BRk
+       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Akv/ Bu
+          do izh0=1,n3h0
+             do iky=1,ikty
+                ky = kya(iky)
+                do ikx=1,iktx
+                   kx = kxa(ikx)
+                   kh2=kx*kx+ky*ky
+                   if(L(ikx,iky)==1) then
+                      BRk(ikx,iky,izh0) = i*kx*(BRk(ikx,iky,izh0) + 0.25*kh2*ARk(ikx,iky,izh0)/Bu)
+                   else
+                      BRk(ikx,iky,izh0) = (0.D0,0.D0)
+                   end if
+                enddo
+             enddo
+          end do
+       end if
+       call fft_c2r(BRk,BRr,n3h0)
+       field = Uw_scale*BRr/L_scale
+
+       !LAI_x
+    elseif(id_field==6) then
+       Imemk = BIk
+       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Ak / Bu
+          do izh0=1,n3h0
+             do iky=1,ikty
+                ky = kya(iky)
+                do ikx=1,iktx
+                   kx = kxa(ikx)
+                   kh2=kx*kx+ky*ky
+                   if(L(ikx,iky)==1) then
+                      BIk(ikx,iky,izh0) = i*kx*(BIk(ikx,iky,izh0) + 0.25*kh2*AIk(ikx,iky,izh0)/Bu)
+                   else
+                      BIk(ikx,iky,izh0) = (0.D0,0.D0)
+                   end if
+                enddo
+             enddo
+          end do
+       end if
+       call fft_c2r(BIk,BIr,n3h0)
+       field = Uw_scale*BIr/L_scale
+
+
+
+       !LAR_y
+    elseif(id_field==7) then
+       Rmemk = BRk
+       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Akv/ Bu
+          do izh0=1,n3h0
+             do iky=1,ikty
+                ky = kya(iky)
+                do ikx=1,iktx
+                   kx = kxa(ikx)
+                   kh2=kx*kx+ky*ky
+                   if(L(ikx,iky)==1) then
+                      BRk(ikx,iky,izh0) = i*ky*(BRk(ikx,iky,izh0) + 0.25*kh2*ARk(ikx,iky,izh0)/Bu)
+                   else
+                      BRk(ikx,iky,izh0) = (0.D0,0.D0)
+                   end if
+                enddo
+             enddo
+          end do
+       end if
+       call fft_c2r(BRk,BRr,n3h0)
+       field = Uw_scale*BRr/L_scale
+
+       !LAI_y
+    elseif(id_field==8) then
+       Imemk = BIk
+       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Ak / Bu
+          do izh0=1,n3h0
+             do iky=1,ikty
+                ky = kya(iky)
+                do ikx=1,iktx
+                   kx = kxa(ikx)
+                   kh2=kx*kx+ky*ky
+                   if(L(ikx,iky)==1) then
+                      BIk(ikx,iky,izh0) = i*ky*(BIk(ikx,iky,izh0) + 0.25*kh2*AIk(ikx,iky,izh0)/Bu)
+                   else
+                      BIk(ikx,iky,izh0) = (0.D0,0.D0)
+                   end if
+                enddo
+             enddo
+          end do
+       end if
+       call fft_c2r(BIk,BIr,n3h0)
+       field = Uw_scale*BIr/L_scale
+
+
     end if
 
 
@@ -1461,6 +1554,14 @@ end subroutine hspec
           elseif(id_field==2)    then 
              BRk=Rmemk
           elseif(id_field==3)    then 
+             BIk=Imemk
+          elseif(id_field==5)    then
+             BRk=Rmemk
+          elseif(id_field==6)    then
+             BIk=Imemk
+          elseif(id_field==7)    then
+             BRk=Rmemk
+          elseif(id_field==8)    then
              BIk=Imemk
           end if
 

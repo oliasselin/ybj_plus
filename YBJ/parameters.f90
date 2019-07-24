@@ -31,7 +31,7 @@ MODULE parameters
     integer, parameter :: passive_scalar = 0    !1: Set A and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     
     !Gaussian wave initial condition
-    double precision, parameter :: delta_a = 100.
+    double precision, parameter :: delta_a = 50.
     double precision, parameter :: xi_a = dom_z/(L3*delta_a)
 
 
@@ -88,8 +88,8 @@ MODULE parameters
     !Base-state!
     !----------!
 
-    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4
-    integer, parameter :: stratification = double_gaussian!constant_N
+    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5
+    integer, parameter :: stratification = constant_N!double_gaussian_ml_min
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -102,17 +102,19 @@ MODULE parameters
     double precision, parameter :: N2_scale = 0.75D0   !N^2 ~ exp(N2_scale*(z-z0) 
 
     !Stratification = constant_N!
-!    double precision, parameter :: N0 = sqrt(5.e-6) !(25./8.)*twopi*cor!/sqrt(3.)
+    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
 
     !Stratification = double_gaussian!
-    double precision, parameter ::  N0        = 0.009023730234586 
+!    double precision, parameter ::  N0        = 0.009023730234586 
     double precision, parameter ::  N02_dg    = 0.011957184903585
     double precision, parameter ::  N12_dg    = 0.987728763634230
     double precision, parameter ::  N22_dg    = 0.114406828801100
-    double precision, parameter ::  z1_dg     = twopi
-    double precision, parameter ::  z2_dg     = 5.215043804959056
     double precision, parameter ::  sigma1_dg = 0.139436722755870
     double precision, parameter ::  sigma2_dg = 0.439822971502571
+    double precision, parameter ::  z1_dg     = twopi
+    double precision, parameter ::  z2_dg     = 5.215043804959056
+    double precision, parameter ::  z3_dg     = sigma1_dg/3.
+
 
    ! USEFUL INDEX !                                                                                                                          
    ! ------------ !                                                                                                                         
@@ -254,12 +256,12 @@ MODULE parameters
 
     !Slices
     integer, parameter :: max_slices = 999     
-    integer, parameter :: nfields  = 4         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
+    integer, parameter :: nfields  = 8         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
     integer, parameter :: nfields2 = 7         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
     integer :: count_slice(nfields) = 0       !number of slices
     integer :: count_slice2(nfields2) = 0       !number of slices
     integer :: yval(n1)
-    integer :: hlvl(nfields)=[0,0,0,0]                                   
+    integer :: hlvl(nfields)=[0,0,0,0,0,0,0,0]                                   
     integer :: hlvl2(nfields2)=[2,2,1,1,2,1,1]                                   
 
     integer, parameter :: bot_height = 0!1

@@ -3,8 +3,8 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
 
-plot_phi=0
-plot_u  =1
+plot_phi=1
+plot_u  =0
 
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
@@ -13,8 +13,8 @@ hres=256
 vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/'#'leif/double_gaussian/'
-run = 'ml_100'#'test'
+folder = 'leif/double_gaussian/'
+run = 'test_ml_sig33'
 
 #Create folder for plots if it doesn't exists
 if not os.path.exists('plots/'+run+'/'):

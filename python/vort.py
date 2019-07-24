@@ -39,6 +39,8 @@ path_vort  = scratch_location+folder+run+'/output/slice2htop7 0.dat'
 f_vort = np.loadtxt(path_vort)
 g_vort = np.rot90(np.reshape(f_vort,(hres,hres)),k=1) 
 
+print np.max(g_vort)
+
 path_u  = scratch_location+folder+run+'/output/slice2htop1 0.dat'
 f_u = np.loadtxt(path_u)
 g_u = np.rot90(np.reshape(f_u,(hres,hres)),k=0) 

@@ -6,7 +6,7 @@ import os
 ts_list=np.arange(1,201,1)
 
 
-field='wke'
+field='dudz'
 
 if(field=='dudz'):
     vmin = -0.0008
@@ -24,7 +24,7 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/double_gaussian/'
-run = 'test'#'attempt3_ro50'#'ml_100'
+run = 'test_ml_sig33'#'attempt3_ro50'#'ml_100'
 
 plot_slice=1
 colormap='RdBu_r' 
@@ -134,6 +134,6 @@ for ts in ts_list:
             ax.text(gp_del, gp_depth+10,r'$x_{cs}$ (km)',rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
             zeros_ts = (3-len(str(ts)))*'0'
-            plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.eps',bbox_inches='tight')
+            plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.png',bbox_inches='tight')
 #            plt.close()
     
