@@ -39,8 +39,6 @@ path_vort  = scratch_location+folder+run+'/output/slice2htop7 0.dat'
 f_vort = np.loadtxt(path_vort)
 g_vort = np.rot90(np.reshape(f_vort,(hres,hres)),k=1) 
 
-print np.max(g_vort)
-
 path_u  = scratch_location+folder+run+'/output/slice2htop1 0.dat'
 f_u = np.loadtxt(path_u)
 g_u = np.rot90(np.reshape(f_u,(hres,hres)),k=0) 
@@ -57,10 +55,7 @@ X, Y = np.meshgrid(np.arange(0,hres), np.arange(0,hres))
 
 nticks=2
 ticks_loc=np.arange(0,hres,(hres-1.)/nticks)
-tlabels=np.arange(0,Dx+1,Dx/(nticks))
-
-print ticks_loc
-print tlabels
+tlabels=np.arange(-Dx/2,Dx/2+1,Dx/(nticks))
 
 
 if(plot_slice==1):
@@ -100,6 +95,17 @@ if(plot_slice==1):
 #        ax.scatter(c_loc, c_loc, color='m', s=20)
 #        ax.scatter(a_loc, a_loc, color='y', s=20)
 
+        
+        ax.text(-hres/10, hres/2,r'y (km)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+        ax.text(hres/2, hres+hres/10,r"$x$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
+
+        color='magenta'
+
+        ax.arrow(hres/2,hres/2,-hres/10,hres/10,width=0.5,head_width=5.,color=color)
+        ax.arrow(hres/2,hres/2,hres/10,hres/10,width=0.5,head_width=5.,color=color)
+
+        ax.text(hres/2-hres/10,hres/2+hres/50,r"$x'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
+        ax.text(hres/2+hres/10,hres/2+hres/50,r"$y'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
 
         cbar = ax.cax.colorbar(im)
         cbar = grid.cbar_axes[0].colorbar(im)

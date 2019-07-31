@@ -8,13 +8,15 @@ import subprocess
 import sys
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
+cor=1.24e-4
+
 
 hres=256
 vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'N2_1e5'
+run = 'N2_1e5_dla'
 
 plot_slice=0
 colormap='RdBu_r' 
@@ -74,8 +76,10 @@ for ts in range(ts_min,ts_max):
     print "ts=",ts
 
     spaces_ts = (3-len(str(ts)))*' '
-    path_lar  = scratch_location+folder+run+'/output/slicev2'+spaces_ts+str(ts)+'.dat'
-    path_lai  = scratch_location+folder+run+'/output/slicev3'+spaces_ts+str(ts)+'.dat'
+    path_lar  = scratch_location+folder+run+'/output/slicev1'+spaces_ts+str(ts)+'.dat'
+    path_lai  = scratch_location+folder+run+'/output/slicev2'+spaces_ts+str(ts)+'.dat'
+    path_lart  = scratch_location+folder+run+'/output/slicev3'+spaces_ts+str(ts)+'.dat'
+    path_lait  = scratch_location+folder+run+'/output/slicev4'+spaces_ts+str(ts)+'.dat'
 
 
     path_larx  = scratch_location+folder+run+'/output/slicev5'+spaces_ts+str(ts)+'.dat'
@@ -92,6 +96,8 @@ for ts in range(ts_min,ts_max):
         f_lar = np.loadtxt(path_lar)                 #Loads the full file as a 1-dim array                                                                             
         f_lai = np.loadtxt(path_lai)                 #Loads the full file as a 1-dim array                                                                                   
 
+        f_lart = np.loadtxt(path_lart)                 #Loads the full file as a 1-dim array                                                                             
+        f_lait = np.loadtxt(path_lait)                 #Loads the full file as a 1-dim array
         f_larx = np.loadtxt(path_larx)                 #Loads the full file as a 1-dim array                                                                             
         f_laix = np.loadtxt(path_laix)                 #Loads the full file as a 1-dim array
         f_lary = np.loadtxt(path_lary)                 #Loads the full file as a 1-dim array                                                                             
@@ -100,6 +106,8 @@ for ts in range(ts_min,ts_max):
         g_lar   = np.rot90(np.reshape(f_lar,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                                   
         g_lai   = np.rot90(np.reshape(f_lai,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                         
 
+        g_lart   = np.rot90(np.reshape(f_lart,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                                   
+        g_lait   = np.rot90(np.reshape(f_lait,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                         
         g_larx   = np.rot90(np.reshape(f_larx,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                                   
         g_laix   = np.rot90(np.reshape(f_laix,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                         
         g_lary   = np.rot90(np.reshape(f_lary,(vres,hres)),k=2)        #Reshapes the array into a 2-d one  g(z,x,t)                                                                   
@@ -108,6 +116,8 @@ for ts in range(ts_min,ts_max):
         lar = g_lar[0:gp_depth,x0:x1]                                                                                                                                
         lai = g_lai[0:gp_depth,x0:x1]
 
+        lart = g_lart[0:gp_depth,x0:x1]                                                                                                                                
+        lait = g_lait[0:gp_depth,x0:x1]
         larx = g_larx[0:gp_depth,x0:x1]                                                                                                                                
         laix = g_laix[0:gp_depth,x0:x1]
         lary = g_lary[0:gp_depth,x0:x1]                                                                                                                                
@@ -121,13 +131,16 @@ for ts in range(ts_min,ts_max):
 #            dlardx[:,ix] = (lar[:,ix+1]-lar[:,ix-1])/(2.*dx)
 #            dlaidx[:,ix] = (lai[:,ix+1]-lai[:,ix-1])/(2.*dx)
 
+        #Calculate the Eulerian frequency
+        sig = (lart*lai-lait*lar)/(lar*lar+lai*lai)
+        sig = sig/cor
 
         #Calculate the local wavenumbers in m^{-1}. Primed coordinate system: k' and l' are the cross- and along-stream wavenumbers.
         m = (dlaidz*lar - dlardz*lai)/(lar*lar+lai*lai)
-        lambda_v = 2.*np.pi/m
+        lambda_z = 2.*np.pi/m
 
-        lambda_v[0,:] = 0.
-        lambda_v[-1,:] = 0.
+        lambda_z[0,:] = 0.
+        lambda_z[-1,:] = 0.
 
         #Using the spectral accurate LAx and LAy
         k = -((laix+laiy)*lar - (larx+lary)*lai )/(np.sqrt(2)*(lar*lar+lai*lai))
@@ -140,6 +153,7 @@ for ts in range(ts_min,ts_max):
 
 
         zeros_ts = (3-len(str(ts)))*'0'
+        np.savetxt('plots/'+run+'/wn/sig_t'+zeros_ts+str(ts)+'.dat',sig)
         np.savetxt('plots/'+run+'/wn/k_t'+zeros_ts+str(ts)+'.dat',k)
         np.savetxt('plots/'+run+'/wn/l_t'+zeros_ts+str(ts)+'.dat',l)
         np.savetxt('plots/'+run+'/wn/m_t'+zeros_ts+str(ts)+'.dat',m)
@@ -151,7 +165,8 @@ for ts in range(ts_min,ts_max):
         if(plot_slice==1):
 
             nan_indices = np.where(lar*lar + lai*lai < 2.*wke_threshold)
-            lambda_v[nan_indices] = 0.
+            sig[nan_indices] = 0.
+            lambda_z[nan_indices] = 0.
             lambda_x[nan_indices] = 0.
             lambda_y[nan_indices] = 0.
 
@@ -176,22 +191,23 @@ for ts in range(ts_min,ts_max):
                 ax.get_yaxis().set_label('Depth (m)')
 
                 #im = ax.imshow(wke,cmap=colormap,norm=colors.LogNorm(vmin=wke_min, vmax=wke_max),aspect=aspect)
-                im = ax.imshow(lambda_x,cmap=colormap,vmin=lh_min,vmax=lh_max,aspect=aspect)
+#                im = ax.imshow(lambda_x,cmap=colormap,vmin=lh_min,vmax=lh_max,aspect=aspect)
+                im = ax.imshow(sig,cmap=colormap,aspect=aspect)#,vmin=sig_min,vmax=sig_max)
                 
                 cbar = ax.cax.colorbar(im)# ticks=[1e-8, 1e-2])
                 cbar = grid.cbar_axes[0].colorbar(im)
 
                 time_title = '%.1f' % time        
-                ax.set_title(r'$\lambda_x$ (km), $t =$ '+time_title+' inertial periods',fontsize=12)
+                ax.set_title(r'$\sigma/f$ (km), $t =$ '+time_title+' inertial periods',fontsize=12)
                 ax.text(-15, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
                 ax.text(gp_del, gp_depth+20,r'$x_{cs}$ (km)',rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
 
-#                plt.show()
+                plt.show()
 #                zeros_ts = (3-len(str(ts)))*'0'
 #                plt.savefig('plots/'+run+'/lh/lh_t'+zeros_ts+str(ts)+'.png',bbox_inches='tight')
 
-if(plot_slice==1):
-    make_gif = 'convert -limit thread 1 -delay 1 -loop 0 plots/'+run+'/lh/*.png plots/'+run+'/lh/lh.gif'
-    p = subprocess.Popen(make_gif, shell = True)
-    os.waitpid(p.pid, 0)
+#if(plot_slice==1):
+#    make_gif = 'convert -limit thread 1 -delay 1 -loop 0 plots/'+run+'/lh/*.png plots/'+run+'/lh/lh.gif'
+#    p = subprocess.Popen(make_gif, shell = True)
+#    os.waitpid(p.pid, 0)

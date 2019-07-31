@@ -1191,12 +1191,16 @@ end subroutine hspec
   !!!!! SLICES !!!!!
   !****************!
 
-  subroutine slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
+  subroutine slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
 
     double complex, dimension(iktx,ikty,n3h0) :: ARk,AIk
 
     double complex, dimension(iktx,ikty,n3h0) :: BRk,BIk
     double precision,    dimension(n1d,n2d,n3h0) :: BRr, BIr
+
+    double complex, dimension(iktx,ikty,n3h0) :: dBRk,dBIk
+    double precision,    dimension(n1d,n2d,n3h0) :: dBRr, dBIr
+
 
     double complex, dimension(iktx,ikty,n3h0) :: CRk,CIk
 
@@ -1228,31 +1232,8 @@ end subroutine hspec
        yval(ix)=ix
     end do
 
-    if(id_field==1)   then
-       Rmemk = BRk
-       Imemk = BIk
-       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Ak / Bu
-          do izh0=1,n3h0
-             do iky=1,ikty
-                ky = kya(iky)
-                do ikx=1,iktx
-                   kx = kxa(ikx)
-                   kh2=kx*kx+ky*ky
-                   if(L(ikx,iky)==1) then
-                      BRk(ikx,iky,izh0) = BRk(ikx,iky,izh0) + 0.25*kh2*ARk(ikx,iky,izh0)/Bu
-                      BIk(ikx,iky,izh0) = BIk(ikx,iky,izh0) + 0.25*kh2*AIk(ikx,iky,izh0)/Bu
-                   else
-                      BRk(ikx,iky,izh0) = (0.D0,0.D0)
-                      BIk(ikx,iky,izh0) = (0.D0,0.D0)
-                   end if
-                enddo
-             enddo
-          end do
-       end if
-       call fft_c2r(BRk,BRr,n3h0)
-       call fft_c2r(BIk,BIr,n3h0)
-       field = 0.5*(BRr*BRr + BIr*BIr)*Uw_scale*Uw_scale
-    elseif(id_field==2) then
+    !LAR
+    if(id_field==1) then
        Rmemk = BRk
        if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Akv/ Bu
           do izh0=1,n3h0
@@ -1272,7 +1253,8 @@ end subroutine hspec
        end if
        call fft_c2r(BRk,BRr,n3h0)
        field = Uw_scale*BRr
-    elseif(id_field==3) then
+    !LAI
+    elseif(id_field==2) then
        Imemk = BIk
        if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Ak / Bu
           do izh0=1,n3h0
@@ -1292,42 +1274,16 @@ end subroutine hspec
        end if
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
-    elseif(id_field==4) then       
-       do izh0=1,n3h0
-          do ikx=1,iktx
-             kx=kxa(ikx)
-             do iky=1,ikty
-                ky=kya(iky)
-                kh2=kx*kx+ky*ky
-                
-                Rmemk(ikx,iky,izh0)  =  i*kx*CRk(ikx,iky,izh0)
-                Imemk(ikx,iky,izh0)  =  i*kx*CIk(ikx,iky,izh0)
-                
-                Rmemk2(ikx,iky,izh0) =  i*ky*CRk(ikx,iky,izh0)
-                Imemk2(ikx,iky,izh0) =  i*ky*CIk(ikx,iky,izh0)
-                
-             end do
-          end do
-       end do
 
-       call fft_c2r(Rmemk ,Rmem ,n3h0)
-       call fft_c2r(Imemk ,Imem ,n3h0)
-       call fft_c2r(Rmemk2,Rmem2,n3h0)
-       call fft_c2r(Imemk2,Imem2,n3h0)
-       
+       !d/dt (LAR)
+    elseif(id_field==3) then
+       call fft_c2r(dBRk,dBRr,n3h0)
+       field = Uw_scale*dBRr*U_scale/L_scale
 
-       do izh0=1,n3h0
-          izh2=izh0+2
-          do ix=1,n1
-             do iy=1,n2
-                
-                field(ix,iy,izh0) = (0.25/(Bu*r_2(izh2)))*( Rmem(ix,iy,izh0)*Rmem(ix,iy,izh0) + Imem(ix,iy,izh0)*Imem(ix,iy,izh0) + Rmem2(ix,iy,izh0)*Rmem2(ix,iy,izh0) + Imem2(ix,iy,izh0)*Imem2(ix,iy,izh0) )
-                
-             end do
-          end do
-       end do
-
-
+       !d/dt (LAI)
+    elseif(id_field==4) then
+       call fft_c2r(dBIk,dBIr,n3h0)
+       field = Uw_scale*dBIr*U_scale/L_scale
 
 
        !LAR_x
@@ -1550,10 +1506,7 @@ end subroutine hspec
 
           if(id_field==1)    then 
              BRk=Rmemk
-             BIk=Imemk
           elseif(id_field==2)    then 
-             BRk=Rmemk
-          elseif(id_field==3)    then 
              BIk=Imemk
           elseif(id_field==5)    then
              BRk=Rmemk

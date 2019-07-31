@@ -4,8 +4,8 @@ number_of_nodes=4
 number_of_tasks=64
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/N2_1e5/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/N2_1e5/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/N2_1e5_dla/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/leif/N2_1e5_dla/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir

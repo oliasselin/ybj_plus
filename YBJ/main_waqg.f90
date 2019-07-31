@@ -99,6 +99,13 @@ PROGRAM main
 
   equivalence(u_rotr,u_rot)
 
+  !For the Eulerian frequency diagnostic only
+  double complex,   dimension(iktx,ikty,n3h0) :: dBRk, dBIk
+  double precision, dimension(n1d,n2d,n3h0)   :: dBRr, dBIr
+
+  equivalence(dBRr,dBRk)
+  equivalence(dBIr,dBIk)
+
   !********************** Initializing... *******************************!
 
 
@@ -128,6 +135,9 @@ PROGRAM main
   call generate_halo(uk,vk,wk,bk)
   call generate_halo_q(qk) 
 
+  !For Eulerian Freq onlt
+  dBRk = (0.D0,0.D0)
+  dBIk = (0.D0,0.D0)
 
  !Initial diagnostics!
  !*******************!
@@ -142,7 +152,7 @@ PROGRAM main
  if(out_etot ==1) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields                                            
-    if(out_slice ==1)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
+    if(out_slice ==1)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
  end do
 
  do id_field=1,nfields2                                            
@@ -330,6 +340,11 @@ end if
         enddo
      enddo
 
+     !For diagnostic of Eulerian Frequency only!
+     !d(LA)/dt = [LA^(n+1)-LA^(n-1)]/2dt
+     dBRk=(BRtempk-BRok)/(2.*delt)
+     dBIk=(BItempk-BIok)/(2.*delt)
+     !*****************************************!
 
      !Apply Robert-Asselin filter to damp the leap-frog computational mode
      do izh0=1,n3h0
@@ -421,7 +436,7 @@ end if
 if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields
-    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
+    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
  end do
 ! do id_field=1,nfields2
 !    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)

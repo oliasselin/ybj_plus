@@ -3,19 +3,19 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
 
-ts_list=np.arange(1,201,1)
+ts_list=[100]#np.arange(1,201,1)
 
 
-field='dudz'
+field='dudz'#'dudz'#'dudz'
 
 if(field=='dudz'):
-    vmin = -0.0008
-    vmax = 0.0008
+    vmin = -0.001
+    vmax = 0.001
 else:
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008
 
-aspect=0.4
+aspect=0.2
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
 
@@ -23,9 +23,10 @@ hres=256
 vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/double_gaussian/'
-run = 'test_ml_sig33'#'attempt3_ro50'#'ml_100'
+folder = 'leif/double_gaussian/'#'leif/'
+run = 'test'#'N2_1e5'#'attempt3_ro50'#'ml_100'
 
+show=1
 plot_slice=1
 colormap='RdBu_r' 
 ncases=1
@@ -41,17 +42,26 @@ tylabels=np.arange(0,depth+1,depth/nyticks)
 ticksy_loc=np.arange(0,gp_depth,(gp_depth-1.)/nyticks)
 
 
-xyrange_km = 10
-xrange_km  = xyrange_km*np.cos(np.deg2rad(45))
 Dx_km=100
-gp_del= int(round(hres*xrange_km/Dx_km)) 
-x0 = int(hres/2-gp_del) 
-x1 = int(hres/2+gp_del) 
+Dx=Dx_km*1000
+dx=Dx/hres
 
+#Range in x'
+xpl =10000#-35000#5000#
+xpr =25000#20000#
 
-nxticks=4
-txlabels=np.arange(-xyrange_km,xyrange_km+1,(2*xyrange_km)/nxticks)
-ticksx_loc=np.arange(0,2*gp_del,(2*gp_del-1.)/nxticks)
+#Corresponding grid point range
+#x0 = int((Dx/2. - xpr*np.cos(np.deg2rad(45)))/dx)
+#x1 = int((Dx/2. - xpl*np.cos(np.deg2rad(45)))/dx)
+x0 = int((Dx/2. + xpl*np.cos(np.deg2rad(45)))/dx)
+x1 = int((Dx/2. + xpr*np.cos(np.deg2rad(45)))/dx)
+gp_del= x1-x0
+
+print x0,x1
+
+nxticks=3
+txlabels=np.arange(xpl/1000,(xpr+1)/1000,(xpr-xpl)/(nxticks*1000))
+ticksx_loc=np.arange(0,gp_del,(gp_del-1.)/nxticks)
 
 
 #Create folder for plots if it doesn't exists
@@ -116,24 +126,28 @@ for ts in ts_list:
             ax.get_yaxis().set_ticks(ticksy_loc)
             ax.set_yticklabels(tylabels)
             ax.get_yaxis().set_label('Depth (m)')
+
+            time_title = '%.1f' % time
             
             if(field=='dudz'):
                 im = ax.imshow(dudz,cmap=colormap,aspect=aspect,vmin=vmin,vmax=vmax)
-                ax.set_title(r'$du/dz$ (s$^{-1}$), $t =$ '+str(time)+' inertial periods',fontsize=12)    
+                ax.set_title(r'$du/dz$ (s$^{-1}$), $t =$ '+time_title+' inertial periods',fontsize=12)    
                 cbar = grid.cbar_axes[0].colorbar(im,ticks=[vmin,vmin/2,0.,vmax/2.,vmax])
             elif(field=='wke'):
                 im = ax.imshow(wke,cmap=colormap,aspect=aspect,vmin=vmin,vmax=vmax)
-                ax.set_title(r'WKE (m/s)$^{2}$, $t =$ '+str(time)+' inertial periods',fontsize=12)    
+                ax.set_title(r'WKE (m/s)$^{2}$, $t =$ '+time_title+' inertial periods',fontsize=12)    
                 cbar = grid.cbar_axes[0].colorbar(im,ticks=[0.,vmax/2.,vmax])                        
 
 
 #            cbar = ax.cax.colorbar(im)
 #            cbar = grid.cbar_axes[0].colorbar(im)
         
-            ax.text(-7, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
-            ax.text(gp_del, gp_depth+10,r'$x_{cs}$ (km)',rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
+            ax.text(-3.5, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+            ax.text(gp_del/2, gp_depth+10,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
-            zeros_ts = (3-len(str(ts)))*'0'
-            plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.png',bbox_inches='tight')
-#            plt.close()
+            if(show==1):
+                plt.show()
+            else:
+                zeros_ts = (3-len(str(ts)))*'0'
+                plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.eps',bbox_inches='tight')
     
