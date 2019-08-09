@@ -9,7 +9,7 @@ import sys
 
 ts_plot=[100]#np.arange(0,180,1)#[66]#np.arange(0,181,10)#np.arange(141,201,1)#[50,100,150,200]
 
-field = 9
+field = 2
 trace = 0
 wke_contours=1
 dzdx  = 'km'
@@ -17,8 +17,8 @@ plot_slice=1
 make_gif=0
 show=0
 
-field_title = ['$\sigma/(\zeta_{max}/2)$','$Bu$','Doppler shift $/(\zeta_{max}/2)$','$R_{WKB}$','$(\sigma-\zeta/2)/(\zeta_{max}/2)$','$\sigma/f$','$\zeta/\zeta_{max}$','-k/m','$Bu_p$','$Bu$-$Bu_p$']
-field_name  = ['sig','bu','ds','res','sminusz','omega','zeta','km','bu_pred','bu_error']
+field_title = ['$\sigma/(\zeta_{max}/2)$','$Bu$','Doppler shift $/(\zeta_{max}/2)$','$R_{WKB}$','$(\sigma-\zeta/2)/(\zeta_{max}/2)$','$\sigma/f$','$\zeta/\zeta_{max}$','-k/m','$Bu_p$','|$Bu-Bu_p$|','$|(Bu-Bu_p)(1-$min$($WKB$_{res},1))|$']
+field_name  = ['sig','bu','ds','res','sminusz','omega','zeta','km','bu_pred','bu_error','bu_error_weighted']
 
 if(trace==1):
     trace_name=dzdx
@@ -208,7 +208,7 @@ for ts in ts_plot:
 
         #Calculate the prediction to Bu
         Bu_pred = (N2/f2)*alpha*alpha*np.power(N2*alpha*alpha/(3.*cor*bigD),-2./3.)
-        Bu_error= Bu-Bu_pred
+        Bu_error= np.abs(Bu-Bu_pred)
 
 
         #Normalize by zeta_max/2
@@ -218,6 +218,10 @@ for ts in ts_plot:
 
         #Other quantities of interest
         WKB_residual = np.absolute((sig-Zprime/2.-0.5*Bu - DS)/(zeta_max/2.))
+        WKBness      = (1.-np.minimum(WKB_residual,WKB_residual*0.+1.))
+
+        print WKB_residual.shape,WKBness.shape
+
         slope = (sig-Zprime/2.)/(zeta_max/2.)
 #        slope = np.real(np.sqrt(   (f2/N2)*(sig*sig-np.power(Zprime/2.,2)) ))
 
@@ -250,7 +254,7 @@ for ts in ts_plot:
                 if(field==1):
                     im = ax.imshow(sig_norm,cmap=colormap,aspect=aspect,vmin=-1.,vmax=1.)
                 elif(field==2):
-                    im = ax.imshow(Bu_norm,cmap=colormap,aspect=aspect,vmin=0.,vmax=1.)
+                    im = ax.imshow(Bu,cmap=colormap,aspect=aspect,vmin=0.,vmax=1.)
                 elif(field==3):                    
                     im = ax.imshow(DS_norm,cmap=colormap,aspect=aspect,vmin=-1.,vmax=1.)
                 elif(field==4):                    
@@ -267,7 +271,12 @@ for ts in ts_plot:
                 elif(field==9):
                     im = ax.imshow(Bu_pred,cmap=colormap,aspect=aspect,vmin=0.,vmax=1.0)
                 elif(field==10):
-                    im = ax.imshow(Bu_error,cmap=colormap,aspect=aspect,vmin=-1.,vmax=1.0)
+                    im = ax.imshow(Bu_error,cmap=colormap,aspect=aspect,vmin=0.,vmax=1.0)
+                elif(field==11):
+                    im = ax.imshow(np.abs(Bu_error*WKBness),cmap=colormap,aspect=aspect,vmin=0.,vmax=1.0)
+
+
+
 
                 if(wke_contours==1):
                     ax.contour(wke,levels=wke_levels,colors='k')#, levels, colors='k', origin='upper', extent=extent)                                              

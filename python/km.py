@@ -81,7 +81,9 @@ kmza_m = -kmza*dz
 xp0 = kmx0*dx/1000-xyrange_km
 xp1 = kmx1*dx/1000-xyrange_km
 
-gamma=0.5*grad_zeta*np.cos(k_over_sqrt2*(xp1-xp0)*1000)
+
+gamma=0.5*grad_zeta*np.cos(k_over_sqrt2*((xp1+xp0)/2.)*1000)
+beta =0.5*grad_zeta
 ave_depth = (kmz0+kmz1)*dz/2
 
 print "x' = [",xp0,",",xp1,"] km"
@@ -90,7 +92,7 @@ print ave_depth
 
 kmt = np.zeros((len(ts_plot),3))       #Time series of t,k,m at point kmx,kmz
 kmtp = np.zeros((len(ts_plot),3,len(kmxa)))       #Time series of t,k,m at point kmx,kmz
-pred = np.zeros((len(ts_plot),3))             #Prediction for k: k = 0.5 (max_grad_zeta) t
+pred = np.zeros((len(ts_plot),5))             #Prediction for k: k = 0.5 (max_grad_zeta) t
 
 
 
@@ -147,6 +149,9 @@ for its,ts in enumerate(ts_plot):
         pred[its,0] = ts*timestep  #Time in inertial periods
         pred[its,1]   = gamma*(2*np.pi/cor)*ts*timestep #0.5*grad_zeta*np.cos(k_over_sqrt2*(xp1-xp0)*1000)*(2*np.pi/cor)*ts*timestep
         pred[its,2]   = np.power((N2*gamma*gamma)/(3*cor*ave_depth),(1./3.))*(2*np.pi/cor)*ts*timestep
+        pred[its,3]   =  beta*(2*np.pi/cor)*ts*timestep #0.5*grad_zeta*np.cos(k_over_sqrt2*(xp1-xp0)*1000)*(2*np.pi/cor)*ts*timestep
+        pred[its,4]   = np.power((N2*beta*beta)/(3*cor*ave_depth),(1./3.))*(2*np.pi/cor)*ts*timestep
+
 
         for point in range(len(kmxa)):
             kmtp[its,0,point] = ts*timestep  #Time in inertial periods
@@ -163,15 +168,18 @@ for its,ts in enumerate(ts_plot):
 
 
 if(plot_k==1):
-    plt.plot(kmt[:,0],kmt[:,1],color='k',label='Average k',linewidth=3.)
-    plt.plot(kmt[:,0],pred[:,1],'-r',label=r"$k = 0.5 |\zeta_{x'}| t$",linewidth=3.)
+    plt.plot(kmt[:,0],kmt[:,1],color='k',label=r'$\bar{k}$',linewidth=2.)
+    plt.plot(kmt[:,0],pred[:,3],'-b',label=r"$k = 0.5 \beta t$",linewidth=2.)
+    plt.plot(kmt[:,0],pred[:,1],'-r',label=r"$k = - 0.5 \zeta_{x'}(\bar{x'}) t$",linewidth=2.)
 
     for point in range(len(kmxa)):
         plt.plot(kmtp[:,0,point],kmtp[:,1,point],color='gray',linewidth=0.3,label='_nolegend_')
 
 elif(plot_m==1):
-    plt.plot(kmt[:,0],kmt[:,2],color='k',label='Average m',linewidth=3.)
-    plt.plot(kmt[:,0],pred[:,2],'-r',label=r"$m = (N^2 |\zeta_{x'}|^2 / 12 f D)^{1/3} t$",linewidth=3.)
+    plt.plot(kmt[:,0],kmt[:,2],color='k',label=r'$\bar{m}$',linewidth=3.)
+    plt.plot(kmt[:,0],pred[:,4],'-b',label=r"$m = (N^2 \beta^2 / 12 f |\bar{z}|)^{1/3} t$",linewidth=3.)
+    plt.plot(kmt[:,0],pred[:,2],'-r',label=r"$m = (N^2 \zeta_{x'}(\bar{x'})^2 / 12 f |\bar{z}|)^{1/3} t$",linewidth=3.)
+
 
     for point in range(len(kmxa)):
         plt.plot(kmtp[:,0,point],kmtp[:,2,point],color='gray',linewidth=0.3,label='_nolegend_')

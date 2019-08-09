@@ -119,8 +119,13 @@ PROGRAM main
 
   !Initialize fields
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
-
   call fft_r2c(psir,psik,n3h1)
+
+  if(new_vort_input==1) then   !Read the r-space vorticity file with dimensions n1=nx_leif x n2=ny_leif. Requires matching dimensions  
+     call input_vort_r2c
+  end if
+  if(leif_field==1) call init_leif(psik)         !Use Leif's realistic NISKINE flow field
+
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
   call sumB(BRk,BIk)
@@ -152,7 +157,7 @@ PROGRAM main
  if(out_etot ==1) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields                                            
-    if(out_slice ==1)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
+    if(out_slice ==1)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
  end do
 
  do id_field=1,nfields2                                            
@@ -436,7 +441,7 @@ end if
 if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields
-    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
+    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
  end do
 ! do id_field=1,nfields2
 !    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)

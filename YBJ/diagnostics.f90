@@ -1191,9 +1191,10 @@ end subroutine hspec
   !!!!! SLICES !!!!!
   !****************!
 
-  subroutine slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
+  subroutine slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
 
     double complex, dimension(iktx,ikty,n3h0) :: ARk,AIk
+    double precision,    dimension(n1d,n2d,n3h0) :: ARr, AIr
 
     double complex, dimension(iktx,ikty,n3h0) :: BRk,BIk
     double precision,    dimension(n1d,n2d,n3h0) :: BRr, BIr
@@ -1275,16 +1276,18 @@ end subroutine hspec
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
 
-       !d/dt (LAR)
+
+       !AR
     elseif(id_field==3) then
-       call fft_c2r(dBRk,dBRr,n3h0)
-       field = Uw_scale*dBRr*U_scale/L_scale
+       Rmemk = ARk       
+       call fft_c2r(ARk,ARr,n3h0)
+       field = (Uw_scale*L_scale*L_scale/Bu)*ARr
 
-       !d/dt (LAI)
+       !AI
     elseif(id_field==4) then
-       call fft_c2r(dBIk,dBIr,n3h0)
-       field = Uw_scale*dBIr*U_scale/L_scale
-
+       Imemk = AIk
+       call fft_c2r(AIk,AIr,n3h0)
+       field = (Uw_scale*L_scale*L_scale/Bu)*AIr
 
        !LAR_x
     elseif(id_field==5) then
@@ -1375,7 +1378,6 @@ end subroutine hspec
        end if
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr/L_scale
-
 
     end if
 
@@ -1508,6 +1510,10 @@ end subroutine hspec
              BRk=Rmemk
           elseif(id_field==2)    then 
              BIk=Imemk
+          elseif(id_field==3)    then 
+             ARk=Rmemk
+          elseif(id_field==4)    then 
+             AIk=Imemk
           elseif(id_field==5)    then
              BRk=Rmemk
           elseif(id_field==6)    then
@@ -3598,6 +3604,127 @@ SUBROUTINE cond_wz(wak)
       end if
 
     end subroutine tropopause_meanders
+
+
+
+  !Read the r-space vorticity field with dimensions nx_leif=n1 x ny_leif=ny. Optional transfer onto vortr for testing
+  !The subroutine Fourier transforms that input into k-space and saves the field, leif_zetak.dat, for future usage not
+  !requiring nx_leif=n1 .and. ny_leif=ny
+  subroutine input_vort_r2c
+
+    integer :: unit
+    integer :: level
+    character(len = 64) :: fname                !future file name                                                                                                   
+    character(len = 64) :: fname1                !future file name                                                                                                   
+    character(len = 64) :: fname2                !future file name                                                                                                   
+
+    integer :: unit_leif = 1234321
+
+    integer :: ix,iy
+
+    !Input vorticity
+    double precision, dimension(nx_leif+2,ny_leif,1) :: init_vortr
+    double complex, dimension(iktx_leif,ikty_leif,1) :: init_vortk
+    equivalence(init_vortr,init_vortk)
+
+    open (unit=unit_leif,file='leif_vorticity.dat',action="read",status="old")
+
+    init_vortr=0.D0
+    do ix=1,nx_leif
+       do iy=1,ny_leif
+          read(unit=unit_leif,fmt=335) init_vortr(ix,iy,1)         
+       end do
+    end do
+335 format(F20.15)
+    close (unit=unit_leif)      
+
+    !The input vorticity field is in s^{-1}. We nondimensionalize zeta'= (L_scale/U_scale)*zeta
+    init_vortr=init_vortr*L_scale/U_scale
+
+    !Correct Fourier transform requires n1=nx_leif and n2=ny_leif
+    if(n1==nx_leif .and. n2==ny_leif) then
+       call fft_r2c(init_vortr,init_vortk,1)
+
+       open (unit=unit_leif+1,file='leif_zetak.dat',action="write",status="replace")
+
+       do iky=1,ikty_leif
+          write(unit=unit_leif+1,fmt=336) (init_vortk(ikx,iky,1), ikx=1,iktx_leif)
+       enddo
+336    format(1x,E24.17,1x,E24.17)
+       
+       close (unit=unit_leif+1)  
+
+    else
+       write(*,*) "FATAL: Correct Fourier transform of IC requires n1=nx_leif and n2=ny_leif  "
+    end if
+
+
+
+  end subroutine input_vort_r2c
+
+
+  subroutine init_leif(psik)
+
+    double complex, dimension(iktx,ikty,n3h1) :: psik
+
+    !k-space vorticity with the dimensions input by leif.
+    double complex, dimension(iktx_leif,ikty_leif,1) :: vortk_temp
+
+    !Actual vorticity field with whatever dimensions (need to be larger than Leif's)
+    double complex, dimension(iktx,ikty,1) :: vortk
+    
+    integer :: unit
+    integer, parameter :: unit_leif=123421
+    
+    open (unit=unit_leif,file='leif_zetak.dat',action="read",status="old")
+
+    !Read from file into temp variable
+    do iky=1,ikty_leif
+       do ikx=1,iktx_leif
+          read(unit=unit_leif,fmt=335) vortk_temp(ikx,iky,1)
+       end do
+    end do
+335 format(1x,E24.17,1x,E24.17)
+    close (unit=unit_leif)      
+    
+
+    !Translate temp vorticity field into proper dimensions
+    vortk = (0.D0,0.D0)   !Initialize to 0 everywhere
+
+    !Positive ky's first
+    do ikx=1,iktx_leif
+       do iky=1,ikty_leif/2  !From ky = 0 to ny_leif/2-1 = ikty_leif/2-1
+          vortk(ikx,iky,1) = vortk_temp(ikx,iky,1)
+       end do
+    end do
+
+    !Negative ky
+    do ikx=1,iktx_leif
+       do iky=1,ikty_leif/2-1   !From ky = -1 (last element at ikty or ikty_leif) down to the lowest negative ky = - ny_leif/2+1
+          vortk(ikx,ikty-iky+1,1) = vortk_temp(ikx,ikty_leif-iky+1,1)
+       end do
+    end do
+
+    !Compute psik and Broadcast on all vertical levels
+    do iz=2,izh1                                                                                                                                                
+       do ikx=1,iktx
+          kx = kxa(ikx)
+          do iky=1,ikty
+             ky = kya(iky)
+             kh2= kx*kx+ky*ky
+             if(L(ikx,iky).eq.1 .and. kh2>0) then                                                                                                                       
+                psik(ikx,iky,iz)=-vortk(ikx,iky,1)/kh2
+             else
+                psik(ikx,iky,izh1) = (0.D0,0.D0)
+             end if
+          end do                                                                                                                                                
+       end do                                                                                                                                                                 
+    end do
+
+
+
+  end subroutine init_leif
+  
 
 
 

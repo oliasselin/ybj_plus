@@ -16,7 +16,7 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'N2_1e5_dla'
+run = 'N2_2e5_a'
 
 plot_slice=0
 colormap='RdBu_r' 
@@ -55,7 +55,7 @@ lh_max=30
 wke_threshold = 1e-5
 
 #Time range (time should be in fractions of inertial period. Fraction = timestep var above)                                                                                                                   
-ts_min=0
+ts_min=130
 ts_max=201
 
 
