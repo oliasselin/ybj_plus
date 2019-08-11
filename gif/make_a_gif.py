@@ -3,7 +3,7 @@ import subprocess
 import sys
 import numpy as np
 
-def make_a_gif(run,sli,field,fixed_cbrange='',cbmin=-0.005,cbmax=0.0005,nmax=1000,hres=128,vres=128,U_scale=0.1/(2*np.pi),L_scale=1600000/(2*np.pi),timestep=0.01,time_unit='days',scratch_location='/scratch/05518/oasselin/',home_location='/home1/05518/oasselin/',cor=1.24e-4):
+def make_a_gif(folder,run,sli,field,fixed_cbrange='',cbmin=-0.005,cbmax=0.0005,nmax=1000,hres=128,vres=128,U_scale=0.1/(2*np.pi),L_scale=1600000/(2*np.pi),timestep=0.01,time_unit='days',scratch_location='/scratch/05518/oasselin/',home_location='/home1/05518/oasselin/',cor=1.24e-4):
 
     if field=='1':
         field_name = 'WKE'
@@ -28,16 +28,16 @@ def make_a_gif(run,sli,field,fixed_cbrange='',cbmin=-0.005,cbmax=0.0005,nmax=100
     for k in range(0,nmax):
     
         if k<10: 
-            path_file_xy  = scratch_location+run+'/output/slice'+sli+field+'  '+str(k)+'.dat'
+            path_file_xy  = scratch_location+folder+run+'/output/slice'+sli+field+'  '+str(k)+'.dat'
         if (k<100 and k>9):
-            path_file_xy  = scratch_location+run+'/output/slice'+sli+field+' '+str(k)+'.dat'
+            path_file_xy  = scratch_location+folder+run+'/output/slice'+sli+field+' '+str(k)+'.dat'
         if k>=100:
-            path_file_xy  = scratch_location+run+'/output/slice'+sli+field+str(k)+'.dat'
+            path_file_xy  = scratch_location+folder+run+'/output/slice'+sli+field+str(k)+'.dat'
 
         if os.path.isfile(path_file_xy): 
 
             if k==0:
-                png_dir=scratch_location+run+'/temp/'
+                png_dir=scratch_location+folder+run+'/temp/'
                 if not os.path.exists(png_dir):
                     os.makedirs(png_dir)
 
@@ -79,7 +79,7 @@ def make_a_gif(run,sli,field,fixed_cbrange='',cbmin=-0.005,cbmax=0.0005,nmax=100
             p = subprocess.Popen(gnuplot_command, shell = True)
             os.waitpid(p.pid, 0)
 
-    gif_dir=home_location+'gif/'+run
+    gif_dir=home_location+folder+'/gif/'+run
 
     if not os.path.exists(gif_dir):
         os.makedirs(gif_dir)

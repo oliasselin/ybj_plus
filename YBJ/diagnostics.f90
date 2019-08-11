@@ -1230,7 +1230,11 @@ end subroutine hspec
     !For z-slices, pick xy section!
     do ix=1,n1
 !       yval(ix)=n2/4
-       yval(ix)=ix
+       if(leif_field==1) then
+          yval(ix)=n2-(ix-1)   !transect x = -y
+       else
+          yval(ix)=ix             !transect x = +y
+       end if
     end do
 
     !LAR
@@ -1558,11 +1562,17 @@ end subroutine hspec
 
     equivalence(zzk,zzr)
 
-    !For z-slices, pick xy section!                                                                                                                                             
+
+    !For z-slices, pick xy section!                                                                                                                                           
     do ix=1,n1
-!       yval(ix)=n2/4                                                                                                                                                            
-       yval(ix)=ix
+!       yval(ix)=n2/4                                                                                                                                                             
+       if(leif_field==1) then
+          yval(ix)=n2-(ix-1)   !transect x = -y                                                                                                                            
+       else
+          yval(ix)=ix             !transect x = +y                                                                                                                        
+       end if
     end do
+
 
 
     if(id_field==1)   then
@@ -3706,14 +3716,14 @@ SUBROUTINE cond_wz(wak)
     end do
 
     !Compute psik and Broadcast on all vertical levels
-    do iz=2,izh1                                                                                                                                                
+    do izh1=1,n3h1                                                                                                                                                
        do ikx=1,iktx
           kx = kxa(ikx)
           do iky=1,ikty
              ky = kya(iky)
              kh2= kx*kx+ky*ky
              if(L(ikx,iky).eq.1 .and. kh2>0) then                                                                                                                       
-                psik(ikx,iky,iz)=-vortk(ikx,iky,1)/kh2
+                psik(ikx,iky,izh1)=-vortk(ikx,iky,1)/kh2
              else
                 psik(ikx,iky,izh1) = (0.D0,0.D0)
              end if

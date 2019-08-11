@@ -2,8 +2,8 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=256, n2=256, n3=32 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
-    integer, parameter :: npe=8
+    integer, parameter :: n1=256, n2=256, n3=256 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
+    integer, parameter :: npe=64
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
     integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4
@@ -97,7 +97,7 @@ MODULE parameters
     !----------!
 
     integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5
-    integer, parameter :: stratification = constant_N!double_gaussian_ml_min
+    integer, parameter :: stratification = double_gaussian!double_gaussian_ml_min !constant_N!double_gaussian_ml_min
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -274,7 +274,7 @@ MODULE parameters
 
     integer, parameter :: bot_height = 5*n3/6!1
     integer, parameter :: mid_height = 9*n3/10!n3/2
-    integer, parameter :: top_height = 9*n3/20!n3
+    integer, parameter :: top_height = n3!9*n3/20!n3
 
     integer, parameter :: out_slab = 0, freq_slab = 1
     integer, parameter :: slab_mype   = npe/2-1 

@@ -23,8 +23,8 @@ hres=256
 vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/double_gaussian/'#'leif/'
-run = 'test'#'N2_1e5'#'attempt3_ro50'#'ml_100'
+folder = 'leif/'#'leif/'
+run = 'N2_1e5_a'#'attempt3_ro50'#'ml_100'
 
 show=1
 plot_slice=1
