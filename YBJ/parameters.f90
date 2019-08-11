@@ -2,7 +2,7 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=256, n2=256, n3=32
+    integer, parameter :: n1=256, n2=256, n3=32 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
     integer, parameter :: npe=8
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
@@ -19,7 +19,7 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = 60000                             !Horizontal domain size (in m)
+    double precision, parameter :: dom_x = 120000                             !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
