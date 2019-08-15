@@ -3,10 +3,10 @@ from make_a_gif import make_a_gif
 scratch_location='/oasis/scratch/comet/oasselin/temp_project/'
 home_location='/home/oasselin/'
 folder = 'leif/'
-run_list =['real_gaussian']# ['N2_1e5_a']
+run_list =['real_N2_1e5','real_dg','real_dg_ml']# ['N2_1e5_a']
 field_list = ['1']
 #field_list = ['7']
-sli_list = ['v']
+sli_list = ['htop']
 #sli_list = ['htop','hmid','hbot']
 ##sli_list = ['htop','hmid','hbot']
 

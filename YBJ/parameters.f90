@@ -110,10 +110,10 @@ MODULE parameters
     double precision, parameter :: N2_scale = 0.75D0   !N^2 ~ exp(N2_scale*(z-z0) 
 
     !Stratification = constant_N!
-    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
+!    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
 
     !Stratification = double_gaussian!
-!    double precision, parameter ::  N0        = 0.009023730234586 
+    double precision, parameter ::  N0        = 0.009023730234586 
     double precision, parameter ::  N02_dg    = 0.011957184903585
     double precision, parameter ::  N12_dg    = 0.987728763634230
     double precision, parameter ::  N22_dg    = 0.114406828801100

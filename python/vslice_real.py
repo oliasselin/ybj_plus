@@ -8,10 +8,14 @@ from finds import find_resolution
 from finds import find_scales
 from finds import find_timestep
 
+make_gif=0
+show=0
+plot_slice=1
+
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'
-run = 'real_ml'#'N2_1e5'#'attempt3_ro50'#'ml_100'
+run = 'real_dg_ml'#'N2_1e5'#'attempt3_ro50'#'ml_100'
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)
@@ -20,16 +24,16 @@ Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 depth = 800  #m
 #Range in x'
-xpl =0#-350000#-35000#5000#
+xpl =-30000#-350000#-35000#5000#
 xpr =30000#20000#
 ts_list=[100]#np.arange(0,201,1)
 
 
-field='dudz'#'dudz'#'dudz'
+field='wke'#'dudz'#'dudz'
 
 if(field=='dudz'):
-    vmin = -0.0005
-    vmax = 0.0005
+    vmin = -0.0008
+    vmax = 0.0008
 else:
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008
@@ -39,9 +43,6 @@ timestep=0.1 #0.1 #Fraction of an inertial period between slices
 hres=n1
 vres=n3
 
-make_gif=1
-show=0
-plot_slice=1
 colormap='RdBu_r' 
 ncases=1
 nts=1
@@ -57,7 +58,7 @@ gp_del= x1-x0
 gp_depth = int(vres*depth/Dz)  
 aspect=0.5*gp_del/gp_depth
 
-nxticks=3
+nxticks=4
 txlabels=np.arange(xpl/1000,(xpr)/1000+1,(xpr-xpl)/(nxticks*1000))
 ticksx_loc=np.arange(0,gp_del,(gp_del-1.)/nxticks)
 
@@ -107,6 +108,7 @@ for ts in ts_list:
         u =  g_lar[0:gp_depth,x0:x1]*np.cos(time*2.*np.pi) + g_lai[0:gp_depth,x0:x1]*np.sin(time*2.*np.pi)
         v = -g_lar[0:gp_depth,x0:x1]*np.sin(time*2.*np.pi) + g_lai[0:gp_depth,x0:x1]*np.cos(time*2.*np.pi)
         wke = 0.5*(u*u+v*v)
+        
 
         if(field=='dudz'):
             for iz in range(0,len(u[:,0])-1):
@@ -151,7 +153,7 @@ for ts in ts_list:
 #            cbar = ax.cax.colorbar(im)
 #            cbar = grid.cbar_axes[0].colorbar(im)
         
-            ax.text(-gp_depth/8, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+            ax.text(-gp_del/10, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
             ax.text(gp_del/2, gp_depth+gp_depth/7,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
             if(show==1):

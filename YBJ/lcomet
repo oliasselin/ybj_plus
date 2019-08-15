@@ -4,8 +4,8 @@ number_of_nodes=4
 number_of_tasks=64
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/real_gaussian_v/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/real_gaussian_v/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/real_dg/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/leif/real_dg/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir

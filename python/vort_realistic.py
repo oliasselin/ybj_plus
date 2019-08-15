@@ -10,16 +10,17 @@ vres=256
 
 Dx = 120  #km (size of domain in the horizontal) 
 
+ts='100'
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'read_test'
+run = 'real_N2_1e5'#'real_N2_1e5'#'real_dg_ml'
 
 plot_slice=1
-field_to_plot='psi' #vort, u or v
+field_to_plot='wke' #vort, u or v
 show_plot=0
 show_xyp=0
-show_quivers=0
+show_quivers=1
 colormap='RdBu_r' 
 ncases=1
 nts=1
@@ -60,8 +61,18 @@ f_p = np.loadtxt(path_p)
 g_p = np.flipud(np.reshape(f_p,(hres,hres))) 
 
 
-#X = np.linspace(0,hres)
-#Y = np.linspace(0,hres)
+if(field_to_plot=='wke'):
+    path_lar = scratch_location+folder+run+'/output/slicehtop1'+ts+'.dat'
+    f_lar = np.loadtxt(path_lar)
+    g_lar = np.flipud(np.reshape(f_lar,(hres,hres)))
+
+    path_lai = scratch_location+folder+run+'/output/slicehtop2'+ts+'.dat'
+    f_lai = np.loadtxt(path_lai)
+    g_lai = np.flipud(np.reshape(f_lai,(hres,hres)))
+
+    wke = 0.5*(g_lar*g_lar + g_lai*g_lai)
+
+
 
 X, Y = np.meshgrid(np.arange(0,hres), np.arange(0,hres))
 
@@ -111,6 +122,9 @@ if(plot_slice==1):
         elif(field_to_plot=='psi'): 
             ax.set_title(r'Surface $\psi$ (m$^2$/s)')
             im = ax.imshow(g_p,cmap=colormap)
+        elif(field_to_plot=='wke'): 
+            ax.set_title(r'Surface WKE (m/s)$^2$')
+            im = ax.imshow(wke,cmap=colormap)
 
         if(show_quivers==1):
             Q = ax.quiver(X[::16,::16],Y[::16,::16],g_u[::16,::16],g_v[::16,::16],color='k',pivot='mid', units='width')
@@ -122,14 +136,13 @@ if(plot_slice==1):
         ax.text(hres/2, hres+hres/10,r"$x$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
         if(show_xyp==1):
-            color='magenta'
+            color='green'
 
-            ax.arrow(hres/2,hres/2,-hres/10,hres/10,width=0.5,head_width=5.,color=color)
             ax.arrow(hres/2,hres/2,hres/10,hres/10,width=0.5,head_width=5.,color=color)
+            ax.arrow(hres/2,hres/2,hres/10,-hres/10,width=0.5,head_width=5.,color=color)
 
-            ax.text(hres/2-hres/10,hres/2+hres/50,r"$x'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
-            ax.text(hres/2+hres/10,hres/2+hres/50,r"$y'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
-            
+            ax.text(hres/2+hres/25,hres/2+hres/8,r"$x'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
+            ax.text(hres/2+hres/25,hres/2-hres/10,r"$y'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)            
 
         cbar = ax.cax.colorbar(im)
         cbar = grid.cbar_axes[0].colorbar(im)
