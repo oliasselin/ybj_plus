@@ -15,12 +15,14 @@ MODULE files
 !  integer, parameter :: unit_estra  =52
   integer, parameter :: unit_energyr=53
   integer, parameter :: unit_we=544
+  integer, parameter :: unit_ce=5441234
   integer, parameter :: unit_conv=545
 
 !  integer, parameter :: unit_hbot   =61
 !  integer, parameter :: unit_hmid   =62
 !  integer, parameter :: unit_htop   =63
   integer, parameter :: unit_ez     =64
+  integer, parameter :: unit_wz     =65
 
   integer, parameter :: unit_rco    =67
   integer, parameter :: unit_bs     =68

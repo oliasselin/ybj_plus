@@ -70,5 +70,5 @@ COMPILE
 chmod 755 COMPILE_STEP
 ./COMPILE_STEP
 ##chmod 755 EXEC_STEP                                                                                                                                       
-sbatch EXEC_STEP
+#sbatch EXEC_STEP
 ##./EXEC_STEP                                                                                                                                               

@@ -640,7 +640,208 @@ end subroutine hspec
 
 
 
-     subroutine wave_energy(BRk,BIk,CRk,CIk)
+
+
+
+
+     subroutine wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
+       
+       !Computes the volume integrated waves energy: WKE = int( 0.5* |LA|^2 dV ) = Uw_scale^2 int( 0.5* |LA|^2 dV ) in nondim form.
+       !Computes the volume integrated waves potential energy: WPE = int( 0.25* (f/N)^2 |grad(Az)|^2 dV ). I defined a field C=Az to simplifiy.
+       !Nondim: WPE = int( 0.25* Uw_scalle^2/Bu 1/N'^2(z) |grad(Az)|^2 dV )   
+       !Then, WPE = int( 0.25 (f/N)^2 sum_k kh^2 [ |CRk|^2 + |CIk|^2 ] dz
+
+       !In the real space, WKE = int( 0.5* |B|^2 dV ) = int( 0.5*( Br^2 + Bi^2 ) dV ) which is analoguous to KE ~ int ( 0.5* (u^2 + v^2) dV)
+       !The integral in real space can be converted to a sum on horizontal wavenumbers at each vertical level:
+       ! 
+       ! KE(z) = sum over all k's such that L=1 of |uk|^2 minus half the kh=0 mode.
+
+       double complex, dimension(iktx,ikty,n3h0) :: ARk,AIk
+       double complex, dimension(iktx,ikty,n3h0) :: BRk,BIk
+       double complex, dimension(iktx,ikty,n3h0) :: CRk,CIk
+
+       real, dimension(n3h0) :: k_p
+       real, dimension(n3h0) :: p_p
+       real, dimension(n3h0) :: c_p      !Correction to K: 1/16 nabla A
+       
+       real :: ktot_p,ktot
+       real :: ptot_p,ptot
+       real :: ctot_p,ctot
+
+       real :: k0tot_p,k0tot  !Kinetic energy in the kh=0 mode
+
+       ktot_p = 0.
+       ptot_p = 0.
+       ctot_p = 0.
+
+       k0tot_p = 0.
+
+       k_p = 0.
+       p_p = 0.
+       c_p = 0.
+
+       do izh0=1,n3h0
+          izh2=izh0+2
+
+          do ikx=1,iktx
+             kx=kxa(ikx)
+             do iky=1,ikty
+                ky=kya(iky)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+                   k_p(izh0) = k_p(izh0) + real( BRk(ikx,iky,izh0)*CONJG( BRk(ikx,iky,izh0) ) + BIk(ikx,iky,izh0)*CONJG( BIk(ikx,iky,izh0) ) )
+                   p_p(izh0) = p_p(izh0) + (0.5/(r_2(izh2)*Bu))*kh2*real( CRk(ikx,iky,izh0)*CONJG( CRk(ikx,iky,izh0) ) + CIk(ikx,iky,izh0)*CONJG( CIk(ikx,iky,izh0) ) )
+                   c_p(izh0) = c_p(izh0) + (1./8.)*(1./(Bu*Bu))*kh2*kh2*real( ARk(ikx,iky,izh0)*CONJG( ARk(ikx,iky,izh0) ) + AIk(ikx,iky,izh0)*CONJG( AIk(ikx,iky,izh0) ) )
+                end if
+
+
+             enddo
+          enddo
+
+          !With dealiasing, sum_k 1/2 |u(kx,ky,z)|^2 = sum_k L |u|^2 - 0.5 |u(0,0,z)|^2     
+          k_p(izh0) = k_p(izh0) - 0.5*real( BRk(1,1,izh0)*CONJG( BRk(1,1,izh0) ) + BIk(1,1,izh0)*CONJG( BIk(1,1,izh0) ) )
+
+          !Sum local to the processor
+          ktot_p = ktot_p + k_p(izh0)
+          ptot_p = ptot_p + p_p(izh0)
+          ctot_p = ctot_p + c_p(izh0)
+
+          k0tot_p = k0tot_p + 0.5*real( BRk(1,1,izh0)*CONJG( BRk(1,1,izh0) ) + BIk(1,1,izh0)*CONJG( BIk(1,1,izh0) ) )
+
+       end do
+
+       !--- Vertical slices ---!
+
+       !Get the dimensional values of WKE, WPE, and inverse wave Richardson number (this last is actually nondimensional...)
+       k_p = Uw_scale*Uw_scale*k_p
+       p_p = Uw_scale*Uw_scale*p_p
+       c_p = Uw_scale*Uw_scale*c_p
+
+       !If desired, we can plot these quantities as a function of z
+       if(out_wz ==1   .and. ( mod(iter,freq_wz)==0 .or. iter == 0)) call plot_wz(k_p,p_p,c_p)
+
+
+       !--- Volume integrals ---!
+
+       !Sum results from each processor                                                                                                                                                 
+       call mpi_reduce(ktot_p,ktot,1,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierror)
+       call mpi_reduce(ptot_p,ptot,1,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierror)
+       call mpi_reduce(ctot_p,ctot,1,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierror)
+
+       call mpi_reduce(k0tot_p,k0tot,1,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierror)
+
+       ktot = Uw_scale*Uw_scale*ktot/n3
+       ptot = Uw_scale*Uw_scale*ptot/n3
+       ctot = Uw_scale*Uw_scale*ctot/n3
+
+       k0tot = Uw_scale*Uw_scale*k0tot/n3
+
+       if(mype==0) write(unit_we,fmt=*) time*(L_scale/U_scale)/(3600*24),ktot,k0tot
+       if(mype==0) write(unit_ce,fmt=*) time*(L_scale/U_scale)/(3600*24),ptot,ctot
+
+     end subroutine wave_energy
+
+
+
+
+
+
+
+SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name of the file and the mpi tags)
+
+   real, dimension(n3h0) :: ks,ku,ps         !Staggered (s) and unstaggered (u) energy         
+   real, dimension(n3h0) :: ks_r,ku_r,ps_r   !Copies of eu and es to keep es and eu valid for energy subroutine.
+
+   real,dimension(n3)   :: kuz,ksz,psz             !energy(z) for entire domain
+   
+   integer :: processor,izp,nrec
+   
+   ksz=0.
+   kuz=0.
+   psz=0.
+
+    !Send err_p from other processors to mype = 0                                                                                                                    
+    if(mype>0) call mpi_send(ks,n3h0,MPI_REAL,0,tag_kzs2,MPI_COMM_WORLD,ierror)
+    if(mype>0) call mpi_send(ku,n3h0,MPI_REAL,0,tag_kzu2,MPI_COMM_WORLD,ierror)
+    if(mype>0) call mpi_send(ps,n3h0,MPI_REAL,0,tag_pzs2,MPI_COMM_WORLD,ierror)
+
+    if(mype==0) then
+
+       !Copy mype==0 part onto err                  
+       do iz=1,n3h0
+             ksz(iz) = ks(iz)
+             kuz(iz) = ku(iz)
+             psz(iz) = ps(iz)
+       end do
+
+
+       !Receive other parts from other processors    
+       do nrec=1,npe-1
+
+          call mpi_recv(ks_r,n3h0,MPI_REAL,MPI_ANY_SOURCE,tag_kzs2,MPI_COMM_WORLD,status,ierror)
+
+          !Copy received share onto err                                                                                                                                       
+          processor=status(MPI_SOURCE)
+
+          !Add the awaiting half level
+          do iz=1,n3h0
+             izp=processor*n3h0+iz
+
+             ksz(izp) = ksz(izp) + ks_r(iz)
+
+          end do
+
+          !Kinetic unstag energy part
+          call mpi_recv(ku_r,n3h0,MPI_REAL,MPI_ANY_SOURCE,tag_kzu2,MPI_COMM_WORLD,status,ierror)
+
+          !Copy received share onto err                                                                                                                                        
+          processor=status(MPI_SOURCE)
+
+          !Add the awaiting half level
+          do iz=1,n3h0
+             izp=processor*n3h0+iz
+
+             kuz(izp) = kuz(izp) + ku_r(iz)
+
+          end do
+
+          
+          !Potential unstag energy part
+          call mpi_recv(ps_r,n3h0,MPI_REAL,MPI_ANY_SOURCE,tag_pzs2,MPI_COMM_WORLD,status,ierror)
+
+          !Copy received share onto err                                                                                                                                        
+          processor=status(MPI_SOURCE)
+
+          !Add the awaiting half level
+          do iz=1,n3h0
+             izp=processor*n3h0+iz
+
+             psz(izp) = psz(izp) + ps_r(iz)
+
+          end do
+
+       end do
+
+       !PLOT!
+     do iz=1,n3
+        write(unit_wz,fmt=*) zas(iz)*H_scale,ksz(iz),kuz(iz),psz(iz)      !iz,URMS, WRMS, BRMS
+     enddo
+     write(unit_wz,*) '           '
+     call flush(unit_wz)
+
+   end if
+
+
+ END SUBROUTINE plot_wz
+
+
+
+
+
+
+
+     subroutine wave_energy_original(BRk,BIk,CRk,CIk)
        
        !Computes the volume integrated waves kinetic energy: WKE = int( 0.5* |LA|^2 dV ) = Uw_scale^2 int( 0.5* |LA|^2 dV ) in nondim form.
        !Computes the volume integrated waves potential energy: WPE = int( 0.25* (f/N)^2 |grad(Az)|^2 dV ). I defined a field C=Az to simplifiy.
@@ -695,7 +896,7 @@ end subroutine hspec
 
        if(mype==0) write(unit_we,fmt=*) time,ktot,ptot
 
-     end subroutine wave_energy
+     end subroutine wave_energy_original
 
 
      subroutine we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
