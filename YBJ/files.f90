@@ -125,6 +125,7 @@ MODULE files
       !Energy
       if(mype==0) open (unit=unit_energy   ,file="energy.dat"   ,action="write",status="replace")
       if(mype==0) open (unit=unit_ez       ,file="ez.dat"       ,action="write",status="replace")
+      if(mype==0) open (unit=unit_wz       ,file="wz.dat"       ,action="write",status="replace")
       if(mype==0) open (unit=unit_energyr  ,file="erot.dat"   ,action="write",status="replace")
       if(mype==0) open (unit=unit_we       ,file="we.dat"   ,action="write",status="replace")
       if(mype==0) open (unit=unit_conv     ,file="conv.dat"  ,action="write",status="replace")

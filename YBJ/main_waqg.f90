@@ -169,6 +169,7 @@ PROGRAM main
  end do
 
  if(out_we   ==1) call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
+ if(out_wvave==1) call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1) call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
 
  !************************************************************************!
@@ -452,6 +453,7 @@ if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak
  end do
 
  if(out_we ==1   .and. mod(iter,freq_we   )==0)  call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
+ if(out_wvave==1 .and. mod(iter,freq_wvave)==0)  call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1 .and. mod(iter,freq_conv )==0)  call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
 
  !**************************************************************************!

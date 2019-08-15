@@ -7,8 +7,8 @@ import sys
 from finds import find_resolution
 from finds import find_scales
 
-field_to_plot='wke' #vort, u or v
-make_gif=0
+field_to_plot='wke_vave' #vort, u or v
+make_gif=1
 plot_slice=1
 show_plot=0
 show_xyp=0
@@ -19,14 +19,14 @@ show_contours=1
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'                                                                                                                                              
-run = 'real_dg'#'N2_1e5'#'attempt3_ro50'#'ml_100'                                                                                                                                   
+run = 'real_cstN'#'N2_1e5'#'attempt3_ro50'#'ml_100'                                                                                                                                   
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)
 Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 timestep=0.1   #Number of inertial periods between frames
-ts_list=[100]#np.arange(0,165,1)                                                                                                                                                     
+ts_list=np.arange(0,165,1)                                                                                                                                                     
 wke_min=0.
 wke_max=0.005
 
@@ -45,8 +45,8 @@ tlabels=np.arange(-int(Dx/2/1000),int(Dx/2/1000+1),int(Dx/(nticks)/1000))
 
 
 #Create folder for plots if it doesn't exists
-if not os.path.exists('plots/'+run+'/'):
-    os.makedirs('plots/'+run+'/')
+if not os.path.exists('plots/'+run+'/'+field_to_plot+'/'):
+    os.makedirs('plots/'+run+'/'+field_to_plot+'/')
 
 if(show_quivers==1):
 
@@ -92,6 +92,17 @@ for ts in ts_list:
         field = 0.5*(g_lar*g_lar + g_lai*g_lai)
 
 
+    if(field_to_plot=='wke_vave'):
+        spaces_ts = (3-len(str(ts)))*' '
+        path_wvave  = scratch_location+folder+run+'/output/WE_vave'+spaces_ts+str(ts)+'.dat'
+
+        field = np.flipud(np.reshape(np.loadtxt(path_wvave),(hres,hres)))
+
+        ave_energy = np.average(field)
+        field = field/ave_energy
+
+        if(leif_field!=1):
+            field = np.fliplr(field)
 
 
 
@@ -123,6 +134,10 @@ for ts in ts_list:
             if(field_to_plot=='wke'): 
                 ax.set_title(r'Surface WKE (m/s)$^2$, $t =$ '+time_title+' IP',fontsize=12)
                 im = ax.imshow(field,cmap=colormap,vmin=wke_min,vmax=wke_max)
+
+            if(field_to_plot=='wke_vave'):
+                ax.set_title(r'Vertically-averaged WKE anomaly, $t =$ '+time_title+' IP',fontsize=12)
+                im = ax.imshow(field,cmap=colormap,vmin=0.)
                 
             if(show_quivers==1):
                 Q = ax.quiver(X[::16,::16],Y[::16,::16],g_u[::16,::16],g_v[::16,::16],color='k',pivot='mid', units='width')

@@ -746,6 +746,71 @@ end subroutine hspec
 
 
 
+     !Calculate the vertically-averaged wave energy (only total wave energy for now)
+     subroutine we_vave(BRk,BIk,BRr,BIr)
+
+       double complex,   dimension(iktx,ikty,n3h0) :: BRk, BIk 
+       double precision, dimension(n1d,n2d,n3h0)   :: BRr, BIr
+
+       double complex,   dimension(iktx,ikty,n3h0) :: BRmem, BImem     !Save temporarily in Xmem to avoid fft back
+
+       real, dimension(n1,n2) :: WE       !Total wave energy density 0.5 |LA+|^2
+       real, dimension(n1,n2) :: WE_ave   !Total wave energy density 0.5 |LA+|^2, vertically averaged
+
+       character(len = 32) :: fname                !future file name                                                                                                           
+
+
+       !Save onto Bmem to avoid fft back
+       BRmem=BRk
+       BImem=BIk
+
+       call fft_c2r(BRk,BRr,n3h0)
+       call fft_c2r(BIk,BIr,n3h0)
+
+       !Initialize WE to zero
+       WE = 0.
+       WE_ave=0.
+
+       !Compute the total wave energy:
+       do izh0=1,n3h0
+          do ix=1,n1
+             do iy=1,n2
+                WE(ix,iy) = WE(ix,iy) + 0.5*(BRr(ix,iy,izh0)*BRr(ix,iy,izh0) + BIr(ix,iy,izh0)*BIr(ix,iy,izh0))
+             end do
+          end do
+       end do
+
+       !Recover the k-space versions of B
+       BRk=BRmem
+       BIk=BImem
+
+
+       !Perform the vertical integral:
+       call mpi_reduce(WE,WE_ave,n1*n2,MPI_REAL,   MPI_SUM,0,MPI_COMM_WORLD,ierror)
+
+
+       !Now in mype==0, print slice
+       if(mype==0) then
+
+          !Normalize and make dimensional
+          WE_ave = WE_ave*Uw_scale*Uw_scale/n3
+
+          write (fname, "(A7,I3,A4)") "WE_vave",count_vave,".dat"
+          open (unit=count_vave,file=fname,action="write",status="replace")
+          
+          do iy=1,n2
+             write(unit=count_vave,fmt=333) (WE_ave(ix,iy),ix=1,n1)
+             write(unit=count_vave,fmt=*) '           '
+          enddo
+333       format(1x,E12.5,1x)
+          
+          close (unit=count_vave)
+
+          count_vave=count_vave+1
+       end if
+
+
+     end subroutine we_vave
 
 
 SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name of the file and the mpi tags)
@@ -2194,10 +2259,13 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     write(unit_run,*) 
     write(unit_run,*) 
 
-    write(unit_run,*) "Period of total energy        output:",freq_etot*delt,  freq_etot           
-    write(unit_run,*) "Period of horziontal spectrum output:",freq_hspec*delt, freq_hspec           
-    write(unit_run,*) "Period of            slab     output:",freq_slab*delt,  freq_slab           
-    write(unit_run,*) "Period of            slices   output:",freq_slice*delt, freq_slice           
+    write(unit_run,*) "Period of total energy        output:",freq_etot*delt,  freq_etot
+    write(unit_run,*) "Period of total wave energy   output:",freq_we*delt,  freq_we
+    write(unit_run,*) "Period of flow z-profile      output:",freq_ez*delt,  freq_ez
+    write(unit_run,*) "Period of wave z-profile      output:",freq_wz*delt,  freq_wz
+    write(unit_run,*) "Period of horziontal spectrum output:",freq_hspec*delt, freq_hspec
+    write(unit_run,*) "Period of            slab     output:",freq_slab*delt,  freq_slab
+    write(unit_run,*) "Period of            slices   output:",freq_slice*delt, freq_slice
 
     
     

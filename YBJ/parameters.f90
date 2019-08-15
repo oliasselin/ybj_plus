@@ -97,7 +97,7 @@ MODULE parameters
     !----------!
 
     integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5
-    integer, parameter :: stratification = double_gaussian!double_gaussian_ml_min !constant_N!double_gaussian_ml_min
+    integer, parameter :: stratification = double_gaussian_ml_min !constant_N!double_gaussian_ml_min
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -230,6 +230,7 @@ MODULE parameters
 
     integer, parameter :: out_ez     = 0, freq_ez    =  freq_etot        !E(z) (freq has to be a multiple of that of etot) 
     integer, parameter :: out_wz     = 1, freq_wz    =  freq_we          !WE(z) (freq has to be a multiple of that of we)
+    integer, parameter :: out_wvave  = 1, freq_wvave =  freq_we          !WE(z) (freq has to be a multiple of that of we)
     integer, parameter :: out_rotz   = 0, freq_rotz  =  freq_etot 
     integer, parameter :: out_ensz   = 0, freq_ensz  =  3*n3!freq_ens
     integer, parameter :: out_pvz    = 0, freq_pvz   =  freq_pv
@@ -267,8 +268,9 @@ MODULE parameters
     integer, parameter :: max_slices = 999     
     integer, parameter :: nfields  = 8         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
     integer, parameter :: nfields2 = 7         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
-    integer :: count_slice(nfields) = 0       !number of slices
-    integer :: count_slice2(nfields2) = 0       !number of slices
+    integer :: count_slice(nfields) = 0        !number of slices
+    integer :: count_slice2(nfields2) = 0      !number of slices
+    integer :: count_vave=0                    !Initialize count for vertically-averaged energy 
     integer :: yval(n1)
     integer :: hlvl(nfields)=[0,0,0,0,0,0,0,0]                                   
     integer :: hlvl2(nfields2)=[2,2,1,1,2,1,1]                                   
