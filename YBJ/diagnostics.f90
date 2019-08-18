@@ -796,15 +796,15 @@ end subroutine hspec
           WE_ave = WE_ave*Uw_scale*Uw_scale/n3
 
           write (fname, "(A7,I3,A4)") "WE_vave",count_vave,".dat"
-          open (unit=count_vave,file=fname,action="write",status="replace")
+          open (unit=unit_wvave,file=fname,action="write",status="replace")
           
           do iy=1,n2
-             write(unit=count_vave,fmt=333) (WE_ave(ix,iy),ix=1,n1)
-             write(unit=count_vave,fmt=*) '           '
+             write(unit=unit_wvave,fmt=333) (WE_ave(ix,iy),ix=1,n1)
+             write(unit=unit_wvave,fmt=*) '           '
           enddo
 333       format(1x,E12.5,1x)
           
-          close (unit=count_vave)
+          close (unit=unit_wvave)
 
           count_vave=count_vave+1
        end if
@@ -1496,7 +1496,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     !For z-slices, pick xy section!
     do ix=1,n1
 !       yval(ix)=n2/4
-       if(leif_field==1) then
+       if(x_equal_minus_y_transect==1) then
           yval(ix)=n2-(ix-1)   !transect x = -y
        else
           yval(ix)=ix             !transect x = +y
@@ -1657,18 +1657,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehbot",id_field,count_slice(id_field),".dat"
        write (fname, "(A9,I1,I3,A4)") "slicehbot",id_field,count_slice(id_field),".dat"
-       open (unit=count_slice(id_field),file=fname,action="write",status="replace")
+       open (unit=unit_slices,file=fname,action="write",status="replace")
        
        iz=bot_height - mype*n3h0 + hlvl(id_field)
        
        
        do iy=1,n2
-          write(unit=count_slice(id_field),fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
-          write(unit=count_slice(id_field),fmt=*) '           '
+          write(unit=unit_slices,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices,fmt=*) '           '
        enddo
 333    format(1x,E12.5,1x)
        
-       close (unit=count_slice(id_field))
+       close (unit=unit_slices)
        
     end if
     
@@ -1678,18 +1678,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehmid",id_field,count_slice(id_field),".dat"
        write (fname, "(A9,I1,I3,A4)") "slicehmid",id_field,count_slice(id_field),".dat"
-       open (unit=count_slice(id_field),file=fname,action="write",status="replace")
+       open (unit=unit_slices,file=fname,action="write",status="replace")
        
        iz=mid_height - mype*n3h0 + hlvl(id_field)
        
        
        do iy=1,n2
-          write(unit=count_slice(id_field),fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
-          write(unit=count_slice(id_field),fmt=*) '           '
+          write(unit=unit_slices,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices,fmt=*) '           '
        enddo
        
        
-       close (unit=count_slice(id_field))
+       close (unit=unit_slices)
        
     end if
     
@@ -1698,18 +1698,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehtop",id_field,count_slice(id_field),".dat"
        write (fname, "(A9,I1,I3,A4)") "slicehtop",id_field,count_slice(id_field),".dat"
-       open (unit=count_slice(id_field),file=fname,action="write",status="replace")
+       open (unit=unit_slices,file=fname,action="write",status="replace")
        
        iz=top_height - mype*n3h0 + hlvl(id_field)
        
        
        do iy=1,n2
-          write(unit=count_slice(id_field),fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
-          write(unit=count_slice(id_field),fmt=*) '           '
+          write(unit=unit_slices,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices,fmt=*) '           '
        enddo
        
        
-       close (unit=count_slice(id_field))
+       close (unit=unit_slices)
        
     end if
 
@@ -1721,7 +1721,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        if(mype==0) then
 !          write (fname, "(A6,I1,I1,A4)") "slicev",id_field,count_slice(id_field),".dat"
           write (fname, "(A6,I1,I3,A4)") "slicev",id_field,count_slice(id_field),".dat"
-          open (unit=count_slice(id_field),file=fname,action="write",status="replace")
+          open (unit=unit_slicesv,file=fname,action="write",status="replace")
 
           !Copy ur slice on XY_slice (NOTICE IT'S NOT ON XY_slice_p)                                                                                                                                                                      
           do ix=1,n1
@@ -1750,10 +1750,10 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 !             end do
 !          end do
           do iz=1,n3
-             write(unit=count_slice(id_field),fmt=333) (XZ_slice(ix,iz),ix=1,n1)
-             write(unit=count_slice(id_field),fmt=*) '           '
+             write(unit=unit_slicesv,fmt=333) (XZ_slice(ix,iz),ix=1,n1)
+             write(unit=unit_slicesv,fmt=*) '           '
           enddo
-          close (unit=count_slice(id_field))
+          close (unit=unit_slicesv)
 
           
        end if
@@ -1832,7 +1832,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     !For z-slices, pick xy section!                                                                                                                                           
     do ix=1,n1
 !       yval(ix)=n2/4                                                                                                                                                             
-       if(leif_field==1) then
+       if(x_equal_minus_y_transect==1) then
           yval(ix)=n2-(ix-1)   !transect x = -y                                                                                                                            
        else
           yval(ix)=ix             !transect x = +y                                                                                                                        
@@ -1963,18 +1963,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehbot",id_field,count_slice(id_field),".dat"
        write (fname, "(A10,I1,I2,A4)") "slice2hbot",id_field,count_slice2(id_field),".dat"
-       open (unit=count_slice2(id_field),file=fname,action="write",status="replace")
+       open (unit=unit_slices2,file=fname,action="write",status="replace")
        
        iz=bot_height - mype*n3h0 + hlvl2(id_field)
        
        
        do iy=1,n2
-          write(unit=count_slice2(id_field),fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
-          write(unit=count_slice2(id_field),fmt=*) '           '
+          write(unit=unit_slices2,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices2,fmt=*) '           '
        enddo
 333    format(1x,E12.5,1x)
        
-       close (unit=count_slice2(id_field))
+       close (unit=unit_slices2)
        
     end if
     
@@ -1984,18 +1984,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehmid",id_field,count_slice(id_field),".dat"
        write (fname, "(A10,I1,I2,A4)") "slice2hmid",id_field,count_slice2(id_field),".dat"
-       open (unit=count_slice2(id_field),file=fname,action="write",status="replace")
+       open (unit=unit_slices2,file=fname,action="write",status="replace")
        
        iz=mid_height - mype*n3h0 + hlvl2(id_field)
        
        
        do iy=1,n2
-          write(unit=count_slice2(id_field),fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
-          write(unit=count_slice2(id_field),fmt=*) '           '
+          write(unit=unit_slices2,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices2,fmt=*) '           '
        enddo
        
        
-       close (unit=count_slice2(id_field))
+       close (unit=unit_slices2)
        
     end if
     
@@ -2004,18 +2004,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehtop",id_field,count_slice(id_field),".dat"
        write (fname, "(A10,I1,I2,A4)") "slice2htop",id_field,count_slice2(id_field),".dat"
-       open (unit=count_slice2(id_field),file=fname,action="write",status="replace")
+       open (unit=unit_slices2,file=fname,action="write",status="replace")
        
        iz=top_height - mype*n3h0 + hlvl2(id_field)
        
        
        do iy=1,n2
-          write(unit=count_slice2(id_field),fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
-          write(unit=count_slice2(id_field),fmt=*) '           '
+          write(unit=unit_slices2,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices2,fmt=*) '           '
        enddo
        
        
-       close (unit=count_slice2(id_field))
+       close (unit=unit_slices2)
        
     end if
 
@@ -2027,7 +2027,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        if(mype==0) then
 !          write (fname, "(A6,I1,I1,A4)") "slicev",id_field,count_slice(id_field),".dat"
           write (fname, "(A7,I1,I2,A4)") "slice2v",id_field,count_slice2(id_field),".dat"
-          open (unit=count_slice2(id_field),file=fname,action="write",status="replace")
+          open (unit=unit_slices2v,file=fname,action="write",status="replace")
 
           !Copy ur slice on XY_slice (NOTICE IT'S NOT ON XY_slice_p)                                                                                                                                                                      
           do ix=1,n1
@@ -2056,10 +2056,10 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 !             end do
 !          end do
           do iz=1,n3
-             write(unit=count_slice2(id_field),fmt=333) (XZ_slice(ix,iz),ix=1,n1)
-             write(unit=count_slice2(id_field),fmt=*) '           '
+             write(unit=unit_slices2v,fmt=333) (XZ_slice(ix,iz),ix=1,n1)
+             write(unit=unit_slices2v,fmt=*) '           '
           enddo
-          close (unit=count_slice2(id_field))
+          close (unit=unit_slices2v)
 
           
        end if

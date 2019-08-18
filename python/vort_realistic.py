@@ -8,18 +8,18 @@ timestep=0.1 #0.1 #Fraction of an inertial period between slices
 hres=256
 vres=256
 
-Dx = 120  #km (size of domain in the horizontal) 
+Dx = 100  #km (size of domain in the horizontal) 
 
 ts='100'
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'real_N2_1e5'#'real_N2_1e5'#'real_dg_ml'
+run = 'dipole_cstN_test'#'real_N2_1e5'#'real_dg_ml'
 
 plot_slice=1
-field_to_plot='wke' #vort, u or v
+field_to_plot='vort' #vort, u or v
 show_plot=0
-show_xyp=0
+show_xyp=1
 show_quivers=1
 colormap='RdBu_r' 
 ncases=1
@@ -136,7 +136,7 @@ if(plot_slice==1):
         ax.text(hres/2, hres+hres/10,r"$x$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
         if(show_xyp==1):
-            color='green'
+            color='yellow'
 
             ax.arrow(hres/2,hres/2,hres/10,hres/10,width=0.5,head_width=5.,color=color)
             ax.arrow(hres/2,hres/2,hres/10,-hres/10,width=0.5,head_width=5.,color=color)

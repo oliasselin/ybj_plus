@@ -10,6 +10,10 @@ MODULE files
   !********************!                                                                          
                                                                          
   !unit no of files for output                                                                                                                            
+  integer, parameter :: unit_slices  = 1
+  integer, parameter :: unit_slicesv = 2
+  integer, parameter :: unit_slices2 = 3
+  integer, parameter :: unit_slices2v= 4
   integer, parameter :: unit_energy =50
 !  integer, parameter :: unit_etrop  =51
 !  integer, parameter :: unit_estra  =52
@@ -23,6 +27,7 @@ MODULE files
 !  integer, parameter :: unit_htop   =63
   integer, parameter :: unit_ez     =64
   integer, parameter :: unit_wz     =65
+  integer, parameter :: unit_wvave  =66
 
   integer, parameter :: unit_rco    =67
   integer, parameter :: unit_bs     =68

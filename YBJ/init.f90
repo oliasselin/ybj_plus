@@ -876,7 +876,7 @@ do ix=1,n1d
          end if
 
       if(ix<=n1) then
-         if(z1>=0) f1s(ix,iy,iz1)=sin(x)+sin(y)
+         if(z1>=0) f1s(ix,iy,iz1)=sin(y)-sin(x)
          if(z2>=0) f2s(ix,iy,iz2)=0.
          if(z3>=0) f3s(ix,iy,iz3)=exp(-(xi_a*(z3-twopi))**2)
       else

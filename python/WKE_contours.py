@@ -1,8 +1,11 @@
 #!/usr/bin/env python                                                                                                                                                               
 import os
 import numpy as np
+from numpy import ma
 import matplotlib.pyplot as plt
-from matplotlib import ticker
+from matplotlib import ticker#, cm
+import matplotlib.colors as colors
+from matplotlib.colors import LogNorm
 from finds import find_resolution
 from finds import find_scales
 from finds import find_timestep
@@ -10,17 +13,19 @@ from finds import find_timestep
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'real_cstN/'
+run = 'real/ml/'
 location = scratch_location+folder+run
 
 colormap='RdBu_r'
 
-focus_depth=300 #Focus on the top $focus_depth meters
-focus_time =20  #Focus on the first $focus_time inertial periods
+focus_depth=1000 #Focus on the top $focus_depth meters
+focus_time =15  #Focus on the first $focus_time inertial periods
 
 plot_all_three_fields=0
-show=1
-
+show=0
+log_plot=1
+wke_levels=np.logspace(start=-6,stop=-2,num=5,base=10)
+levs=np.logspace(start=-6,stop=-2,num=500,base=10)
 
 #Read parameters from the source#
 n1,n2,n3 = find_resolution(location)
@@ -75,7 +80,6 @@ if os.path.isfile(path_wz):
     wce = wce[:max_time_wz,lowest_depth:n3]
 
     z = wz[lowest_depth:n3,0]-Dz
-#    t = ts_wz_days*np.arange(0,wke.shape[0])
     t = ts_wz_ip*np.arange(0,wke.shape[0])
     ZZ, TT = np.meshgrid(z, t)
 
@@ -110,15 +114,27 @@ if os.path.isfile(path_wz):
     else:
 
         plt.subplot(1, 1, 1)
-        WKE = plt.contourf(TT,ZZ,wke/WKE0,20,cmap=colormap)
-        plt.title('Horizontally-averaged WE')                                                                                                                
+
+        if(log_plot==1):
+            WKE = plt.contourf(TT,ZZ,wke,levs,cmap=colormap,norm=colors.LogNorm())
+            cbar = plt.colorbar(WKE)
+            cbar.set_ticks(wke_levels)
+            cbar.set_ticklabels(wke_levels)
+            cbar.ax.set_ylabel('WE (m/s)$^2$')
+        else:
+            wke=wke/WKE0
+            WKE = plt.contourf(TT,ZZ,wke,500,cmap=colormap)#,norm=LogNorm(vmin=wke_levels[0], vmax=wke_levels[-1]))#,norm=LogNorm(vmin=wke_levels[0], vmax=wke_levels[-1]))
+            cbar = plt.colorbar(WKE,ticks=np.linspace(0,1,5+1,endpoint=True))
+            cbar.ax.set_ylabel('WE/WE$_0$')
+
+        plt.title('Horizontally-averaged wave energy, run='+run)                                                                                                                
         plt.xlabel('Time (IP)')                                                                                                                                                   
         plt.ylabel('Depth (m)')
-        cbar = plt.colorbar(ticks=np.linspace(0,1,5+1,endpoint=True))
-        cbar.ax.set_ylabel('WE/WE$_0$')
+
+
     
     if(show==1):
-            plt.show()
+        plt.show()
     else:
-        plt.savefig('plots/'+run+'/wcontours.eps',bbox_inches='tight')
+        plt.savefig('plots/'+run+'/wke_contours.eps',bbox_inches='tight')
 

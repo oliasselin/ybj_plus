@@ -14,19 +14,19 @@ plot_slice=1
 
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/'#double_gaussian/'#'leif/'
-run = 'real_dg_ml'#'N2_1e5'#'attempt3_ro50'#'ml_100'
+folder = 'leif/dipole/'#double_gaussian/'#'leif/'
+run = 'N2_1e-5'#'N2_1e5'#'attempt3_ro50'#'ml_100'
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)
 Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 
-depth = 800  #m
+depth = 1000  #m
 #Range in x'
-xpl =-30000#-350000#-35000#5000#
-xpr =30000#20000#
-ts_list=[100]#np.arange(0,201,1)
+xpl =-70000#-350000#-35000#5000#
+xpr =70000#20000#
+ts_list=[150]#np.arange(0,201,1)
 
 
 field='wke'#'dudz'#'dudz'
@@ -34,9 +34,12 @@ field='wke'#'dudz'#'dudz'
 if(field=='dudz'):
     vmin = -0.0008
     vmax = 0.0008
-else:
+elif(field=='wke'):
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008
+elif(field=='u'):
+    vmin = -0.1#0.001#-0.0008
+    vmax = 0.1#0.0008
 
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
@@ -148,6 +151,11 @@ for ts in ts_list:
                 im = ax.imshow(wke,cmap=colormap,aspect=aspect,vmin=vmin,vmax=vmax)
                 ax.set_title(r'WKE (m/s)$^{2}$, $t =$ '+time_title+' inertial periods',fontsize=12)    
                 cbar = grid.cbar_axes[0].colorbar(im,ticks=[0.,vmax/2.,vmax])                        
+            elif(field=='u'):
+                im = ax.imshow(u,cmap=colormap,aspect=aspect,vmin=vmin,vmax=vmax)
+                ax.set_title(r'u (m/s), $t =$ '+time_title+' inertial periods',fontsize=12)    
+                cbar = grid.cbar_axes[0].colorbar(im,ticks=[vmin,vmin/2,0.,vmax/2.,vmax])                        
+
 
 
 #            cbar = ax.cax.colorbar(im)

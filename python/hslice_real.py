@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import AxesGrid
+import matplotlib.colors as colors
+from matplotlib.colors import LogNorm
+from matplotlib.ticker import LogLocator
 import numpy as np
+#from numpy import ma
 import os
 import subprocess
 import sys
@@ -8,29 +12,31 @@ from finds import find_resolution
 from finds import find_scales
 
 field_to_plot='wke_vave' #vort, u or v
-make_gif=1
+make_gif=0
 plot_slice=1
 show_plot=0
 show_xyp=0
 show_quivers=0
 show_quivers_key=0
 show_contours=1
+log_plot=1
 
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'                                                                                                                                              
-run = 'real_cstN'#'N2_1e5'#'attempt3_ro50'#'ml_100'                                                                                                                                   
+run = 'real/ml'#'attempt3_ro50'#'ml_100'                                                                                                                                   
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)
 Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 timestep=0.1   #Number of inertial periods between frames
-ts_list=np.arange(0,165,1)                                                                                                                                                     
+ts_list=[50,150]#np.arange(0,165,1)                                                                                                                                                     
 wke_min=0.
 wke_max=0.005
 
 vort_levels=[-0.2, -0.1, 0. ,0.1, 0.2]
+wke_levels=np.logspace(start=-1,stop=1,num=3,base=10)#[1e-3,1e-2, 1e-1, 1e0, 1e1]
 
 #Automatic parameter setting
 colormap='RdBu_r' 
@@ -136,8 +142,11 @@ for ts in ts_list:
                 im = ax.imshow(field,cmap=colormap,vmin=wke_min,vmax=wke_max)
 
             if(field_to_plot=='wke_vave'):
-                ax.set_title(r'Vertically-averaged WKE anomaly, $t =$ '+time_title+' IP',fontsize=12)
-                im = ax.imshow(field,cmap=colormap,vmin=0.)
+                ax.set_title(r'Vert.-ave WE anomaly, $t =$ '+time_title+' IP',fontsize=12)
+                if(log_plot==1):
+                    im = ax.imshow(field,cmap=colormap,norm=LogNorm(vmin=wke_levels[0], vmax=wke_levels[-1]))#vmin=0.)#,vmax=10.)
+                else:
+                    im = ax.imshow(field,cmap=colormap,vmin=0.,vmax=10.) 
                 
             if(show_quivers==1):
                 Q = ax.quiver(X[::16,::16],Y[::16,::16],g_u[::16,::16],g_v[::16,::16],color='k',pivot='mid', units='width')
@@ -157,9 +166,19 @@ for ts in ts_list:
                 
                 ax.text(hres/2+hres/25,hres/2+hres/8,r"$x'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
                 ax.text(hres/2+hres/25,hres/2-hres/10,r"$y'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)            
-                
-            cbar = ax.cax.colorbar(im)
-            cbar = grid.cbar_axes[0].colorbar(im)
+  
+            if(log_plot==1):
+                cbar = ax.cax.colorbar(im,ticks=wke_levels)
+            else:
+                cbar = ax.cax.colorbar(im)
+#            cbar = ax.cax.colorbar(im)#,ticks=wke_levels)
+#            cbar.ax.yaxis.set_major_locator(LogLocator())  # <- Why? See above.
+#            cbar.set_ticks(cbar.ax.yaxis.get_major_locator().tick_values(z.min(), z.max())
+            
+#            cbar.ax.set_yticklabels(['yo','sup','vachier','salut'])
+#            cbar = ax.cax.colorbar(im)
+
+#            cbar = grid.cbar_axes[0].colorbar(im)
 
             if(show_contours==1):
                 im=ax.contour(g_vort,levels=vort_levels,colors='k')#,colors='k')   
