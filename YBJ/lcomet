@@ -23,7 +23,7 @@ cat > EXEC_STEP << EXEC
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t00:30:00
+#SBATCH -t 00:30:00
 
 #This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
 #ibrun in verbose mode will give binding detail
@@ -69,6 +69,5 @@ COMPILE
 
 chmod 755 COMPILE_STEP
 ./COMPILE_STEP
-##chmod 755 EXEC_STEP                                                                                                                                       
 sbatch EXEC_STEP
-##./EXEC_STEP                                                                                                                                               
+

@@ -10,14 +10,14 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'attempt3_ro50'
+run = 'N2_5e6'
 
 plot_slice=1
 colormap='RdBu_r' 
 ncases=1
 nts=1
 
-depth = 200  #m
+depth = 800  #m
 Dz= 3000
 gp_depth = int(vres*depth/Dz)
 dz= Dz/vres
@@ -47,7 +47,7 @@ ticksx_loc=np.arange(0,2*gp_del,(2*gp_del-1.)/nxticks)
 if not os.path.exists('plots/'):
     os.makedirs('plots/')
 
-ts=0
+ts=100
 
 g_wke = np.zeros((vres,hres))    
 g_lar = np.zeros((vres,hres))    

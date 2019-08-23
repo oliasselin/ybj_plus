@@ -34,6 +34,9 @@ MODULE parameters
     double precision, parameter :: delta_a = 50.
     double precision, parameter :: xi_a = dom_z/(L3*delta_a)
 
+    integer, parameter :: cos_ic = 0                      !If 1: multiply the initial wave gaussian by cos(2pi*z_dim/lambda_a) = cos(z_model*m_a)
+    double precision, parameter :: lambda_ic = 150.        !Wavelength (m) of the initial cosinus multiply the gaussian envelope
+    double precision, parameter :: m_ic = dom_z/lambda_ic !nondimensional vertical wavenumber of the initial envelope
 
     !Tags to specify run!
     !-------------------!

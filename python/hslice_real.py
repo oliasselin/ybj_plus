@@ -24,7 +24,7 @@ log_plot=1
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'                                                                                                                                              
-run = 'real/ml'#'attempt3_ro50'#'ml_100'                                                                                                                                   
+run = 'dipole/ml'#'attempt3_ro50'#'ml_100'                                                                                                                                   
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)

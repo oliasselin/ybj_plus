@@ -15,7 +15,6 @@ else:
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008
 
-aspect=0.2
 
 timestep=0.1 #0.1 #Fraction of an inertial period between slices
 
@@ -24,9 +23,9 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#'leif/'
-run = 'N2_1e5_a'#'attempt3_ro50'#'ml_100'
+run = 'N2_1e5'#'attempt3_ro50'#'ml_100'
 
-show=1
+show=0
 plot_slice=1
 colormap='RdBu_r' 
 ncases=1
@@ -47,8 +46,8 @@ Dx=Dx_km*1000
 dx=Dx/hres
 
 #Range in x'
-xpl =10000#-35000#5000#
-xpr =25000#20000#
+xpl =-5000#-35000#5000#
+xpr =15000#20000#
 
 #Corresponding grid point range
 #x0 = int((Dx/2. - xpr*np.cos(np.deg2rad(45)))/dx)
@@ -57,10 +56,10 @@ x0 = int((Dx/2. + xpl*np.cos(np.deg2rad(45)))/dx)
 x1 = int((Dx/2. + xpr*np.cos(np.deg2rad(45)))/dx)
 gp_del= x1-x0
 
-print x0,x1
+aspect=0.5*gp_del/gp_depth
 
-nxticks=3
-txlabels=np.arange(xpl/1000,(xpr+1)/1000,(xpr-xpl)/(nxticks*1000))
+nxticks=4
+txlabels=np.arange(xpl/1000,(xpr)/1000+1,(xpr-xpl)/(nxticks*1000))
 ticksx_loc=np.arange(0,gp_del,(gp_del-1.)/nxticks)
 
 
@@ -142,8 +141,8 @@ for ts in ts_list:
 #            cbar = ax.cax.colorbar(im)
 #            cbar = grid.cbar_axes[0].colorbar(im)
         
-            ax.text(-3.5, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
-            ax.text(gp_del/2, gp_depth+10,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
+            ax.text(-gp_del/10, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+            ax.text(gp_del/2, gp_depth+gp_depth/7,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
             if(show==1):
                 plt.show()

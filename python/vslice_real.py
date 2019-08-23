@@ -9,13 +9,15 @@ from finds import find_scales
 from finds import find_timestep
 
 make_gif=0
-show=0
+show=1
 plot_slice=1
 
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
-folder = 'leif/dipole/'#double_gaussian/'#'leif/'
-run = 'N2_1e-5'#'N2_1e5'#'attempt3_ro50'#'ml_100'
+folder = 'leif/'#double_gaussian/'#'leif/'
+run = 'dipole/N2_1e-5'#'N2_1e5'#'attempt3_ro50'#'ml_100'
+zoom='_zoom'#''
+
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)
@@ -24,9 +26,9 @@ Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 depth = 1000  #m
 #Range in x'
-xpl =-70000#-350000#-35000#5000#
-xpr =70000#20000#
-ts_list=[150]#np.arange(0,201,1)
+xpl = -35000#-350000#-35000#5000#
+xpr =35000#20000#
+ts_list=[100]#np.arange(0,201,1)
 
 
 field='wke'#'dudz'#'dudz'
@@ -161,7 +163,7 @@ for ts in ts_list:
 #            cbar = ax.cax.colorbar(im)
 #            cbar = grid.cbar_axes[0].colorbar(im)
         
-            ax.text(-gp_del/10, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+            ax.text(-gp_del/5, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
             ax.text(gp_del/2, gp_depth+gp_depth/7,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
 
             if(show==1):
@@ -169,9 +171,9 @@ for ts in ts_list:
             else:
                 zeros_ts = (3-len(str(ts)))*'0'
                 if(make_gif==1):
-                    plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.png',bbox_inches='tight')
+                    plt.savefig('plots/'+run+'/'+field+'/'+field+zoom+zeros_ts+str(ts)+'.png',bbox_inches='tight')
                 else:
-                    plt.savefig('plots/'+run+'/'+field+'/'+field+zeros_ts+str(ts)+'.eps',bbox_inches='tight')
+                    plt.savefig('plots/'+run+'/'+field+'/'+field+zoom+zeros_ts+str(ts)+'.eps',bbox_inches='tight')
     
 
 if(make_gif==1):

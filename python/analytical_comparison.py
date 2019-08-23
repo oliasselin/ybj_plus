@@ -7,18 +7,16 @@ import os
 import subprocess
 import sys
 
-ts_plot=[50]#np.arange(0,152,1)#[66]#np.arange(0,181,10)#np.arange(141,201,1)#[50,100,150,200]
+ts_plot=[100]#np.arange(0,152,1)#[66]#np.arange(0,181,10)#np.arange(141,201,1)#[50,100,150,200]
 
-field = 10
-contours=1
+field = 5
+contours=0
 plot_slice=1
 make_gif=0
-show=1
-full_solution=0
-zeta_phase = 0
+show=0
 
-field_title = ['AR','AR_pred','AI','AI_pred','$\Re(LA)$','$\Re(LA_p)$','LAI','LAI_pred','test','$\Re(LA)$','beta']
-field_name  = ['AR','AR_pred','AI','AI_pred','LAR','LAR_pred','LAI','LAI_pred','test','WKE_pred','beta']
+field_title = ['AR','AR_pred','AI','AI_pred','$\Re(LA)$','$\Re(LA_p)$','LAI','LAI_pred','test','Analytical $\Re(LA)$','beta']
+field_name  = ['AR','AR_pred','AI','AI_pred','LAR','LAR_pred','LAI','LAI_pred','test','LA_pred','beta']
 
 
 
@@ -45,13 +43,13 @@ timestep=0.1 #0.1 #Fraction of an inertial period between slices
 
 
 
-depth = 1000                   #Depth of interest (m)
+depth = 500                   #Depth of interest (m)
 Dz= 3000                       #Full depth of the simulation (m)
 gp_depth = int(vres*depth/Dz)  #Number of gp in the vertical
 dz= Dz/vres                    #dz (m)
 
 
-xyrange_km = 35#np.sqrt(2)*25                    #Half-range of x' (km)
+xyrange_km = 20#np.sqrt(2)*25                    #Half-range of x' (km)
 xrange_km  = xyrange_km*np.cos(np.deg2rad(45))   #Half-range of x  (km) -- projection assuming 45 degrees angle
 Dx_km=100                                        #Domain size (km)
 Dx=Dx_km*1000                                    #Domain size (m)
@@ -74,35 +72,32 @@ Vprime = np.zeros((gp_depth,gp_xrange))          #V'(z,x')    --- along-stream v
 Zprime = np.zeros((gp_depth,gp_xrange))          #Zeta'(z,x') --- vertical vorticity (normalized by f) 
 Zeta   = np.zeros((gp_depth,gp_xrange))          #Zeta'(z,x') --- vertical vorticity 
 GradZp = np.zeros((gp_depth,gp_xrange))          #d Zeta'(z,x')/dx' --- gradient of vertical vorticity at y'=0                                    
-bigD   = np.zeros((gp_depth,gp_xrange))          #Depth vector (>0)
+ZZ     = np.zeros((gp_depth,gp_xrange))          #Depth vector (>0)
 XP     = np.zeros((gp_depth,gp_xrange))          #x' vector (m)
 for iz in range(gp_depth):
     Vprime[iz,:] = np.sqrt(2)*U_scale*np.cos(k_over_sqrt2*xp_m)
     Zprime[iz,:] = -zeta_max*np.sin(k_over_sqrt2*xp_m)
     GradZp[iz,:] = -grad_zeta*np.cos(k_over_sqrt2*xp_m)
-    bigD[iz,:]   = dz*gpz[iz]
-    XP[iz,:]      = xp_m[:]
+    ZZ[iz,:]     = -dz*gpz[iz]
+    XP[iz,:]     = xp_m[:]
     Zeta[iz,:]   = Zprime[iz,:]*cor
-
-ZZ = -bigD            #Actual z (negative in the ocean)
-alpha = -0.5*GradZp   #k=alpha*t  (>0 in the neighborhood of x'=0)
 
 if(constant_beta==1):
     beta  = grad_zeta
 else:
-    beta  = -GradZp
+    beta  = GradZp
 
 
 #############Plot parameters###############
 colormap='RdBu_r' 
-aspect=0.6
+aspect=1.*gp_del/gp_depth
 ncases=1
 nts=1
 
 nxticks=2
 txlabels=np.arange(-xyrange_km,xyrange_km+1,(2*xyrange_km)/nxticks)
 ticksx_loc=np.arange(0,2*gp_del,(2*gp_del-1.)/nxticks)
-nyticks=4
+nyticks=5
 tylabels=np.arange(0,depth+1,depth/nyticks)
 ticksy_loc=np.arange(0,gp_depth,(gp_depth-1.)/nyticks)
 
@@ -151,64 +146,27 @@ for ts in ts_plot:
         #Guessing the solution
         time = (2*np.pi/cor)*ts*timestep   #time is s
         
-        m_star = np.power((N2*beta*beta)/(12*cor*bigD),(1./3.))*time
-        phi_star = -N2*beta*beta*np.power(time,3)/(24*cor*np.power(m_star,2)) - m_star*bigD    
+        m_star = np.power((N2*beta*beta)/(12*cor*np.abs(ZZ)),(1./3.))*time
+        phi_star = (3./2.)*m_star*ZZ
 
         decay = np.exp(-np.power(m_star*sigma_w,2)/4.)
 
-        if(zeta_phase==1):
-            phase = phi_star -    Zeta*time/2. + np.pi/4.
-        else:
-            phase = phi_star + beta*XP*time/2. + np.pi/4.
-#        phase_simple = beta*XP*time/2. - m_star*bigD
-#        phase_simple2= -N2*beta*beta*np.power(time,3)/(24*cor*np.power(m_star,2))
+        phase = phi_star -Zeta*time/2. + np.pi/4.
 
-        ampli = -(2*u_0*np.sqrt(N2)*sigma_w)/(beta*np.power(cor*time,3./2.))*np.ones((gp_depth,gp_xrange))
+        ampli = (2*u_0*np.sqrt(N2)*sigma_w)/(beta*np.power(cor*time,3./2.))*np.ones((gp_depth,gp_xrange))
 
+        #Prediction for A
+        AR_pred = ampli*np.cos(phase)*decay
+        AI_pred = ampli*np.sin(phase)*decay
 
+        phiz  = ii*m_star  +  np.power(sigma_w*m_star,2)/(6.*ZZ)  
+        phizz = ii*(-m_star/(3.*ZZ)) - (5./18.)*np.power(sigma_w*m_star/ZZ,2) 
 
-
-        if(full_solution==1):
-
-            phi_star2= kappa*phi_star/(beta*time)
-            decay = np.exp(phi_star2-np.power(m_star*sigma_w,2)/4.)
-
-            #For LA#
-            phiz  =ii*m_star  +  np.power(sigma_w*m_star,2)/(6.*ZZ)  + kappa*m_star/(beta*time)                                                                
-            phizz =ii*(-m_star/(3.*ZZ)) - (5./18.)*np.power(sigma_w*m_star/ZZ,2) -(1./3.)*kappa*m_star/(beta*time*ZZ)
-
-            CC   = np.sqrt(2)*np.power(np.exp(4*phi_star2)*(1+np.sin(kappa*XP)) + (1-np.sin(kappa*XP)),-1./2.)
-            CCz  = -np.power(CC,3)*(1+np.sin(kappa*XP))*(m_star*kappa/(beta*time))*np.exp(4*phi_star2)
-            CCzz = CCz*(3.*CCz/CC - 1./(3*ZZ) + 4.*(m_star*kappa/(beta*time)) )
-
-#            CC    = 4.*np.power(np.exp(4*phi_star2)*(1+np.sin(kappa*XP)) + (1-np.sin(kappa*XP)),-2)
-#            CCz   = -32.*(kappa*m_star/(beta*time))*np.exp(4*phi_star2)*(1. + np.sin(kappa*XP))*np.power(np.exp(4*phi_star2)*(1+np.sin(kappa*XP)) + (1-np.sin(kappa*XP)),-3)
-#            CCzz  = CCz*( (-1./(3.*ZZ)) + 4.*(kappa*m_star/(beta*time))*(1- 3.*(1+np.sin(kappa*XP))*np.exp(4*phi_star2)*np.power(np.exp(4*phi_star2)*(1+np.sin(kappa*XP)) + (1-np.sin(kappa*XP)),-1) ) )
-
-
-            MM = (f2/N2)*(CCzz/CC + 2.*CCz*phiz/CC + phizz + np.power(phiz,2))
-
-            AR_pred = ampli*np.cos(phase)*decay*CC
-            AI_pred = ampli*np.sin(phase)*decay*CC
-
-            AA = AR_pred + ii*AI_pred
-
-            LAR_pred = np.real(MM*AA)
-            LAI_pred = np.imag(MM*AA)
-
-        else:
-
-            AR_pred = ampli*np.cos(phase)*decay
-            AI_pred = ampli*np.sin(phase)*decay
-
-            phiz  = ii*m_star  +  np.power(sigma_w*m_star,2)/(6.*ZZ)  #+ kappa*m_star/(beta*time)
-            phizz = ii*(-m_star/(3.*ZZ)) - (5./18.)*np.power(sigma_w*m_star/ZZ,2) #-(1./3.)*kappa*m_star/(beta*time*ZZ)
-
-            MM    = (f2/N2)*(phizz + np.power(phiz,2))
-            AA    = AR_pred + ii*AI_pred
+        MM    = (f2/N2)*(phizz + np.power(phiz,2))
+        AA    = AR_pred + ii*AI_pred
         
-            LAR_pred = np.real(MM*AA)
-            LAI_pred = np.imag(MM*AA)
+        LAR_pred = np.real(MM*AA)
+        LAI_pred = np.imag(MM*AA)
 
 
 
@@ -252,8 +210,6 @@ for ts in ts_plot:
                 elif(field==8):
                     im = ax.imshow(LAI_pred,cmap=colormap,aspect=aspect,vmin=-100000,vmax=100000)#,vmin=-1.,vmax=1.)
                 elif(field==9):
-#                    im = ax.imshow(bigD,cmap=colormap,aspect=aspect)#,vmin=-1.,vmax=1.)
-#                    im = ax.imshow(beta,cmap=colormap,aspect=aspect)#,vmin=-1.,vmax=1.)
                     im = ax.imshow(AI_pred,cmap=colormap,aspect=aspect)#,vmin=-1.,vmax=1.)
                 elif(field==10):
 #                    im = ax.imshow(LAR_pred*LAR_pred+LAI_pred*LAI_pred,cmap=colormap,aspect=aspect)#,vmin=-1.,vmax=1.)
@@ -272,9 +228,12 @@ for ts in ts_plot:
                 time=ts*timestep
                 time_title = '%.1f' % time
                 ax.set_title(r''+field_title[field-1]+' (m/s)$^2$, $t =$ '+time_title+' inertial periods',fontsize=12)
-                ax.text(-15, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
-                ax.text(gp_del, gp_depth+20,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
-                
+#                ax.text(-15, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+#                ax.text(gp_del, gp_depth+20,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
+
+                ax.text(-gp_del/5, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
+                ax.text(gp_del, gp_depth+gp_depth/7,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)                
+
                 
                 if(show==1):
                     plt.show()
