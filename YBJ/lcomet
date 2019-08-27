@@ -1,11 +1,11 @@
 #!/bin/bash
 
-number_of_nodes=4
+number_of_nodes=3
 number_of_tasks=64
-ntasks_per_node=16
+ntasks_per_node=24
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/dipole/N2_5e-5/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/dipole/N2_5e-5/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/real/ml_256_uwz/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/leif/real/ml_256_uwz/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -17,8 +17,7 @@ cat > EXEC_STEP << EXEC
 #!/bin/sh 
 
 #SBATCH --job-name="real"
-#SBATCH --output="/home/oasselin/monitor/real.o"
-#SBATCH --error="/home/oasselin/monitor/real.e"
+#SBATCH --output="/home/oasselin/monitor/real.o%j.%N"
 #SBATCH --partition=debug#compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
@@ -30,7 +29,7 @@ cat > EXEC_STEP << EXEC
 
 cd $datadir                                                                                                                                                                            
 cp $sourdir/exec_full $datadir   
-ibrun -v ./exec_full
+ibrun -n $number_of_tasks -v ./exec_full
 
                                                                                                                                                         
 EXEC

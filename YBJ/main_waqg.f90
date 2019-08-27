@@ -30,6 +30,7 @@ PROGRAM main
 
   !**** C = Az and is decomposed into real and imag parts (ex.: C = CR + iCI) even though in Fourier-space both CRk and CIk are complex
   double complex,   dimension(iktx,ikty,n3h0) :: CRk, CIk
+  double precision, dimension(n1d,n2d,n3h0)   :: CRr, CIr
 
   !**** n = nonlinear advection term J(psi,B) **** r = refractive term ~ B*vort
   double complex,   dimension(iktx,ikty,n3h0) :: nBRk, nBIk, rBRk, rBIk
@@ -74,6 +75,9 @@ PROGRAM main
   equivalence(BIr,BIk)
   equivalence(ARr,ARk)
   equivalence(AIr,AIk)
+
+  equivalence(CRr,CRk)
+  equivalence(CIr,CIk)
 
   equivalence(nBRr,nBRk)
   equivalence(nBIr,nBIk)
@@ -157,7 +161,7 @@ PROGRAM main
  if(out_etot ==1) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields                                            
-    if(out_slice ==1)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
+    if(out_slice ==1)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
  end do
 
  do id_field=1,nfields2                                            
@@ -442,7 +446,7 @@ end if
 if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields
-    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
+    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
  end do
 ! do id_field=1,nfields2
 !    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)

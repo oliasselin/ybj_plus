@@ -1457,7 +1457,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
   !!!!! SLICES !!!!!
   !****************!
 
-  subroutine slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,dBRk,dBIk,dBRr,dBIr,id_field)
+  subroutine slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
 
     double complex, dimension(iktx,ikty,n3h0) :: ARk,AIk
     double precision,    dimension(n1d,n2d,n3h0) :: ARr, AIr
@@ -1470,6 +1470,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
 
     double complex, dimension(iktx,ikty,n3h0) :: CRk,CIk
+    double precision,    dimension(n1d,n2d,n3h0) :: CRr, CIr
 
     !Temp arrays for convenience
     double complex, dimension(iktx,ikty,n3h0) :: Rmemk, Imemk
@@ -1546,18 +1547,46 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
 
-
-       !AR
+    !LAR_z : for quick and dirty plot, use the otherwise unused C field to store LAz. This only works outside of top/bottom levels of each processor (which we set to zero)                                                                                                                                                                       
     elseif(id_field==3) then
-       Rmemk = ARk       
-       call fft_c2r(ARk,ARr,n3h0)
-       field = (Uw_scale*L_scale*L_scale/Bu)*ARr
-
-       !AI
+       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. 
+          do izh0=2,n3h0-1   !Only works away from top and bottom levels of each processor
+             do iky=1,ikty
+                ky = kya(iky)
+                do ikx=1,iktx
+                   kx = kxa(ikx)
+                   kh2=kx*kx+ky*ky
+                   if(L(ikx,iky)==1) then
+                      CRk(ikx,iky,izh0) = ((BRk(ikx,iky,izh0+1) + 0.25*kh2*ARk(ikx,iky,izh0+1)/Bu) - (BRk(ikx,iky,izh0-1) + 0.25*kh2*ARk(ikx,iky,izh0-1)/Bu))/(2.*dz)
+                   else
+                      CRk(ikx,iky,izh0) = (0.D0,0.D0)
+                   end if
+                enddo
+             enddo
+          end do
+       end if
+       call fft_c2r(CRk,CRr,n3h0)
+       field = Uw_scale*CRr/H_scale
+    !LAI_z                                                                                                                                                                             
     elseif(id_field==4) then
-       Imemk = AIk
-       call fft_c2r(AIk,AIr,n3h0)
-       field = (Uw_scale*L_scale*L_scale/Bu)*AIr
+       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. 
+          do izh0=2,n3h0-1   !Only works away from top and bottom levels of each processor
+             do iky=1,ikty
+                ky = kya(iky)
+                do ikx=1,iktx
+                   kx = kxa(ikx)
+                   kh2=kx*kx+ky*ky
+                   if(L(ikx,iky)==1) then
+                      CIk(ikx,iky,izh0) = ((BIk(ikx,iky,izh0+1) + 0.25*kh2*AIk(ikx,iky,izh0+1)/Bu) - (BIk(ikx,iky,izh0-1) + 0.25*kh2*AIk(ikx,iky,izh0-1)/Bu))/(2.*dz)
+                   else
+                      CIk(ikx,iky,izh0) = (0.D0,0.D0)
+                   end if
+                enddo
+             enddo
+          end do
+       end if
+       call fft_c2r(CIk,CIr,n3h0)
+       field = Uw_scale*CIr/H_scale
 
        !LAR_x
     elseif(id_field==5) then
@@ -1780,10 +1809,6 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
              BRk=Rmemk
           elseif(id_field==2)    then 
              BIk=Imemk
-          elseif(id_field==3)    then 
-             ARk=Rmemk
-          elseif(id_field==4)    then 
-             AIk=Imemk
           elseif(id_field==5)    then
              BRk=Rmemk
           elseif(id_field==6)    then

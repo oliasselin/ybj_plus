@@ -2,7 +2,7 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=256, n2=256, n3=256 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
+    integer, parameter :: n1=256, n2=256, n3=256!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
     integer, parameter :: npe=64
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
@@ -19,7 +19,7 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = 100000                             !Horizontal domain size (in m)
+    double precision, parameter :: dom_x = 120000                             !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
@@ -77,7 +77,7 @@ MODULE parameters
     integer, parameter :: ny_leif = 60
     integer, parameter :: iktx_leif= nx_leif/2+1, ikty_leif=ny_leif
     integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
-    integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
+    integer, parameter :: leif_field = 1                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =1                !Do the xz slices along x=-y (if = 0, then x = y transect)
 
     !Normalization at the tropopause!
@@ -101,7 +101,7 @@ MODULE parameters
     !----------!
 
     integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5
-    integer, parameter :: stratification = constant_N!double_gaussian_ml_min !constant_N!double_gaussian_ml_min
+    integer, parameter :: stratification = double_gaussian_ml_min !constant_N!double_gaussian_ml_min
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -114,10 +114,10 @@ MODULE parameters
     double precision, parameter :: N2_scale = 0.75D0   !N^2 ~ exp(N2_scale*(z-z0) 
 
     !Stratification = constant_N!
-    double precision, parameter :: N0 = sqrt(5.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
+!    double precision, parameter :: N0 = sqrt(5.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
 
     !Stratification = double_gaussian!
-!    double precision, parameter ::  N0        = 0.009023730234586 
+    double precision, parameter ::  N0        = 0.009023730234586 
     double precision, parameter ::  N02_dg    = 0.011957184903585
     double precision, parameter ::  N12_dg    = 0.987728763634230
     double precision, parameter ::  N22_dg    = 0.114406828801100
@@ -279,9 +279,9 @@ MODULE parameters
     integer :: hlvl(nfields)=[0,0,0,0,0,0,0,0]                                   
     integer :: hlvl2(nfields2)=[2,2,1,1,2,1,1]                                   
 
-    integer, parameter :: bot_height = 5*n3/6!1
-    integer, parameter :: mid_height = 9*n3/10!n3/2
-    integer, parameter :: top_height = n3!9*n3/20!n3
+    integer, parameter :: bot_height = INT(n3*(1-200/dom_z))
+    integer, parameter :: mid_height = INT(n3*(1-300/dom_z))
+    integer, parameter :: top_height = INT(n3*(1-400/dom_z))
 
     integer, parameter :: out_slab = 0, freq_slab = 1
     integer, parameter :: slab_mype   = npe/2-1 

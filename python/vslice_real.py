@@ -15,7 +15,7 @@ plot_slice=1
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'
-run = 'dipole/N2_1e-5'#'N2_1e5'#'attempt3_ro50'#'ml_100'
+run = 'real/ml_1024_uwz'
 zoom='_zoom'#''
 
 
@@ -24,18 +24,18 @@ n1,n2,n3 = find_resolution(location)
 Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 
-depth = 1000  #m
+depth = 800  #m
 #Range in x'
-xpl = -35000#-350000#-35000#5000#
-xpr =35000#20000#
-ts_list=[100]#np.arange(0,201,1)
+xpl = -10000#-350000#-35000#5000#
+xpr = 10000#20000#
+ts_list=[66]#np.arange(0,165,1)
 
 
-field='wke'#'dudz'#'dudz'
+field='dudz'#'dudz'#'dudz'
 
 if(field=='dudz'):
-    vmin = -0.0008
-    vmax = 0.0008
+    vmin = -0.0001#-0.0008
+    vmax = 0.0001#0.0008
 elif(field=='wke'):
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008
@@ -177,6 +177,6 @@ for ts in ts_list:
     
 
 if(make_gif==1):
-    make_gif = 'convert -limit thread 1 -delay 1 -loop 0 plots/'+run+'/'+field+'/*.png plots/'+run+'/'+field+'/'+field+'.gif'
+    make_gif = 'convert -limit thread 1 -delay 1 -loop 0 plots/'+run+'/'+field+'/'+field+zoom+'*.png plots/'+run+'/'+field+'/'+field+'.gif'
     p = subprocess.Popen(make_gif, shell = True)
     os.waitpid(p.pid, 0)

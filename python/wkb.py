@@ -7,18 +7,18 @@ import os
 import subprocess
 import sys
 
-ts_plot=[100]#np.arange(0,180,1)#[66]#np.arange(0,181,10)#np.arange(141,201,1)#[50,100,150,200]
+ts_plot=[100]#np.arange(5,101,5)#[30]#np.arange(0,180,1)#[66]#np.arange(0,181,10)#np.arange(141,201,1)#[50,100,150,200]
 
-field = 2
+field = 5
 trace = 0
 wke_contours=1
 dzdx  = 'km'
 plot_slice=1
 make_gif=0
-show=0
+show=1
 
-field_title = ['$\sigma/(\zeta_{max}/2)$','$Bu$','Doppler shift $/(\zeta_{max}/2)$','$R_{WKB}$','$(\sigma-\zeta/2)/(\zeta_{max}/2)$','$\sigma/f$','$\zeta/\zeta_{max}$','-k/m','$Bu_p$','|$Bu-Bu_p$|','$|(Bu-Bu_p)(1-$min$($WKB$_{res},1))|$']
-field_name  = ['sig','bu','ds','res','sminusz','omega','zeta','km','bu_pred','bu_error','bu_error_weighted']
+field_title = ['$\sigma/(\zeta_{max}/2)$','$Bu$','Doppler shift $/(\zeta_{max}/2)$','$R_{WKB}$','$|\sigma-\zeta/2|/(\zeta_{max}/2)$','$\sigma/f$','$\zeta/\zeta_{max}$','-k/m','$Bu_p$','|$Bu-Bu_p$|','$|(Bu-Bu_p)(1-$min$($WKB$_{res},1))|$']
+field_name  = ['sig','bu','ds','res','refractive_phase','omega','zeta','km','bu_pred','bu_error','bu_error_weighted']
 
 if(trace==1):
     trace_name=dzdx
@@ -29,7 +29,7 @@ else:
 #Run specification##############################################
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'N2_1e5_dla'
+run = 'N2_1e5_a' #'N2_1e5_dla'
 
 N2=1e-5
 cor = 1.24e-4
@@ -45,7 +45,7 @@ timestep=0.1 #0.1 #Fraction of an inertial period between slices
 
 
 
-depth = 1000                   #Depth of interest (m)
+depth = 100                   #Depth of interest (m)
 Dz= 3000                       #Full depth of the simulation (m)
 gp_depth = int(vres*depth/Dz)  #Number of gp in the vertical
 dz= Dz/vres                    #dz (m)
@@ -82,7 +82,7 @@ alpha = -0.5*GradZp   #k=alpha*t  (>0 in the neighborhood of x'=0)
 
 #############Plot parameters###############
 colormap='RdBu_r' 
-aspect=0.6
+aspect=1.*gp_del/gp_depth #0.6
 ncases=1
 nts=1
 
@@ -93,8 +93,8 @@ nyticks=4
 tylabels=np.arange(0,depth+1,depth/nyticks)
 ticksy_loc=np.arange(0,gp_depth,(gp_depth-1.)/nyticks)
 
-wke_threshold = 1e-5
-wke_levels=[1e-5, 1e-4, 1e-3, 1e-2]
+wke_threshold = 1e-10#1e-5#1e-4
+wke_levels=[1e-5, 1e-4, 1e-3, 1e-2] #[1e-4, 1e-3, 1e-2]#[1e-5, 1e-4, 1e-3, 1e-2]
 ##########################################
 
 
@@ -128,6 +128,12 @@ for ts in ts_plot:
         l = np.loadtxt(path_l)
         m = np.loadtxt(path_m)
         wke = np.loadtxt(path_wke)
+
+        sig = sig[:gp_depth,:gp_xrange]
+        k   =   k[:gp_depth,:gp_xrange]
+        l   =   l[:gp_depth,:gp_xrange]
+        m   =   m[:gp_depth,:gp_xrange]
+        wke = wke[:gp_depth,:gp_xrange]
 
         #Let's do some ray tracing
         if(trace==1):
@@ -260,7 +266,8 @@ for ts in ts_plot:
                 elif(field==4):                    
                     im = ax.imshow(WKB_residual,cmap=colormap,aspect=aspect,vmin=0.,vmax=1.)
                 elif(field==5):
-                    im = ax.imshow(slope,cmap=colormap,aspect=aspect,vmin=-1.,vmax=1.)                    
+#                    im = ax.imshow(slope,cmap=colormap,aspect=aspect,vmin=-1.,vmax=1.)                    
+                    im = ax.imshow(np.abs(slope),cmap=colormap,aspect=aspect,vmin=0.,vmax=1.0)                    
                 elif(field==6):
                     im = ax.imshow(sig,cmap=colormap,aspect=aspect,vmin=-0.3,vmax=0.3)
                     #im = ax.imshow(Zprime/2.,cmap=colormap,aspect=aspect)                    
@@ -289,7 +296,7 @@ for ts in ts_plot:
                 time_title = '%.1f' % time
                 ax.set_title(r''+field_title[field-1]+', $t =$ '+time_title+' inertial periods',fontsize=12)
                 ax.text(-15, gp_depth/2,r'Depth (m)',rotation='vertical',horizontalalignment='center',verticalalignment='center', fontsize=12)
-                ax.text(gp_del, gp_depth+20,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
+                ax.text(gp_del, gp_depth+gp_depth/7,r"$x'$ (km)",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=12)
                 
                 
 #                for traj,xstart in enumerate(xstart_list):
