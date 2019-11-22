@@ -7,9 +7,9 @@ import os
 import subprocess
 import sys
 
-ts_plot=np.arange(0,201,1)#[50,100,150,200]
+ts_plot=np.arange(0,150,1)#[50,100,150,200]
 
-show=0
+show=1
 plot_k=1
 plot_m=0
 
@@ -17,7 +17,7 @@ plot_m=0
 #Run specification##############################################
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'N2_1e5_dla'
+run = 'N2_1e5_dla'#'confluence/N2_1e-5_y0'#'N2_1e5_dla'
 
 N2=1e-5
 cor = 1.24e-4

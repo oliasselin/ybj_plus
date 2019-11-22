@@ -1498,7 +1498,10 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     do ix=1,n1
 !       yval(ix)=n2/4
        if(x_equal_minus_y_transect==1) then
-          yval(ix)=n2-(ix-1)   !transect x = -y
+          yval(ix)=n2-(ix-1)+y_trans   !transect = y - x + y_trans 
+          if( yval(ix) > n2 ) then
+             yval(ix) = yval(ix) - n2
+          end if
        else
           yval(ix)=ix             !transect x = +y
        end if
@@ -1858,7 +1861,10 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     do ix=1,n1
 !       yval(ix)=n2/4                                                                                                                                                             
        if(x_equal_minus_y_transect==1) then
-          yval(ix)=n2-(ix-1)   !transect x = -y                                                                                                                            
+          yval(ix)=n2-(ix-1)+y_trans   !transect = y - x + y_trans                                                                                                       
+          if( yval(ix) > n2 ) then
+             yval(ix) = yval(ix) - n2
+          end if
        else
           yval(ix)=ix             !transect x = +y                                                                                                                        
        end if
@@ -1980,6 +1986,29 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        
        call fft_c2r(zzk,zzr,n3h1)
        field = Ro*zzr
+    else if(id_field==8) then             !Calculate the normalized (shear componet of) strain: 1/2 (psi_xx - psi_yy) / f
+       qmem=psik
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+
+                if(L(ikx,iky)==1) then
+
+                   psik(ikx,iky,izh1) = -(kx*kx-ky*ky)*psik(ikx,iky,izh1)
+
+                else
+
+                   psik(ikx,iky,izh1) = (0.D0,0.D0)
+
+                end if
+
+             enddo
+          enddo
+       end do
+       call fft_c2r(psik,psir,n3h1)
+       field = Ro*psir
     end if
 
 
@@ -2113,6 +2142,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
           if(id_field==4)    wak=qmem
           if(id_field==5)    bk=bmem
           if(id_field==6)    bk=bmem
+          if(id_field==8)    psik=qmem
 
 
           count_slice2(id_field)=count_slice2(id_field)+1

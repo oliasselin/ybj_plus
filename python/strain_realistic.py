@@ -3,27 +3,28 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
 
-timestep=0.1 #0.1 #Fraction of an inertial period between slices
-
 hres=256
 vres=256
 
 Dx = 100  #km (size of domain in the horizontal) 
 
-ts='100'
+ts=0
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'dipole_cstN_test'#'real_N2_1e5'#'real_dg_ml'
+run = 'confluence/strain'#'real_N2_1e5'#'real_dg_ml'
 
 plot_slice=1
-field_to_plot='vort' #vort, u or v
-show_plot=1
-show_xyp=1
+field_to_plot='strain' #vort, u or v
+show_plot=0
+show_xyp=0
 show_quivers=1
+show_transects=1
 colormap='RdBu_r' 
 ncases=1
 nts=1
+
+y0_transects=[0,hres/8,hres/4,3*hres/8,hres/2]
 
 #Create folder for plots if it doesn't exists
 if not os.path.exists('plots/'+run+'/'):
@@ -61,6 +62,12 @@ f_p = np.loadtxt(path_p)
 g_p = np.flipud(np.reshape(f_p,(hres,hres))) 
 
 
+path_s  = scratch_location+folder+run+'/output/slice2htop8 0.dat'
+f_s = np.loadtxt(path_s)
+g_s = np.flipud(np.reshape(f_s,(hres,hres))) 
+
+
+
 if(field_to_plot=='wke'):
     path_lar = scratch_location+folder+run+'/output/slicehtop1'+ts+'.dat'
     f_lar = np.loadtxt(path_lar)
@@ -71,8 +78,6 @@ if(field_to_plot=='wke'):
     g_lai = np.flipud(np.reshape(f_lai,(hres,hres)))
 
     wke = 0.5*(g_lar*g_lar + g_lai*g_lai)
-
-
 
 X, Y = np.meshgrid(np.arange(0,hres), np.arange(0,hres))
 
@@ -122,6 +127,9 @@ if(plot_slice==1):
         elif(field_to_plot=='psi'): 
             ax.set_title(r'Surface $\psi$ (m$^2$/s)')
             im = ax.imshow(g_p,cmap=colormap)
+        elif(field_to_plot=='strain'): 
+            ax.set_title(r'Surface strain $(V_x+U_y)/f$')
+            im = ax.imshow(g_s,cmap=colormap)
         elif(field_to_plot=='wke'): 
             ax.set_title(r'Surface WKE (m/s)$^2$')
             im = ax.imshow(wke,cmap=colormap)
@@ -143,6 +151,14 @@ if(plot_slice==1):
 
             ax.text(hres/2+hres/25,hres/2+hres/8,r"$x'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)
             ax.text(hres/2+hres/25,hres/2-hres/10,r"$y'$",rotation='horizontal',horizontalalignment='center',verticalalignment='center', fontsize=18,color=color)            
+        if(show_transects==1):
+
+            for y0 in y0_transects:   
+                
+                xx=np.arange(y0,hres)
+                yy=np.arange(0,xx.shape[0])
+                ax.plot(xx,yy,'-k',linewidth=1.5)
+
 
         cbar = ax.cax.colorbar(im)
         cbar = grid.cbar_axes[0].colorbar(im)

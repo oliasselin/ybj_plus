@@ -4,8 +4,8 @@ number_of_nodes=3
 number_of_tasks=64
 ntasks_per_node=24
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/real/ml_256_uwz/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/real/ml_256_uwz/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/confluence/N2_1e-5_n2_3_8/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/leif/confluence/N2_1e-5_n2_3_8/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -23,6 +23,7 @@ cat > EXEC_STEP << EXEC
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
 #SBATCH -t 00:30:00
+#SBATCH -A TG-OCE190014 
 
 #This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
 #ibrun in verbose mode will give binding detail
