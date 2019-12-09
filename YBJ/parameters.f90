@@ -79,7 +79,7 @@ MODULE parameters
     integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
     integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =1                !Do the xz slices along x=-y (if = 0, then x = y transect)
-    integer, parameter :: y_trans = 3*n2/8                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
+    integer, parameter :: y_trans = -n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
 
     !Normalization at the tropopause!
     !-------------------------------!

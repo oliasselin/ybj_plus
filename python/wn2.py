@@ -16,9 +16,12 @@ vres=256
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run =  'confluence/N2_1e-6_y0'#'N2_2e5_a'
 
-#run =  'confluence/crap'#'N2_2e5_a'
+iy_transect = -int(hres/4)
+ix_offset = iy_transect/2
+run =  'confluence/N2_1e-5_y_n2-4'#'N2_2e5_a'
+
+
 leif_field=1
 
 
@@ -37,12 +40,13 @@ nyticks=4
 tylabels=np.arange(0,depth+1,depth/nyticks)
 ticksy_loc=np.arange(0,gp_depth,(gp_depth-1.)/nyticks)
 
+
 xyrange_km = 35#np.sqrt(2)*25
 xrange_km  = xyrange_km*np.cos(np.deg2rad(45))
 Dx_km=100
 gp_del= int(round(hres*xrange_km/Dx_km))
-x0 = int(hres/2-gp_del)
-x1 = int(hres/2+gp_del)
+x0 = int(hres/2-gp_del) + ix_offset
+x1 = int(hres/2+gp_del) + ix_offset
 gp_xrange=x1-x0
 #dx=Dx_km*np.sqrt(2)/hres#Dx_km*np.cos(np.deg2rad(45))/hres
 

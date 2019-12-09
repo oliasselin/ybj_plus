@@ -17,8 +17,8 @@ plot_m=0
 #Run specification##############################################
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'confluence/N2_1e-5_y_n2_4'#'N2_1e5_dla'
-kappa_yp = np.pi/4.  #How far from the y'=0 transect crossing the dipole core centers? kappa_yp = 0 at center +/- pi/2                                                                    
+run = 'confluence/N2_1e-5_y_n2-4'#'N2_1e5_dla'
+kappa_yp = -np.pi/4.  #How far from the y'=0 transect crossing the dipole core centers? kappa_yp = 0 at center +/- pi/2                                                                    
 
 N2=1e-5#1e-5
 cor = 1.24e-4
@@ -83,8 +83,8 @@ xp0 = kmx0*dx/1000-xyrange_km
 xp1 = kmx1*dx/1000-xyrange_km
 
 
-gamma=0.5*grad_zeta*np.cos(k_over_sqrt2*((xp1+xp0)/2.)*1000)*np.cos(kappa_yp)   #Local vorticity gradient (in the x' direction) at an arbitrary location (x',y')
-
+gamma=0.5*grad_zeta*np.cos(k_over_sqrt2*((xp1+xp0)/2.)*1000)*np.cos(kappa_yp)                #Local vorticity gradient (in the x' direction) at an arbitrary location (x',y')
+alpha=0.5*(grad_zeta/k_over_sqrt2)*np.cos(k_over_sqrt2*((xp1+xp0)/2.)*1000)*np.sin(kappa_yp) #U_x' as a measure of strain
 beta =0.5*grad_zeta
 ave_depth = (kmz0+kmz1)*dz/2
 
@@ -94,7 +94,7 @@ print ave_depth
 
 kmt = np.zeros((len(ts_plot),3))       #Time series of t,k,m at point kmx,kmz
 kmtp = np.zeros((len(ts_plot),3,len(kmxa)))       #Time series of t,k,m at point kmx,kmz
-pred = np.zeros((len(ts_plot),5))             #Prediction for k: k = 0.5 (max_grad_zeta) t
+pred = np.zeros((len(ts_plot),6))             #Prediction for k: k = 0.5 (max_grad_zeta) t
 
 
 
@@ -153,6 +153,8 @@ for its,ts in enumerate(ts_plot):
         pred[its,2]   = np.power((N2*gamma*gamma)/(3*cor*ave_depth),(1./3.))*(2*np.pi/cor)*ts*timestep
         pred[its,3]   =  beta*(2*np.pi/cor)*ts*timestep #0.5*grad_zeta*np.cos(k_over_sqrt2*(xp1-xp0)*1000)*(2*np.pi/cor)*ts*timestep
         pred[its,4]   = np.power((N2*beta*beta)/(3*cor*ave_depth),(1./3.))*(2*np.pi/cor)*ts*timestep
+        pred[its,5]   = (gamma/(2*alpha))*(1-np.exp(-alpha*(2.*np.pi/cor)*ts*timestep))    #Full prediction with both strain and vorticity gradient  
+
 
 
         for point in range(len(kmxa)):
@@ -171,8 +173,12 @@ for its,ts in enumerate(ts_plot):
 
 if(plot_k==1):
     plt.plot(kmt[:,0],kmt[:,1],color='k',label=r'$\bar{k}$',linewidth=2.)
-    plt.plot(kmt[:,0],pred[:,3],'-b',label=r"$k = 0.5 \beta t$",linewidth=2.)
-    plt.plot(kmt[:,0],pred[:,1],'-r',label=r"$k = - 0.5 \zeta_{x'}(\bar{x'},\bar{y'}) t$",linewidth=2.)
+    plt.plot(kmt[:,0],pred[:,1],'-r',label="Vorticity gradient only",linewidth=2.)
+    plt.plot(kmt[:,0],pred[:,5],'-b',label="Vorticity gradient and strain",linewidth=2.)
+
+#    plt.plot(kmt[:,0],pred[:,3],'-b',label=r"$k = 0.5 \beta t$",linewidth=2.)
+#    plt.plot(kmt[:,0],pred[:,1],'-r',label=r"$k = - 0.5 \zeta_{x'}(\bar{x'},\bar{y'}) t$",linewidth=2.)
+#    plt.plot(kmt[:,0],pred[:,5],'-g',label=r"$k = - 0.5 (\zeta_{x'}(\bar{x'},\bar{y'})/\alpha) (1-\exp(\alpha t))$",linewidth=2.)
 
     for point in range(len(kmxa)):
         plt.plot(kmtp[:,0,point],kmtp[:,1,point],color='gray',linewidth=0.3,label='_nolegend_')

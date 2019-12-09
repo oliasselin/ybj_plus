@@ -8,15 +8,20 @@ from finds import find_resolution
 from finds import find_scales
 from finds import find_timestep
 
-make_gif=0
-show=1
+make_gif=1
+show=0
 plot_slice=1
 
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'
-run = 'real/ml_1024_uwz'
-zoom='_zoom'#''
+
+
+
+iy_transect = -int(256/4)
+ix_offset   = iy_transect/2
+run = 'confluence/N2_1e-5_y_n2-4'#'real/ml_1024_uwz'
+zoom=''#'_zoom'#''
 
 
 location = scratch_location+folder+run
@@ -24,18 +29,20 @@ n1,n2,n3 = find_resolution(location)
 Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 
-depth = 800  #m
+
+
+depth = 1000  #m
 #Range in x'
-xpl = -10000#-350000#-35000#5000#
-xpr = 10000#20000#
-ts_list=[66]#np.arange(0,165,1)
+xpl = -35000#-350000#-35000#5000#
+xpr = 35000#20000#
+ts_list=np.arange(0,151,1)
 
 
 field='dudz'#'dudz'#'dudz'
 
 if(field=='dudz'):
-    vmin = -0.0001#-0.0008
-    vmax = 0.0001#0.0008
+    vmin = -0.0008
+    vmax = 0.0008
 elif(field=='wke'):
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008
@@ -53,17 +60,22 @@ ncases=1
 nts=1
 
 
-#Translate location into grid pointsa
+#Translate location into grid points
 dx=Dx/hres
 dz=Dz/vres
 
-x0 = int((Dx/2. + xpl*np.cos(np.deg2rad(45)))/dx)
-x1 = int((Dx/2. + xpr*np.cos(np.deg2rad(45)))/dx)
+
+
+x0 = int((Dx/2. + xpl*np.cos(np.deg2rad(45)))/dx) + ix_offset
+x1 = int((Dx/2. + xpr*np.cos(np.deg2rad(45)))/dx) + ix_offset
+
+print x0,x1
+
 gp_del= x1-x0
 gp_depth = int(vres*depth/Dz)  
 aspect=0.5*gp_del/gp_depth
 
-nxticks=4
+nxticks=2
 txlabels=np.arange(xpl/1000,(xpr)/1000+1,(xpr-xpl)/(nxticks*1000))
 ticksx_loc=np.arange(0,gp_del,(gp_del-1.)/nxticks)
 

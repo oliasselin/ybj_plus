@@ -1501,6 +1501,8 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
           yval(ix)=n2-(ix-1)+y_trans   !transect = y - x + y_trans 
           if( yval(ix) > n2 ) then
              yval(ix) = yval(ix) - n2
+          else if( yval(ix) < 1 ) then
+             yval(ix) = yval(ix) + n2
           end if
        else
           yval(ix)=ix             !transect x = +y
@@ -1856,17 +1858,18 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
     equivalence(zzk,zzr)
 
-
-    !For z-slices, pick xy section!                                                                                                                                           
+    !For z-slices, pick xy section!                                                                                                                                                
     do ix=1,n1
-!       yval(ix)=n2/4                                                                                                                                                             
+!       yval(ix)=n2/4                                                                                                                                                              
        if(x_equal_minus_y_transect==1) then
-          yval(ix)=n2-(ix-1)+y_trans   !transect = y - x + y_trans                                                                                                       
+          yval(ix)=n2-(ix-1)+y_trans   !transect = y - x + y_trans                                                                                                                 
           if( yval(ix) > n2 ) then
              yval(ix) = yval(ix) - n2
+          else if( yval(ix) < 1 ) then
+             yval(ix) = yval(ix) + n2
           end if
        else
-          yval(ix)=ix             !transect x = +y                                                                                                                        
+          yval(ix)=ix             !transect x = +y                                                                                                                                 
        end if
     end do
 
