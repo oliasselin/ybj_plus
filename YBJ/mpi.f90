@@ -25,6 +25,7 @@ MODULE mpi
 
   integer :: tag_slice_xz(nfields) = [141,142,143,144,145,146,147,148]  !Up to 14X where X is the number of fields to slice
   integer :: tag_slice_xz2(nfields2) = [1141,1142,1143,1144,1145,1146,1147,1148]  !Up to 114X where X is the number of fields to slice
+  integer :: tag_slice_xz3(nfields3) = [11141,11142,11143,11144,11145,11146,11147,11148]  !Up to 114X where X is the number of fields to slice
 
   integer :: tag_nzs = 151
   integer :: tag_nzu = 152

@@ -14,6 +14,8 @@ MODULE files
   integer, parameter :: unit_slicesv = 2
   integer, parameter :: unit_slices2 = 3
   integer, parameter :: unit_slices2v= 4
+  integer, parameter :: unit_slices3 = 5
+  integer, parameter :: unit_slices3v= 6
   integer, parameter :: unit_energy =50
 !  integer, parameter :: unit_etrop  =51
 !  integer, parameter :: unit_estra  =52
