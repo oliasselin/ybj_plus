@@ -11,7 +11,7 @@ import sys
 from finds import find_resolution
 from finds import find_scales
 
-field_to_plot='tendency' #vort, u or v
+field_to_plot='refraction' #vort, u or v
 vloc='htop'
 term_max = 5e-7
 make_gif=1
@@ -26,7 +26,7 @@ log_plot=0
 leif_field=1
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'#double_gaussian/'#'leif/'                                                                                                                                              
-run = 'strain/N2_1e-5_y_n2-4'#'attempt3_ro50'#'ml_100'                                                                                                                                   
+run = 'strain/N2_1e-5_y_n2-4_nodisp'#'attempt3_ro50'#'ml_100'                                                                                                                                   
 
 location = scratch_location+folder+run
 n1,n2,n3 = find_resolution(location)
