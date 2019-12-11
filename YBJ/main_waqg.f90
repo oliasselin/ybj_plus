@@ -110,6 +110,13 @@ PROGRAM main
   equivalence(dBRr,dBRk)
   equivalence(dBIr,dBIk)
 
+  !For YBJ terms magnitude only                                                                                                                            
+  double complex,   dimension(iktx,ikty,n3h0) :: dARk, dAIk
+  double precision, dimension(n1d,n2d,n3h0)   :: dARr, dAIr
+
+  equivalence(dARr,dARk)
+  equivalence(dAIr,dAIk)
+
   !********************** Initializing... *******************************!
 
 
@@ -273,8 +280,8 @@ if(passive_scalar==0) then
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
 
  if(ybj_plus==1) then
-    call A_solver_ybj_plus(ARk,BRkt)
-    call A_solver_ybj_plus(AIk,BIkt)
+    call A_solver_ybj_plus(ARk,BRkt,CRk)
+    call A_solver_ybj_plus(AIk,BIkt,CIk)
  else   !Normal YBJ solver 
     call compute_sigma(sigma,nBRk, nBIk, rBRk, rBIk)              !Compute the sum of A
     call compute_A(ARk,AIK,BRkt,BIkt,CRk,CIK,sigma)               !Compute A!
@@ -328,6 +335,7 @@ end if
        rBIk = (0.D0,0.D0)
      end if
 
+
      !Compute q^n+1 and B^n+1 using leap-frog
      do izh0=1,n3h0
         izh1=izh0+1
@@ -355,6 +363,7 @@ end if
      dBRk=(BRtempk-BRok)/(2.*delt)
      dBIk=(BItempk-BIok)/(2.*delt)
      !*****************************************!
+
 
      !Apply Robert-Asselin filter to damp the leap-frog computational mode
      do izh0=1,n3h0
@@ -416,8 +425,8 @@ if(passive_scalar==0) then
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
 
  if(ybj_plus==1) then
-    call A_solver_ybj_plus(ARk,BRkt)
-    call A_solver_ybj_plus(AIk,BIkt)
+    call A_solver_ybj_plus(ARk,BRkt,CRk)
+    call A_solver_ybj_plus(AIk,BIkt,CIk)
  else   !Normal YBJ solver 
     call compute_sigma(sigma,nBRk, nBIk, rBRk, rBIk)              !Compute the sum of A
     call compute_A(ARk,AIK,BRkt,BIkt,CRk,CIK,sigma)               !Compute A!
@@ -445,9 +454,14 @@ end if
  
 if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
- do id_field=1,nfields
-    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
- end do
+do id_field=1,nfields
+   if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
+end do
+
+do id_field=1,nfields3
+   if(out_slice3==1 .and. mod(iter,freq_slice3)==0 .and. count_slice3(id_field)<max_slices)  call slices3(ARk,AIK,ARr,AIr,dBRk,dBIk,dBRr,dBIr,nBRk,nBIk,nBRr,nBIr,rBRk,rBIk,rBRr,rBIr,id_field)
+end do
+
 ! do id_field=1,nfields2
 !    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
 ! end do
@@ -459,6 +473,10 @@ if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak
  if(out_we ==1   .and. mod(iter,freq_we   )==0)  call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
  if(out_wvave==1 .and. mod(iter,freq_wvave)==0)  call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1 .and. mod(iter,freq_conv )==0)  call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+ if(out_gamma==1 .and. mod(iter,freq_gamma )==0) call gamma_conversion(ARk, AIk, BRk, BIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+
+
+ 
 
  !**************************************************************************!
 

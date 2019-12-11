@@ -18,8 +18,8 @@ scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
 
 iy_transect = -int(hres/4)
-ix_offset = iy_transect/2
-run =  'confluence/N2_1e-5_y_n2-4'#'N2_2e5_a'
+ix_offset = int(iy_transect/2)
+run =  'strain/N2_1e-5_y_n2-4_noadv_nodisp'#'N2_2e5_a'
 
 
 leif_field=1
@@ -85,7 +85,7 @@ dlaidx = np.zeros((gp_depth,x1-x0))
 for ts in range(ts_min,ts_max):
 
     
-    print "ts=",ts
+    print("ts=",ts)
 
     spaces_ts = (3-len(str(ts)))*' '
     path_lar  = scratch_location+folder+run+'/output/slicev1'+spaces_ts+str(ts)+'.dat'

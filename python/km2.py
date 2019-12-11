@@ -17,7 +17,7 @@ plot_m=0
 #Run specification##############################################
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'confluence/N2_1e-5_y_n2-4'#'N2_1e5_dla'
+run = 'strain/N2_1e-5_y_n2-4_noadv'#'N2_1e5_dla'
 kappa_yp = -np.pi/4.  #How far from the y'=0 transect crossing the dipole core centers? kappa_yp = 0 at center +/- pi/2                                                                    
 
 N2=1e-5#1e-5
@@ -88,9 +88,9 @@ alpha=0.5*(grad_zeta/k_over_sqrt2)*np.cos(k_over_sqrt2*((xp1+xp0)/2.)*1000)*np.s
 beta =0.5*grad_zeta
 ave_depth = (kmz0+kmz1)*dz/2
 
-print "x' = [",xp0,",",xp1,"] km"
-print "z' = [",-kmz0*dz,",",-kmz1*dz,"] m"
-print ave_depth
+print("x' = [",xp0,",",xp1,"] km")
+print("z' = [",-kmz0*dz,",",-kmz1*dz,"] m")
+print(ave_depth)
 
 kmt = np.zeros((len(ts_plot),3))       #Time series of t,k,m at point kmx,kmz
 kmtp = np.zeros((len(ts_plot),3,len(kmxa)))       #Time series of t,k,m at point kmx,kmz
@@ -128,7 +128,7 @@ if not os.path.exists('plots/'+run+'/km'):
 
 for its,ts in enumerate(ts_plot):
 
-    print "ts=",ts
+    print("ts=",ts)
 
     zeros_ts = (3-len(str(ts)))*'0'
     path_sig    = 'plots/'+run+'/wn/sig_t'+zeros_ts+str(ts)+'.dat'  

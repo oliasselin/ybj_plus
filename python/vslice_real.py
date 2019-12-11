@@ -1,4 +1,7 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
@@ -19,8 +22,8 @@ folder = 'leif/'#double_gaussian/'#'leif/'
 
 
 iy_transect = -int(256/4)
-ix_offset   = iy_transect/2
-run = 'confluence/N2_1e-5_y_n2-4'#'real/ml_1024_uwz'
+ix_offset   = int(iy_transect/2)
+run = 'strain/N2_1e-5_y_n2-4_noadv_nodisp'#'real/ml_1024_uwz'
 zoom=''#'_zoom'#''
 
 
@@ -69,7 +72,7 @@ dz=Dz/vres
 x0 = int((Dx/2. + xpl*np.cos(np.deg2rad(45)))/dx) + ix_offset
 x1 = int((Dx/2. + xpr*np.cos(np.deg2rad(45)))/dx) + ix_offset
 
-print x0,x1
+print(x0,x1)
 
 gp_del= x1-x0
 gp_depth = int(vres*depth/Dz)  
@@ -106,7 +109,7 @@ for ts in ts_list:
     if os.path.isfile(path_lar):
     
         time=ts*timestep #time in inertial periods
-        print 'Time = ',time,' inertial periods.'
+        print('Time = ',time,' inertial periods.')
 
         if(leif_field==1):
 

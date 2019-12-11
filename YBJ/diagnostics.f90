@@ -968,7 +968,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
        !Computes the wave potential energy conversion terms:
        !\Gamma_a = 0.25 int( nabla^2 A* J(psi,LA) + nabla^2 A J(psi,LA)* )dV = 0.5 int ( DR JR + DI JI ) dV where DR = Re(nabla^2 A) and JI = Im( J(psi,LA)   ) etc.
-       !\Gamma_a = 0.25 int( nabla^2 A* R         + nabla^2 A R*         )dV = 0.5 int ( DR RR + DI RI ) dV where DR = Re(nabla^2 A) and RI = Im( i zeta LA/2 ) etc.
+       !\Gamma_r = 0.25 int( nabla^2 A* R         + nabla^2 A R*         )dV = 0.5 int ( DR RR + DI RI ) dV where DR = Re(nabla^2 A) and RI = Im( i zeta LA/2 ) etc.
 
        double complex,   dimension(iktx,ikty,n3h0) :: ARk, AIk
 
@@ -1074,6 +1074,189 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        if(mype==0) write(unit=unit_conv ,fmt=*) time,ca_tot,cr_tot
 
      end subroutine we_conversion
+
+
+
+    subroutine gamma_conversion(ARk, AIk, BRk, BIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+
+       !Computes the wave energy conversion terms: SIGNS ARE INVERTED FOR GAMMA_R AND GAMMA_A COMPARED WITH WE_ AND WPE_CONVERSION! ALSO EVERYBODY IS DIMENSIONAL.                   
+       !\Gamma_a = - 0.25 int( nabla^2 A* J(psi,LA) + nabla^2 A J(psi,LA)* )dV = - 0.5 int ( DR JR + DI JI ) dV where DR = Re(nabla^2 A) and JI = Im( J(psi,LA)   ) etc.             
+       !\Gamma_r = - 0.25 int( nabla^2 A* R         + nabla^2 A R*         )dV = - 0.5 int ( DR RR + DI RI ) dV where DR = Re(nabla^2 A) and RI = Im( i zeta LA/2 ) etc.            
+
+       double complex,   dimension(iktx,ikty,n3h0) :: ARk, AIk
+       double complex,   dimension(iktx,ikty,n3h0) :: BRk, BIk
+
+       double complex,   dimension(iktx,ikty,n3h0) :: nBRk, nBIk, rBRk, rBIk
+       double precision, dimension(n1d,n2d,n3h0)   :: nBRr, nBIr, rBRr, rBIr
+
+       !Nabla^2 A --> -kh2                                                                                                                                               
+       double complex,   dimension(iktx,ikty,n3h0) :: nARk, nAIk
+       double precision, dimension(n1d,n2d,n3h0)   :: nARr, nAIr
+
+       !Store REF and ADV terms temporarily (to avoid fft back)                                                                                                          
+       double complex,   dimension(iktx,ikty,n3h0) :: tRk, tIk
+       double precision, dimension(n1d,n2d,n3h0)   :: tRr, tIr
+
+       !Conversion terms for advection, refraction, forcing and dissipation                                                                                               
+       real ::  ca_p, ca_tot
+       real ::  cr_p, cr_tot
+       real ::  cd_p, cd_tot
+
+       equivalence(nARk,nARr)
+       equivalence(nAIk,nAIr)
+
+       equivalence(tRk,tRr)
+       equivalence(tIk,tIr)
+
+       ca_p = 0.
+       cr_p = 0.
+       cd_p = 0.
+
+       ca_tot = 0.
+       cr_tot = 0.
+       cd_tot = 0.
+
+
+       !Compute nabla^2 A == nA                                                                                                                                        
+       do izh0=1,n3h0
+         do iky=1,ikty
+            ky = kya(iky)
+            do ikx=1,iktx
+               kx = kxa(ikx)
+               kh2=kx*kx+ky*ky
+
+               nARk(ikx,iky,izh0) =  - kh2*ARk(ikx,iky,izh0)
+               nAIk(ikx,iky,izh0) =  - kh2*AIk(ikx,iky,izh0)
+
+            enddo
+         enddo
+      enddo
+
+      !FFT nA to real-space to compute the conversion terms                                                                                                            
+      call fft_c2r(nARk,nARr,n3h0)
+      call fft_c2r(nAIk,nAIr,n3h0)
+
+
+       !-----------------!                                                                                                                                            
+       !--- Advection ---!                                                                                                                                          
+       !-----------------!                                                                                                                                               
+
+       !Start with the advective conversion term                                                                                                                          
+       tRk = nBRk
+       tIk = nBIk
+
+      !FFT advection to real-space to compute the conversion term                                                                                                         
+      call fft_c2r(nBRk,nBRr,n3h0)
+      call fft_c2r(nBIk,nBIr,n3h0)
+
+      !Compute the local integral for advection conversion                                                                                                                    
+      do izh0=1,n3h0
+         do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+
+                   ca_p = ca_p - 0.5*(nARr(ix,iy,izh0)*nBRr(ix,iy,izh0) + nAIr(ix,iy,izh0)*nBIr(ix,iy,izh0))
+
+                end if
+             end do
+          end do
+       end do
+
+       !Recover k-space advective terms                                                                                                                                     
+       nBRk = tRk
+       nBIk = tIk
+
+
+       !------------------!                                                                                                                                                  
+       !--- Refraction ---!                                                                                                                                                  
+       !------------------!                                                                                                                                                  
+
+       !Next: refractive terms                                                                                                                                                        
+       tRk = rBRk
+       tIk = rBIk
+
+       !FFT refraction to real-space to compute the conversion term                                                                                                             
+       call fft_c2r(rBRk,rBRr,n3h0)
+       call fft_c2r(rBIk,rBIr,n3h0)
+
+       !Compute the local integral for refraction conversion                                                                                                                          
+       do izh0=1,n3h0
+          do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+
+                   cr_p = cr_p + 0.25*(nARr(ix,iy,izh0)*rBIr(ix,iy,izh0) - nAIr(ix,iy,izh0)*rBRr(ix,iy,izh0) )    !Because I define rB = zeta LA, and refraction = (i/2) zeta LA      
+
+                end if
+             end do
+          end do
+       end do
+
+       !Recover k-space advective terms                                                                                                                                               
+       rBRk = tRk
+       rBIk = tIk
+
+
+       !-------------------!                                                                                                                                            
+       !--- Dissipation ---!                                                                                                                
+       !-------------------!                                                                                                                                                  
+
+       !Compute dissipation - nuhX*nabla^{2*ilapX} LA and store in the temporary array                                                                                             
+       do izh0=1,n3h0
+         do iky=1,ikty
+            ky = kya(iky)
+            do ikx=1,iktx
+               kx = kxa(ikx)
+               kh2=kx*kx+ky*ky
+
+               tRk(ikx,iky,izh0) =  - 0.5*( nuh*((1.*kx)**(2.*ilap) + (1.*ky)**(2.*ilap)) )*BRk(ikx,iky,izh0)
+               tIk(ikx,iky,izh0) =  - 0.5*( nuh*((1.*kx)**(2.*ilap) + (1.*ky)**(2.*ilap)) )*BIk(ikx,iky,izh0)
+
+            enddo
+         enddo
+      enddo
+
+      !FFT dissipation to real-space to compute the conversion term                                                                                                           
+      call fft_c2r(tRk,tRr,n3h0)
+      call fft_c2r(tIk,tIr,n3h0)
+
+      !Compute the local integral for advection conversion                                                                                                                 
+                                                                                                                                                                      
+      do izh0=1,n3h0
+         do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+
+                   cd_p = cd_p + nARr(ix,iy,izh0)*tRr(ix,iy,izh0) + nAIr(ix,iy,izh0)*tIr(ix,iy,izh0)
+
+                end if
+             end do
+          end do
+       end do
+
+
+       !-------------------!                                                                                                                                             
+       !--- Write files ---!                                                                                                                                                    
+       !-------------------!  
+
+
+       !Sum over all processors                                                                                                                                              
+       call mpi_reduce(ca_p,ca_tot, 1,MPI_REAL, MPI_SUM,0,MPI_COMM_WORLD,ierror)
+       call mpi_reduce(cr_p,cr_tot, 1,MPI_REAL, MPI_SUM,0,MPI_COMM_WORLD,ierror)
+       call mpi_reduce(cd_p,cd_tot, 1,MPI_REAL, MPI_SUM,0,MPI_COMM_WORLD,ierror)
+
+       !Normalize                                                                                                                                                                     
+       ca_tot = ca_tot*Uw_scale*Uw_scale*U_scale/(n1*n2*n3*Bu*L_scale)
+       cr_tot = cr_tot*Uw_scale*Uw_scale*U_scale/(n1*n2*n3*Bu*L_scale)
+       cd_tot = cd_tot*Uw_scale*Uw_scale*U_scale/(n1*n2*n3*Bu*L_scale)
+
+       if(mype==0) write(unit=unit_gamma ,fmt=*) time*(L_scale/U_scale)/(3600*24),ca_tot,cr_tot,cd_tot
+
+
+     end subroutine gamma_conversion
+
+
+
 
 
  SUBROUTINE enstrophy(zxk,zyk,zzk) 
@@ -1552,46 +1735,11 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
 
-    !LAR_z : for quick and dirty plot, use the otherwise unused C field to store LAz. This only works outside of top/bottom levels of each processor (which we set to zero)                                                                                                                                                                       
     elseif(id_field==3) then
-       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. 
-          do izh0=2,n3h0-1   !Only works away from top and bottom levels of each processor
-             do iky=1,ikty
-                ky = kya(iky)
-                do ikx=1,iktx
-                   kx = kxa(ikx)
-                   kh2=kx*kx+ky*ky
-                   if(L(ikx,iky)==1) then
-                      CRk(ikx,iky,izh0) = ((BRk(ikx,iky,izh0+1) + 0.25*kh2*ARk(ikx,iky,izh0+1)/Bu) - (BRk(ikx,iky,izh0-1) + 0.25*kh2*ARk(ikx,iky,izh0-1)/Bu))/(2.*dz)
-                   else
-                      CRk(ikx,iky,izh0) = (0.D0,0.D0)
-                   end if
-                enddo
-             enddo
-          end do
-       end if
-       call fft_c2r(CRk,CRr,n3h0)
-       field = Uw_scale*CRr/H_scale
-    !LAI_z                                                                                                                                                                             
+       field = 0.
+
     elseif(id_field==4) then
-       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. 
-          do izh0=2,n3h0-1   !Only works away from top and bottom levels of each processor
-             do iky=1,ikty
-                ky = kya(iky)
-                do ikx=1,iktx
-                   kx = kxa(ikx)
-                   kh2=kx*kx+ky*ky
-                   if(L(ikx,iky)==1) then
-                      CIk(ikx,iky,izh0) = ((BIk(ikx,iky,izh0+1) + 0.25*kh2*AIk(ikx,iky,izh0+1)/Bu) - (BIk(ikx,iky,izh0-1) + 0.25*kh2*AIk(ikx,iky,izh0-1)/Bu))/(2.*dz)
-                   else
-                      CIk(ikx,iky,izh0) = (0.D0,0.D0)
-                   end if
-                enddo
-             enddo
-          end do
-       end if
-       call fft_c2r(CIk,CIr,n3h0)
-       field = Uw_scale*CIr/H_scale
+       field = 0.
 
        !LAR_x
     elseif(id_field==5) then
@@ -1844,6 +1992,15 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     double complex, dimension(iktx,ikty,n3h2) :: bmem
     double complex, dimension(iktx,ikty,n3h1) :: qmem
     
+    !Suboptimal storage use: only to avoid fft back in field=9: the Jacobian of psi with zeta
+    double complex, dimension(iktx,ikty,n3h2) :: umem
+    double complex, dimension(iktx,ikty,n3h2) :: vmem
+
+    double complex, dimension(iktx,ikty,n3h1)    :: zxk,zyk
+    double precision,    dimension(n1d,n2d,n3h1) :: zxr,zyr
+
+
+
     double precision,    dimension(n1d,n2d,n3h0+2*hlvl2(id_field)) :: field
 
     real, dimension(n1,n3h0) :: XZ_slice_p        !Scratch array for xz slices (divided amongst processors)                                                                                                                               
@@ -1856,6 +2013,8 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     integer :: nrec
     integer :: processor
 
+    equivalence(zxk,zxr)
+    equivalence(zyk,zyr)
     equivalence(zzk,zzr)
 
     !For z-slices, pick xy section!                                                                                                                                                
@@ -1887,15 +2046,46 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        qmem=psik
        call fft_c2r(psik,psir,n3h1)
        field = U_scale*L_scale*psir    !In fact, w_DIM = UH/L w_NDIM (in the code) = UH/L Ro w_NDIM_1 (since w_NDIM_0 =0 in QG) => w_real_life = U Ar Ro w_1_computed
-    else if(id_field==4) then
-       qmem=wak
-       call fft_c2r(wak,war,n3h1)
-       field = U_scale*sqrt(Ar2)*Ro*war    !In fact, w_DIM = UH/L w_NDIM (in the code) = UH/L Ro w_NDIM_1 (since w_NDIM_0 =0 in QG) => w_real_life = U Ar Ro w_1_computed
-    else if(id_field==5) then             !QG streamfunction
-       bmem=bk
-       call fft_c2r(bk,br,n3h2)
-       field = (U_scale*U_scale/(H_scale*Ro))*br     !In fact, b_real_life = fUL/H b_computed = U^2/(Ro*H) b_computed
-       !For theta_1_real, just multiply field (b_real) by H_scale*H_1/cp.
+    else if(id_field==4) then             !zeta_x for comparison with J(psi,zeta)
+       !Calculate the vorticity gradient                                                                                                                                                
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+                   zxk(ikx,iky,izh1) = -i*kx*kh2*psik(ikx,iky,izh1)
+                else
+                   zxk(ikx,iky,izh1) = (0.D0,0.D0)
+                end if
+
+             enddo
+          enddo
+       end do
+       call fft_c2r(zxk,zxr,n3h1)
+       field = zxr*U_scale/(L_scale*L_scale)
+    else if(id_field==5) then             !zeta_y for comparison with J(psi,zeta)
+       !Calculate the vorticity gradient                                                                                                                                                
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+                   zyk(ikx,iky,izh1) = -i*ky*kh2*psik(ikx,iky,izh1)
+                else
+                   zyk(ikx,iky,izh1) = (0.D0,0.D0)
+                end if
+
+             enddo
+          enddo
+       end do
+       call fft_c2r(zyk,zyr,n3h1)
+       field = zyr*U_scale/(L_scale*L_scale)
     elseif(id_field==6) then   !Fr^2/Ro * b_z/r_2 << 1 ? (Limiting QG assumption)                                                                                                                                                           
        bmem=bk
        call fft_c2r(bk,br,n3h2)
@@ -2012,6 +2202,60 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        end do
        call fft_c2r(psik,psir,n3h1)
        field = Ro*psir
+
+    else if(id_field==9) then    !Calculate J(psi,zeta) = U zeta_x + V zeta_y
+       umem=uk
+       vmem=vk
+
+       call fft_c2r(uk,ur,n3h2)      
+       call fft_c2r(vk,vr,n3h2)      
+
+
+       !Calculate the vorticity gradient
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+
+                   zxk(ikx,iky,izh1) = -i*kx*kh2*psik(ikx,iky,izh1)
+                   zyk(ikx,iky,izh1) = -i*ky*kh2*psik(ikx,iky,izh1)
+
+                else
+
+                   zxk(ikx,iky,izh1) = (0.D0,0.D0)
+                   zyk(ikx,iky,izh1) = (0.D0,0.D0)
+
+                end if
+
+             enddo
+          enddo
+       end do
+
+       call fft_c2r(zxk,zxr,n3h1)
+       call fft_c2r(zyk,zyr,n3h1)
+
+       
+       do izh1=1,n3h1
+          izh2=izh1+1
+          do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+                   
+                   field(ix,iy,izh1) = ur(ix,iy,izh2)*zxr(ix,iy,izh1) + vr(ix,iy,izh2)*zyr(ix,iy,izh1)  
+
+                else
+
+                   field(ix,iy,izh1) = 0.
+
+                end if
+             end do
+          end do
+       end do
+       field = field*(U_scale*U_scale)/(L_scale*L_scale)
     end if
 
 
@@ -2142,16 +2386,297 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
           if(id_field==1)    uk=bmem
           if(id_field==2)    vk=bmem
           if(id_field==3)    psik=qmem
-          if(id_field==4)    wak=qmem
-          if(id_field==5)    bk=bmem
           if(id_field==6)    bk=bmem
           if(id_field==8)    psik=qmem
-
+          if(id_field==9) then
+             uk=umem
+             vk=vmem
+          end if
 
           count_slice2(id_field)=count_slice2(id_field)+1
 
 
         end subroutine slices2
+
+
+
+
+
+
+
+
+
+
+  subroutine slices3(ARk,AIK,ARr,AIr,dBRk,dBIk,dBRr,dBIr,nBRk,nBIk,nBRr,nBIr,rBRk,rBIk,rBRr,rBIr,id_field)
+
+    double complex, dimension(iktx,ikty,n3h0) :: ARk,AIk
+    double precision,    dimension(n1d,n2d,n3h0) :: ARr, AIr
+
+    double complex, dimension(iktx,ikty,n3h0) :: dBRk,dBIk
+    double precision,    dimension(n1d,n2d,n3h0) :: dBRr, dBIr
+
+    double complex, dimension(iktx,ikty,n3h0) :: nBRk,nBIk
+    double precision,    dimension(n1d,n2d,n3h0) :: nBRr, nBIr
+
+    double complex, dimension(iktx,ikty,n3h0) :: rBRk,rBIk
+    double precision,    dimension(n1d,n2d,n3h0) :: rBRr, rBIr
+
+
+    !Temp arrays for convenience
+    double complex, dimension(iktx,ikty,n3h0) :: Rmemk, Imemk
+    double complex, dimension(iktx,ikty,n3h0) :: Rmemk2, Imemk2
+    double precision,    dimension(n1d,n2d,n3h0) :: Rmem,Imem,Rmem2,Imem2
+
+    double precision,    dimension(n1d,n2d,n3h0+2*hlvl3(id_field)) :: field
+
+    real, dimension(n1,n3h0) :: XZ_slice_p        !Scratch array for xz slices (divided amongst processors)                                                             
+    real, dimension(n1,n3)   :: XZ_slice          !Scratch array for xz slices                                                                                             
+
+    integer :: unit
+    integer :: id_field
+    character(len = 32) :: fname                !future file name                                                                         
+
+    integer :: nrec
+    integer :: processor
+
+    equivalence(Rmem,Rmemk)
+    equivalence(Imem,Imemk)
+    equivalence(Rmem2,Rmemk2)
+    equivalence(Imem2,Imemk2)
+
+    !For z-slices, pick xy section!
+    do ix=1,n1
+!       yval(ix)=n2/4
+       if(x_equal_minus_y_transect==1) then
+          yval(ix)=n2-(ix-1)+y_trans   !transect = y - x + y_trans 
+          if( yval(ix) > n2 ) then
+             yval(ix) = yval(ix) - n2
+          else if( yval(ix) < 1 ) then
+             yval(ix) = yval(ix) + n2
+          end if
+       else
+          yval(ix)=ix             !transect x = +y
+       end if
+    end do
+
+    !d/dt LAR
+    if(id_field==1) then
+       Rmemk = dBRk
+       call fft_c2r(dBRk,dBRr,n3h0)
+       field = Uw_scale*dBRr*U_scale/L_scale
+    !d/dt LAI
+    elseif(id_field==2) then
+       Rmemk = dBIk
+       call fft_c2r(dBIk,dBIr,n3h0)
+       field = Uw_scale*dBIr*U_scale/L_scale
+    !J(psi,LAR)
+    elseif(id_field==3) then
+       Rmemk = nBRk
+       call fft_c2r(nBRk,nBRr,n3h0)
+       field = Uw_scale*nBRr*U_scale/L_scale
+    !J(psi,LAI)
+    elseif(id_field==4) then
+       Rmemk = nBIk
+       call fft_c2r(nBIk,nBIr,n3h0)
+       field = Uw_scale*nBIr*U_scale/L_scale
+    !Re(i/2 zeta*LA) = - 0.5 rBIk
+    elseif(id_field==5) then
+       Rmemk = rBIk
+       call fft_c2r(rBIk,rBIr,n3h0)
+       field = -0.5*Uw_scale*rBIr*U_scale/L_scale
+    !Im(i/2 zeta*LA) = + 0.5 rBRk
+    elseif(id_field==6) then
+       Rmemk = rBRk
+       call fft_c2r(rBRk,rBRr,n3h0)
+       field =  0.5*Uw_scale*rBRr*U_scale/L_scale
+    !Re(i/2 cor*nabla(A)) = -0.5 cor nAI
+    elseif(id_field==7) then
+       Rmemk = AIk
+       do izh0=1,n3h0
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+                
+                AIk(ikx,iky,izh0) = -kh2*AIk(ikx,iky,izh0)
+
+             end do
+          end do
+       end do
+
+       call fft_c2r(AIk,AIr,n3h0)
+       field = -0.5*cor*Uw_scale*AIr/Bu
+    !Im(i/2 cor*nabla(A)) = +0.5 cor nAR
+    elseif(id_field==8) then
+       Rmemk = ARk
+       do izh0=1,n3h0
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+                
+                ARk(ikx,iky,izh0) = -kh2*ARk(ikx,iky,izh0)
+
+             end do
+          end do
+       end do
+       call fft_c2r(ARk,ARr,n3h0)
+       field =  0.5*cor*Uw_scale*ARr/Bu
+    end if
+
+
+    !Print bottom slice
+    if( bot_height > mype*n3h0 .AND. bot_height <= (mype+1)*n3h0 ) then
+       
+       write (fname, "(A10,I1,I3,A4)") "slicehbot3",id_field,count_slice3(id_field),".dat"
+       open (unit=unit_slices3,file=fname,action="write",status="replace")
+       
+       iz=bot_height - mype*n3h0 + hlvl3(id_field)
+       
+       
+       do iy=1,n2
+          write(unit=unit_slices3,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices3,fmt=*) '           '
+       enddo
+333    format(1x,E12.5,1x)
+       
+       close (unit=unit_slices3)
+       
+    end if
+    
+    
+    !Print mid-height slice
+    if( mid_height > mype*n3h0 .AND. mid_height <= (mype+1)*n3h0 ) then
+       
+       !          write (fname, "(A9,I1,I1,A4)") "slicehmid",id_field,count_slice(id_field),".dat"
+       write (fname, "(A10,I1,I3,A4)") "slicehmid3",id_field,count_slice3(id_field),".dat"
+       open (unit=unit_slices3,file=fname,action="write",status="replace")
+       
+       iz=mid_height - mype*n3h0 + hlvl3(id_field)
+       
+       
+       do iy=1,n2
+          write(unit=unit_slices3,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices3,fmt=*) '           '
+       enddo
+       
+       
+       close (unit=unit_slices3)
+       
+    end if
+    
+    !Print top slice
+    if( top_height > mype*n3h0 .AND. top_height <= (mype+1)*n3h0 ) then
+       
+       !          write (fname, "(A9,I1,I1,A4)") "slicehtop",id_field,count_slice(id_field),".dat"
+       write (fname, "(A10,I1,I3,A4)") "slicehtop3",id_field,count_slice3(id_field),".dat"
+       open (unit=unit_slices3,file=fname,action="write",status="replace")
+       
+       iz=top_height - mype*n3h0 + hlvl3(id_field)
+       
+       
+       do iy=1,n2
+          write(unit=unit_slices3,fmt=333) (real(field(ix,iy,iz)),ix=1,n1)
+          write(unit=unit_slices3,fmt=*) '           '
+       enddo
+       
+       
+       close (unit=unit_slices3)
+       
+    end if
+
+
+
+
+    !Print vertical slice
+
+       if(mype==0) then
+!          write (fname, "(A6,I1,I1,A4)") "slicev",id_field,count_slice(id_field),".dat"
+          write (fname, "(A7,I1,I3,A4)") "slicev3",id_field,count_slice3(id_field),".dat"
+          open (unit=unit_slices3v,file=fname,action="write",status="replace")
+
+          !Copy ur slice on XY_slice (NOTICE IT'S NOT ON XY_slice_p)                                                                                                                                                                      
+          do ix=1,n1
+             do izh0=1,n3h0
+                iz  =izh0+hlvl3(id_field)
+                XZ_slice(ix,izh0) = field(ix,yval(ix),iz)
+             end do
+          end do
+
+          !Receive from other processors                                                                                                                                                                                                  
+          do nrec=1,npe-1
+             call mpi_recv(XZ_slice_p,n1*n3h0,MPI_REAL,MPI_ANY_SOURCE,tag_slice_xz3(id_field),MPI_COMM_WORLD,status,ierror)
+             processor=status(MPI_SOURCE)
+             !Copy onto scratch array                                                                                                                                                                                                     
+             do ix=1,n1
+                do iz=1,n3h0
+                   XZ_slice(ix,iz+n3h0*processor) = XZ_slice_p(ix,iz)
+                end do
+             end do
+          end do
+
+          !Now print the complete slice onto file                                                                                                                                                                                         
+!          do ix=1,n1
+!            do iz=1,n3
+!               write(unit=count_slice(id_field),fmt=*) real(xa(ix)),real(za(iz)),XZ_slice(ix,iz)
+!             end do
+!          end do
+          do iz=1,n3
+             write(unit=unit_slices3v,fmt=333) (XZ_slice(ix,iz),ix=1,n1)
+             write(unit=unit_slices3v,fmt=*) '           '
+          enddo
+          close (unit=unit_slices3v)
+
+          
+       end if
+
+       !All other processors (mype>0) send their XZ_field_p to mype 0                                                                                                                                                                     
+       if(mype/=0) then
+          do ix=1,n1
+             do izh0=1,n3h0
+                iz  =izh0 + hlvl3(id_field)
+                XZ_slice_p(ix,izh0) = field(ix,yval(ix),iz)
+             end do
+          end do
+          
+          !Now send these chunks to mype 0                                                                                                                                                                                                
+          call mpi_send(XZ_slice_p,n1*n3h0,MPI_REAL,0,tag_slice_xz3(id_field),MPI_COMM_WORLD,ierror)
+          
+       end if
+
+
+
+
+
+          if(id_field==1)    then 
+             dBRk=Rmemk
+          elseif(id_field==2)    then 
+             dBIk=Rmemk
+          elseif(id_field==3)    then 
+             nBRk=Rmemk
+          elseif(id_field==4)    then 
+             nBIk=Rmemk
+          elseif(id_field==5)    then 
+             rBIk=Rmemk
+          elseif(id_field==6)    then 
+             rBRk=Rmemk
+          elseif(id_field==7)    then 
+             AIk=Rmemk
+          elseif(id_field==8)    then 
+             ARk=Rmemk
+          end if
+
+          count_slice3(id_field)=count_slice3(id_field)+1
+
+
+        end subroutine slices3
+
+
+
+
+
 
 
   !**************!

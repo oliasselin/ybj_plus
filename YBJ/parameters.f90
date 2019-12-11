@@ -19,7 +19,7 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = 100000                             !Horizontal domain size (in m)
+    double precision, parameter :: dom_x = 120000                             !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
@@ -77,7 +77,7 @@ MODULE parameters
     integer, parameter :: ny_leif = 60
     integer, parameter :: iktx_leif= nx_leif/2+1, ikty_leif=ny_leif
     integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
-    integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
+    integer, parameter :: leif_field = 1                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =1                !Do the xz slices along x=-y (if = 0, then x = y transect)
     integer, parameter :: y_trans = -n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
 
@@ -223,7 +223,8 @@ MODULE parameters
 
     integer, parameter :: out_etot   = 1, freq_etot   = INT(0.1*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
     integer, parameter :: out_we     = 1, freq_we     = INT(0.1*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
-    integer, parameter :: out_conv   = 0, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
+    integer, parameter :: out_conv   = 1, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
+    integer, parameter :: out_gamma  = 1, freq_gamma  = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_hspec  = 1, freq_hspec  = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
     integer, parameter :: out_hspecw = 1, freq_hspecw = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
     integer, parameter :: out_hg     = 0                 !Output geostrophic horizontal spectrum as well?
@@ -272,17 +273,20 @@ MODULE parameters
     !Slices
     integer, parameter :: max_slices = 999     
     integer, parameter :: nfields  = 8         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
-    integer, parameter :: nfields2 = 8         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
+    integer, parameter :: nfields2 = 9         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
+    integer, parameter :: nfields3 = 8         !Don't forget to change tag_slice_xz(nfields) accordingly in "mpi.f90"
     integer :: count_slice(nfields) = 0        !number of slices
     integer :: count_slice2(nfields2) = 0      !number of slices
+    integer :: count_slice3(nfields3) = 0      !number of slices
     integer :: count_vave=0                    !Initialize count for vertically-averaged energy 
     integer :: yval(n1)
     integer :: hlvl(nfields)=[0,0,0,0,0,0,0,0]                                   
-    integer :: hlvl2(nfields2)=[2,2,1,1,2,1,1,1]                                   
+    integer :: hlvl2(nfields2)=[2,2,1,1,1,1,1,1,1]                                 
+    integer :: hlvl3(nfields)=[0,0,0,0,0,0,0,0]                                     
 
-    integer, parameter :: bot_height = INT(n3*(1-200/dom_z))
-    integer, parameter :: mid_height = INT(n3*(1-300/dom_z))
-    integer, parameter :: top_height = INT(n3*(1-400/dom_z))
+    integer, parameter :: bot_height = INT(n3*(1-400/dom_z))
+    integer, parameter :: mid_height = INT(n3*(1-200/dom_z))
+    integer, parameter :: top_height = n3!INT(n3*(1-400/dom_z))
 
     integer, parameter :: out_slab = 0, freq_slab = 1
     integer, parameter :: slab_mype   = npe/2-1 
@@ -292,6 +296,7 @@ MODULE parameters
     integer :: id_field                       !dummy index to differenciate fields plotted  
 
     integer, parameter :: out_slice   = 1, freq_slice =  1* freq_etot
+    integer, parameter :: out_slice3  = 1, freq_slice3=  1* freq_etot
     integer, parameter :: out_eta     = 0, freq_eta   =  freq_hspec
     integer, parameter :: out_tspec   = 0
 
