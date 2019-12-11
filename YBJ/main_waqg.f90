@@ -335,6 +335,7 @@ end if
        rBIk = (0.D0,0.D0)
      end if
 
+
      !Compute q^n+1 and B^n+1 using leap-frog
      do izh0=1,n3h0
         izh1=izh0+1
@@ -472,6 +473,8 @@ end do
  if(out_we ==1   .and. mod(iter,freq_we   )==0)  call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
  if(out_wvave==1 .and. mod(iter,freq_wvave)==0)  call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1 .and. mod(iter,freq_conv )==0)  call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+ if(out_gamma==1 .and. mod(iter,freq_gamma )==0) call gamma_conversion(ARk, AIk, BRk, BIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+
 
  
 

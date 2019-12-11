@@ -968,7 +968,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
        !Computes the wave potential energy conversion terms:
        !\Gamma_a = 0.25 int( nabla^2 A* J(psi,LA) + nabla^2 A J(psi,LA)* )dV = 0.5 int ( DR JR + DI JI ) dV where DR = Re(nabla^2 A) and JI = Im( J(psi,LA)   ) etc.
-       !\Gamma_a = 0.25 int( nabla^2 A* R         + nabla^2 A R*         )dV = 0.5 int ( DR RR + DI RI ) dV where DR = Re(nabla^2 A) and RI = Im( i zeta LA/2 ) etc.
+       !\Gamma_r = 0.25 int( nabla^2 A* R         + nabla^2 A R*         )dV = 0.5 int ( DR RR + DI RI ) dV where DR = Re(nabla^2 A) and RI = Im( i zeta LA/2 ) etc.
 
        double complex,   dimension(iktx,ikty,n3h0) :: ARk, AIk
 
@@ -1074,6 +1074,189 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        if(mype==0) write(unit=unit_conv ,fmt=*) time,ca_tot,cr_tot
 
      end subroutine we_conversion
+
+
+
+    subroutine gamma_conversion(ARk, AIk, BRk, BIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+
+       !Computes the wave energy conversion terms: SIGNS ARE INVERTED FOR GAMMA_R AND GAMMA_A COMPARED WITH WE_ AND WPE_CONVERSION! ALSO EVERYBODY IS DIMENSIONAL.                   
+       !\Gamma_a = - 0.25 int( nabla^2 A* J(psi,LA) + nabla^2 A J(psi,LA)* )dV = - 0.5 int ( DR JR + DI JI ) dV where DR = Re(nabla^2 A) and JI = Im( J(psi,LA)   ) etc.             
+       !\Gamma_r = - 0.25 int( nabla^2 A* R         + nabla^2 A R*         )dV = - 0.5 int ( DR RR + DI RI ) dV where DR = Re(nabla^2 A) and RI = Im( i zeta LA/2 ) etc.            
+
+       double complex,   dimension(iktx,ikty,n3h0) :: ARk, AIk
+       double complex,   dimension(iktx,ikty,n3h0) :: BRk, BIk
+
+       double complex,   dimension(iktx,ikty,n3h0) :: nBRk, nBIk, rBRk, rBIk
+       double precision, dimension(n1d,n2d,n3h0)   :: nBRr, nBIr, rBRr, rBIr
+
+       !Nabla^2 A --> -kh2                                                                                                                                               
+       double complex,   dimension(iktx,ikty,n3h0) :: nARk, nAIk
+       double precision, dimension(n1d,n2d,n3h0)   :: nARr, nAIr
+
+       !Store REF and ADV terms temporarily (to avoid fft back)                                                                                                          
+       double complex,   dimension(iktx,ikty,n3h0) :: tRk, tIk
+       double precision, dimension(n1d,n2d,n3h0)   :: tRr, tIr
+
+       !Conversion terms for advection, refraction, forcing and dissipation                                                                                               
+       real ::  ca_p, ca_tot
+       real ::  cr_p, cr_tot
+       real ::  cd_p, cd_tot
+
+       equivalence(nARk,nARr)
+       equivalence(nAIk,nAIr)
+
+       equivalence(tRk,tRr)
+       equivalence(tIk,tIr)
+
+       ca_p = 0.
+       cr_p = 0.
+       cd_p = 0.
+
+       ca_tot = 0.
+       cr_tot = 0.
+       cd_tot = 0.
+
+
+       !Compute nabla^2 A == nA                                                                                                                                        
+       do izh0=1,n3h0
+         do iky=1,ikty
+            ky = kya(iky)
+            do ikx=1,iktx
+               kx = kxa(ikx)
+               kh2=kx*kx+ky*ky
+
+               nARk(ikx,iky,izh0) =  - kh2*ARk(ikx,iky,izh0)
+               nAIk(ikx,iky,izh0) =  - kh2*AIk(ikx,iky,izh0)
+
+            enddo
+         enddo
+      enddo
+
+      !FFT nA to real-space to compute the conversion terms                                                                                                            
+      call fft_c2r(nARk,nARr,n3h0)
+      call fft_c2r(nAIk,nAIr,n3h0)
+
+
+       !-----------------!                                                                                                                                            
+       !--- Advection ---!                                                                                                                                          
+       !-----------------!                                                                                                                                               
+
+       !Start with the advective conversion term                                                                                                                          
+       tRk = nBRk
+       tIk = nBIk
+
+      !FFT advection to real-space to compute the conversion term                                                                                                         
+      call fft_c2r(nBRk,nBRr,n3h0)
+      call fft_c2r(nBIk,nBIr,n3h0)
+
+      !Compute the local integral for advection conversion                                                                                                                    
+      do izh0=1,n3h0
+         do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+
+                   ca_p = ca_p - 0.5*(nARr(ix,iy,izh0)*nBRr(ix,iy,izh0) + nAIr(ix,iy,izh0)*nBIr(ix,iy,izh0))
+
+                end if
+             end do
+          end do
+       end do
+
+       !Recover k-space advective terms                                                                                                                                     
+       nBRk = tRk
+       nBIk = tIk
+
+
+       !------------------!                                                                                                                                                  
+       !--- Refraction ---!                                                                                                                                                  
+       !------------------!                                                                                                                                                  
+
+       !Next: refractive terms                                                                                                                                                        
+       tRk = rBRk
+       tIk = rBIk
+
+       !FFT refraction to real-space to compute the conversion term                                                                                                             
+       call fft_c2r(rBRk,rBRr,n3h0)
+       call fft_c2r(rBIk,rBIr,n3h0)
+
+       !Compute the local integral for refraction conversion                                                                                                                          
+       do izh0=1,n3h0
+          do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+
+                   cr_p = cr_p + 0.25*(nARr(ix,iy,izh0)*rBIr(ix,iy,izh0) - nAIr(ix,iy,izh0)*rBRr(ix,iy,izh0) )    !Because I define rB = zeta LA, and refraction = (i/2) zeta LA      
+
+                end if
+             end do
+          end do
+       end do
+
+       !Recover k-space advective terms                                                                                                                                               
+       rBRk = tRk
+       rBIk = tIk
+
+
+       !-------------------!                                                                                                                                            
+       !--- Dissipation ---!                                                                                                                
+       !-------------------!                                                                                                                                                  
+
+       !Compute dissipation - nuhX*nabla^{2*ilapX} LA and store in the temporary array                                                                                             
+       do izh0=1,n3h0
+         do iky=1,ikty
+            ky = kya(iky)
+            do ikx=1,iktx
+               kx = kxa(ikx)
+               kh2=kx*kx+ky*ky
+
+               tRk(ikx,iky,izh0) =  - 0.5*( nuh*((1.*kx)**(2.*ilap) + (1.*ky)**(2.*ilap)) )*BRk(ikx,iky,izh0)
+               tIk(ikx,iky,izh0) =  - 0.5*( nuh*((1.*kx)**(2.*ilap) + (1.*ky)**(2.*ilap)) )*BIk(ikx,iky,izh0)
+
+            enddo
+         enddo
+      enddo
+
+      !FFT dissipation to real-space to compute the conversion term                                                                                                           
+      call fft_c2r(tRk,tRr,n3h0)
+      call fft_c2r(tIk,tIr,n3h0)
+
+      !Compute the local integral for advection conversion                                                                                                                 
+                                                                                                                                                                      
+      do izh0=1,n3h0
+         do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+
+                   cd_p = cd_p + nARr(ix,iy,izh0)*tRr(ix,iy,izh0) + nAIr(ix,iy,izh0)*tIr(ix,iy,izh0)
+
+                end if
+             end do
+          end do
+       end do
+
+
+       !-------------------!                                                                                                                                             
+       !--- Write files ---!                                                                                                                                                    
+       !-------------------!  
+
+
+       !Sum over all processors                                                                                                                                              
+       call mpi_reduce(ca_p,ca_tot, 1,MPI_REAL, MPI_SUM,0,MPI_COMM_WORLD,ierror)
+       call mpi_reduce(cr_p,cr_tot, 1,MPI_REAL, MPI_SUM,0,MPI_COMM_WORLD,ierror)
+       call mpi_reduce(cd_p,cd_tot, 1,MPI_REAL, MPI_SUM,0,MPI_COMM_WORLD,ierror)
+
+       !Normalize                                                                                                                                                                     
+       ca_tot = ca_tot*Uw_scale*Uw_scale*U_scale/(n1*n2*n3*Bu*L_scale)
+       cr_tot = cr_tot*Uw_scale*Uw_scale*U_scale/(n1*n2*n3*Bu*L_scale)
+       cd_tot = cd_tot*Uw_scale*Uw_scale*U_scale/(n1*n2*n3*Bu*L_scale)
+
+       if(mype==0) write(unit=unit_gamma ,fmt=*) time*(L_scale/U_scale)/(3600*24),ca_tot,cr_tot,cd_tot
+
+
+     end subroutine gamma_conversion
+
+
+
 
 
  SUBROUTINE enstrophy(zxk,zyk,zzk) 
