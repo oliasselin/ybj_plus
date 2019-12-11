@@ -1844,6 +1844,15 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     double complex, dimension(iktx,ikty,n3h2) :: bmem
     double complex, dimension(iktx,ikty,n3h1) :: qmem
     
+    !Suboptimal storage use: only to avoid fft back in field=9: the Jacobian of psi with zeta
+    double complex, dimension(iktx,ikty,n3h2) :: umem
+    double complex, dimension(iktx,ikty,n3h2) :: vmem
+
+    double complex, dimension(iktx,ikty,n3h1)    :: zxk,zyk
+    double precision,    dimension(n1d,n2d,n3h1) :: zxr,zyr
+
+
+
     double precision,    dimension(n1d,n2d,n3h0+2*hlvl2(id_field)) :: field
 
     real, dimension(n1,n3h0) :: XZ_slice_p        !Scratch array for xz slices (divided amongst processors)                                                                                                                               
@@ -1856,6 +1865,8 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     integer :: nrec
     integer :: processor
 
+    equivalence(zxk,zxr)
+    equivalence(zyk,zyr)
     equivalence(zzk,zzr)
 
     !For z-slices, pick xy section!                                                                                                                                                
@@ -1887,15 +1898,46 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        qmem=psik
        call fft_c2r(psik,psir,n3h1)
        field = U_scale*L_scale*psir    !In fact, w_DIM = UH/L w_NDIM (in the code) = UH/L Ro w_NDIM_1 (since w_NDIM_0 =0 in QG) => w_real_life = U Ar Ro w_1_computed
-    else if(id_field==4) then
-       qmem=wak
-       call fft_c2r(wak,war,n3h1)
-       field = U_scale*sqrt(Ar2)*Ro*war    !In fact, w_DIM = UH/L w_NDIM (in the code) = UH/L Ro w_NDIM_1 (since w_NDIM_0 =0 in QG) => w_real_life = U Ar Ro w_1_computed
-    else if(id_field==5) then             !QG streamfunction
-       bmem=bk
-       call fft_c2r(bk,br,n3h2)
-       field = (U_scale*U_scale/(H_scale*Ro))*br     !In fact, b_real_life = fUL/H b_computed = U^2/(Ro*H) b_computed
-       !For theta_1_real, just multiply field (b_real) by H_scale*H_1/cp.
+    else if(id_field==4) then             !zeta_x for comparison with J(psi,zeta)
+       !Calculate the vorticity gradient                                                                                                                                                
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+                   zxk(ikx,iky,izh1) = -i*kx*kh2*psik(ikx,iky,izh1)
+                else
+                   zxk(ikx,iky,izh1) = (0.D0,0.D0)
+                end if
+
+             enddo
+          enddo
+       end do
+       call fft_c2r(zxk,zxr,n3h1)
+       field = zxr*U_scale/(L_scale*L_scale)
+    else if(id_field==5) then             !zeta_y for comparison with J(psi,zeta)
+       !Calculate the vorticity gradient                                                                                                                                                
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+                   zyk(ikx,iky,izh1) = -i*ky*kh2*psik(ikx,iky,izh1)
+                else
+                   zyk(ikx,iky,izh1) = (0.D0,0.D0)
+                end if
+
+             enddo
+          enddo
+       end do
+       call fft_c2r(zyk,zyr,n3h1)
+       field = zyr*U_scale/(L_scale*L_scale)
     elseif(id_field==6) then   !Fr^2/Ro * b_z/r_2 << 1 ? (Limiting QG assumption)                                                                                                                                                           
        bmem=bk
        call fft_c2r(bk,br,n3h2)
@@ -2012,6 +2054,60 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        end do
        call fft_c2r(psik,psir,n3h1)
        field = Ro*psir
+
+    else if(id_field==9) then    !Calculate J(psi,zeta) = U zeta_x + V zeta_y
+       umem=uk
+       vmem=vk
+
+       call fft_c2r(uk,ur,n3h2)      
+       call fft_c2r(vk,vr,n3h2)      
+
+
+       !Calculate the vorticity gradient
+       do izh1=1,n3h1
+          do iky=1,ikty
+             ky = kya(iky)
+             do ikx=1,iktx
+                kx = kxa(ikx)
+                kh2=kx*kx+ky*ky
+
+                if(L(ikx,iky)==1) then
+
+                   zxk(ikx,iky,izh1) = -i*kx*kh2*psik(ikx,iky,izh1)
+                   zyk(ikx,iky,izh1) = -i*ky*kh2*psik(ikx,iky,izh1)
+
+                else
+
+                   zxk(ikx,iky,izh1) = (0.D0,0.D0)
+                   zyk(ikx,iky,izh1) = (0.D0,0.D0)
+
+                end if
+
+             enddo
+          enddo
+       end do
+
+       call fft_c2r(zxk,zxr,n3h1)
+       call fft_c2r(zyk,zyr,n3h1)
+
+       
+       do izh1=1,n3h1
+          izh2=izh1+1
+          do ix=1,n1d
+             do iy=1,n2d
+                if(ix<=n1) then
+                   
+                   field(ix,iy,izh1) = ur(ix,iy,izh2)*zxr(ix,iy,izh1) + vr(ix,iy,izh2)*zyr(ix,iy,izh1)  
+
+                else
+
+                   field(ix,iy,izh1) = 0.
+
+                end if
+             end do
+          end do
+       end do
+       field = field*(U_scale*U_scale)/(L_scale*L_scale)
     end if
 
 
@@ -2142,11 +2238,12 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
           if(id_field==1)    uk=bmem
           if(id_field==2)    vk=bmem
           if(id_field==3)    psik=qmem
-          if(id_field==4)    wak=qmem
-          if(id_field==5)    bk=bmem
           if(id_field==6)    bk=bmem
           if(id_field==8)    psik=qmem
-
+          if(id_field==9) then
+             uk=umem
+             vk=vmem
+          end if
 
           count_slice2(id_field)=count_slice2(id_field)+1
 
