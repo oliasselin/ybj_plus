@@ -1,17 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
-
-
-show=1
+show=0
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'gamma/dipole2'#'N2_1e5_dla'
+run = 'gamma/real_U1'#'N2_1e5_dla'
 
 location = scratch_location+folder+run
 gamma = np.loadtxt(scratch_location+folder+run+'/output/gamma.dat')
 
+if not os.path.exists('plots/'+run+'/'):
+    os.makedirs('plots/'+run+'/')
 
 plt.plot(gamma[:,0],gamma[:,1],'-g',label=r'$\Gamma_a$',linewidth=2.)
 plt.plot(gamma[:,0],gamma[:,2],'-b',label=r"$\Gamma_r$",linewidth=2.)

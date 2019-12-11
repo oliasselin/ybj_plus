@@ -1735,46 +1735,11 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
 
-    !LAR_z : for quick and dirty plot, use the otherwise unused C field to store LAz. This only works outside of top/bottom levels of each processor (which we set to zero)                                                                                                                                                                       
     elseif(id_field==3) then
-       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. 
-          do izh0=2,n3h0-1   !Only works away from top and bottom levels of each processor
-             do iky=1,ikty
-                ky = kya(iky)
-                do ikx=1,iktx
-                   kx = kxa(ikx)
-                   kh2=kx*kx+ky*ky
-                   if(L(ikx,iky)==1) then
-                      CRk(ikx,iky,izh0) = ((BRk(ikx,iky,izh0+1) + 0.25*kh2*ARk(ikx,iky,izh0+1)/Bu) - (BRk(ikx,iky,izh0-1) + 0.25*kh2*ARk(ikx,iky,izh0-1)/Bu))/(2.*dz)
-                   else
-                      CRk(ikx,iky,izh0) = (0.D0,0.D0)
-                   end if
-                enddo
-             enddo
-          end do
-       end if
-       call fft_c2r(CRk,CRr,n3h0)
-       field = Uw_scale*CRr/H_scale
-    !LAI_z                                                                                                                                                                             
+       field = 0.
+
     elseif(id_field==4) then
-       if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. 
-          do izh0=2,n3h0-1   !Only works away from top and bottom levels of each processor
-             do iky=1,ikty
-                ky = kya(iky)
-                do ikx=1,iktx
-                   kx = kxa(ikx)
-                   kh2=kx*kx+ky*ky
-                   if(L(ikx,iky)==1) then
-                      CIk(ikx,iky,izh0) = ((BIk(ikx,iky,izh0+1) + 0.25*kh2*AIk(ikx,iky,izh0+1)/Bu) - (BIk(ikx,iky,izh0-1) + 0.25*kh2*AIk(ikx,iky,izh0-1)/Bu))/(2.*dz)
-                   else
-                      CIk(ikx,iky,izh0) = (0.D0,0.D0)
-                   end if
-                enddo
-             enddo
-          end do
-       end if
-       call fft_c2r(CIk,CIr,n3h0)
-       field = Uw_scale*CIr/H_scale
+       field = 0.
 
        !LAR_x
     elseif(id_field==5) then
@@ -2543,7 +2508,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        call fft_c2r(AIk,AIr,n3h0)
        field = -0.5*cor*Uw_scale*AIr/Bu
     !Im(i/2 cor*nabla(A)) = +0.5 cor nAR
-    elseif(id_field==7) then
+    elseif(id_field==8) then
        Rmemk = ARk
        do izh0=1,n3h0
           do iky=1,ikty

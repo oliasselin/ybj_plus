@@ -280,8 +280,8 @@ if(passive_scalar==0) then
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
 
  if(ybj_plus==1) then
-    call A_solver_ybj_plus(ARk,BRkt)
-    call A_solver_ybj_plus(AIk,BIkt)
+    call A_solver_ybj_plus(ARk,BRkt,CRk)
+    call A_solver_ybj_plus(AIk,BIkt,CIk)
  else   !Normal YBJ solver 
     call compute_sigma(sigma,nBRk, nBIk, rBRk, rBIk)              !Compute the sum of A
     call compute_A(ARk,AIK,BRkt,BIkt,CRk,CIK,sigma)               !Compute A!
@@ -425,8 +425,8 @@ if(passive_scalar==0) then
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
 
  if(ybj_plus==1) then
-    call A_solver_ybj_plus(ARk,BRkt)
-    call A_solver_ybj_plus(AIk,BIkt)
+    call A_solver_ybj_plus(ARk,BRkt,CRk)
+    call A_solver_ybj_plus(AIk,BIkt,CIk)
  else   !Normal YBJ solver 
     call compute_sigma(sigma,nBRk, nBIk, rBRk, rBIk)              !Compute the sum of A
     call compute_A(ARk,AIK,BRkt,BIkt,CRk,CIK,sigma)               !Compute A!
