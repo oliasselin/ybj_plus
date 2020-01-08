@@ -6,7 +6,7 @@ show=0
 
 scratch_location = '/oasis/scratch/comet/oasselin/temp_project/'
 folder = 'leif/'
-run = 'gamma/real_U1'#'N2_1e5_dla'
+run = 'gamma/dipole_2xU'#'N2_1e5_dla'
 
 location = scratch_location+folder+run
 gamma = np.loadtxt(scratch_location+folder+run+'/output/gamma.dat')

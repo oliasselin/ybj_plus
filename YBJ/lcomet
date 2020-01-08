@@ -4,8 +4,8 @@ number_of_nodes=3
 number_of_tasks=64
 ntasks_per_node=24
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/gamma/real/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/gamma/real/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/gamma/dipole_2xU/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/leif/gamma/dipole_2xU/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -18,7 +18,7 @@ cat > EXEC_STEP << EXEC
 
 #SBATCH --job-name="real"
 #SBATCH --output="/home/oasselin/monitor/real.o%j.%N"
-#SBATCH --partition=debug#compute
+#SBATCH --partition=compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
