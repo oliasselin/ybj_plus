@@ -1,7 +1,6 @@
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import os
@@ -11,8 +10,8 @@ from finds import find_resolution
 from finds import find_scales
 from finds import find_timestep
 
-make_gif=1
-show=0
+make_gif=0
+show=1
 plot_slice=1
 
 leif_field=1
@@ -21,9 +20,9 @@ folder = 'leif/'#double_gaussian/'#'leif/'
 
 
 
-iy_transect = -int(256/4)
+iy_transect = 0#-int(256/4)
 ix_offset   = int(iy_transect/2)
-run = 'strain/N2_1e-5_y_n2-4_noadv_nodisp'#'real/ml_1024_uwz'
+run = 'new_input/N2_1e-5/'#'strain/N2_1e-5_y_n2-4_noadv_nodisp'#'real/ml_1024_uwz'
 zoom=''#'_zoom'#''
 
 
@@ -38,7 +37,7 @@ depth = 1000  #m
 #Range in x'
 xpl = -35000#-350000#-35000#5000#
 xpr = 35000#20000#
-ts_list=np.arange(0,151,1)
+ts_list=[50]#np.arange(0,151,1)
 
 
 field='dudz'#'dudz'#'dudz'

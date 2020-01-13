@@ -4489,7 +4489,8 @@ SUBROUTINE cond_wz(wak)
     double complex, dimension(iktx_leif,ikty_leif,1) :: init_vortk
     equivalence(init_vortr,init_vortk)
 
-    open (unit=unit_leif,file='leif_vorticity.dat',action="read",status="old")
+!    open (unit=unit_leif,file='leif_vorticity.dat',action="read",status="old")
+    open (unit=unit_leif,file=leif_vort_r,action="read",status="old")
 
     init_vortr=0.D0
     do ix=1,nx_leif
@@ -4507,7 +4508,8 @@ SUBROUTINE cond_wz(wak)
     if(n1==nx_leif .and. n2==ny_leif) then
        call fft_r2c(init_vortr,init_vortk,1)
 
-       open (unit=unit_leif+1,file='leif_zetak.dat',action="write",status="replace")
+!       open (unit=unit_leif+1,file='leif_zetak.dat',action="write",status="replace")
+       open (unit=unit_leif+1,file=leif_vort_k,action="write",status="replace")
 
        do iky=1,ikty_leif
           write(unit=unit_leif+1,fmt=336) (init_vortk(ikx,iky,1), ikx=1,iktx_leif)
@@ -4538,7 +4540,8 @@ SUBROUTINE cond_wz(wak)
     integer :: unit
     integer, parameter :: unit_leif=123421
     
-    open (unit=unit_leif,file='leif_zetak.dat',action="read",status="old")
+!    open (unit=unit_leif,file='leif_zetak.dat',action="read",status="old")
+    open (unit=unit_leif,file=leif_vort_k,action="read",status="old")
 
     !Read from file into temp variable
     do iky=1,ikty_leif

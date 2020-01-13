@@ -4,8 +4,8 @@ number_of_nodes=3
 number_of_tasks=64
 ntasks_per_node=24
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/new_input/ml2_highres/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/new_input/ml2_highres/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -17,12 +17,12 @@ cat > EXEC_STEP << EXEC
 #!/bin/sh 
 
 #SBATCH --job-name="real"
-#SBATCH --output="/home/oasselin/monitor/vort.o%j.%N"
+#SBATCH --output="/home/oasselin/monitor/real.o%j.%N"
 #SBATCH --partition=compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t 00:10:00
+#SBATCH -t 00:30:00
 #SBATCH -A TG-OCE190014 
 
 #This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
