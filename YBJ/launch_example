@@ -1,0 +1,73 @@
+#!/bin/bash
+
+number_of_nodes=3
+number_of_tasks=64
+ntasks_per_node=24
+
+sourdir=/oasis/scratch/comet/oasselin/temp_project/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/output/
+
+mkdir -p $sourdir
+mkdir -p $datadir
+
+cd $sourdir
+
+
+cat > EXEC_STEP << EXEC
+#!/bin/sh 
+
+#SBATCH --job-name="real"
+#SBATCH --output="/home/oasselin/monitor/real.o%j.%N"
+#SBATCH --partition=compute
+#SBATCH --nodes=$number_of_nodes
+#SBATCH --ntasks-per-node=$ntasks_per_node
+#SBATCH --export=ALL
+#SBATCH -t 00:30:00
+#SBATCH -A TG-OCE190014 
+
+#This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
+#ibrun in verbose mode will give binding detail
+
+cd $datadir                                                                                                                                                                            
+cp $sourdir/exec_full $datadir   
+ibrun -n $number_of_tasks -v ./exec_full
+
+                                                                                                                                                        
+EXEC
+
+
+#
+#--- Compile ---#
+#
+cat > COMPILE_STEP << COMPILE
+#!/bin/bash                                                                                                                                               
+                                                                                                                                                       
+
+cd $sourdir
+cp $HOME/leif/YBJ/*.f90 .
+cd $datadir
+cp $HOME/leif/YBJ/input_vort/*.dat .
+cd $sourdir
+
+PARA=parameters.f90
+MAIN=main_waqg.f90
+FFT=fft.f90
+MPI=mpi.f90
+INIT=init.f90
+DERI=derivatives.f90
+FILE=files.f90
+DIAG=diagnostics.f90
+ELLI=elliptic.f90
+SPEC=special.f90
+
+
+#Compile with MPIf90                                                                                                                                       
+mpif90 -mkl parameters.f90 mpi.f90 fft.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 main_waqg.f90 -o exec_full
+
+
+COMPILE
+
+chmod 755 COMPILE_STEP
+./COMPILE_STEP
+sbatch EXEC_STEP
+

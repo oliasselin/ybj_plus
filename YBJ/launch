@@ -3,8 +3,8 @@
 number_of_nodes=1
 number_of_tasks=2
 
-sourdir=/scratch/05518/oasselin/test/source/
-datadir=/scratch/05518/oasselin/test/output/
+sourdir=/scratch/05518/oasselin/leif/confluence/N2_1e-5/y0/source/
+datadir=/scratch/05518/oasselin/leif/confluence/N2_1e-5/y0/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir

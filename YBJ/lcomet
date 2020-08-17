@@ -1,11 +1,11 @@
 #!/bin/bash
 
-number_of_nodes=4
+number_of_nodes=3
 number_of_tasks=64
-ntasks_per_node=16
+ntasks_per_node=24
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/YBJp/YBJp/m2_U0.25_n256_moreslices/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/YBJp/YBJp/m2_U0.25_n256_moreslices/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_nodisp_dt0.01/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_nodisp_dt0.01/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -16,21 +16,21 @@ cd $sourdir
 cat > EXEC_STEP << EXEC
 #!/bin/sh 
 
-#SBATCH --job-name="test1"
-#SBATCH --output="/home/oasselin/monitor/test1.o"
-#SBATCH --error="/home/oasselin/monitor/test1.e"
+#SBATCH --job-name="real"
+#SBATCH --output="/home/oasselin/monitor/vort.o%j.%N"
 #SBATCH --partition=compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t 0:15:00
+#SBATCH -t 06:00:00
+#SBATCH -A TG-OCE190014 
 
 #This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
 #ibrun in verbose mode will give binding detail
 
 cd $datadir                                                                                                                                                                            
 cp $sourdir/exec_full $datadir   
-ibrun -v ./exec_full
+ibrun -n $number_of_tasks -v ./exec_full
 
                                                                                                                                                         
 EXEC
@@ -44,7 +44,10 @@ cat > COMPILE_STEP << COMPILE
                                                                                                                                                        
 
 cd $sourdir
-cp $HOME/YBJ/*.f90 .
+cp $HOME/leif/YBJ/*.f90 .
+cd $datadir
+cp $HOME/leif/YBJ/input_vort/*.dat .
+cd $sourdir
 
 PARA=parameters.f90
 MAIN=main_waqg.f90
@@ -66,6 +69,5 @@ COMPILE
 
 chmod 755 COMPILE_STEP
 ./COMPILE_STEP
-##chmod 755 EXEC_STEP                                                                                                                                       
 sbatch EXEC_STEP
-##./EXEC_STEP                                                                                                                                               
+

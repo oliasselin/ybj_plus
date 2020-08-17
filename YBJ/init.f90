@@ -192,6 +192,15 @@ subroutine init_base_state
      else if(stratification==constant_N) then
         N2_nd(izh2)   = 1.D0
         N2_nds(izh2)  = 1.D0
+     else if(stratification==double_gaussian) then
+        N2_nd(izh2)   = N02_dg + N12_dg*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
+        N2_nds(izh2)  = N02_dg + N12_dg*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
+     else if(stratification==double_gaussian_ml_min) then
+        N2_nd(izh2)   = N02_dg + N12_dg*(-(z -z1_dg-z3_dg)/sigma1_dg)*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
+        N2_nds(izh2)  = N02_dg + N12_dg*(-(zs-z1_dg-z3_dg)/sigma1_dg)*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
+     else if(stratification==triple_gaussian) then
+        N2_nd(izh2)   = N02_tg + N12_tg*exp(-((z -z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((z -z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((z -z3_tg)**2)/(sigma3_tg**2))
+        N2_nds(izh2)  = N02_tg + N12_tg*exp(-((zs-z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((zs-z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((zs-z3_tg)**2)/(sigma3_tg**2))
      else
         write(*,*) "Undefined stratification profile. Aborting."
         stop
@@ -237,8 +246,17 @@ subroutine init_base_state
         N2_ndut =  exp( N2_scale*(z -z0) )
         N2_ndst =  exp( N2_scale*(zs-z0) )
      else if(stratification==constant_N) then
-        N2_ndut   = 1.D0
-        N2_ndst  = 1.D0
+        N2_ndut = 1.D0
+        N2_ndst = 1.D0
+     else if(stratification==double_gaussian) then
+        N2_ndut = N02_dg + N12_dg*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
+        N2_ndst = N02_dg + N12_dg*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
+     else if(stratification==double_gaussian_ml_min) then
+        N2_ndut = N02_dg + N12_dg*(-(z -z1_dg-z3_dg)/sigma1_dg)*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
+        N2_ndst = N02_dg + N12_dg*(-(zs-z1_dg-z3_dg)/sigma1_dg)*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
+     else if(stratification==triple_gaussian) then
+        N2_ndut = N02_tg + N12_tg*exp(-((z -z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((z -z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((z -z3_tg)**2)/(sigma3_tg**2))
+        N2_ndst = N02_tg + N12_tg*exp(-((zs-z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((zs-z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((zs-z3_tg)**2)/(sigma3_tg**2))
      else
         write(*,*) "Undefined stratification profile. Aborting."
         stop
@@ -864,9 +882,14 @@ do ix=1,n1d
          end if
 
       if(ix<=n1) then
-         if(z1>=0) f1s(ix,iy,iz1)=sin(x)*sin(y)
+         if(z1>=0) f1s(ix,iy,iz1)=sin(y)-sin(x)
          if(z2>=0) f2s(ix,iy,iz2)=0.
-         if(z3>=0) f3s(ix,iy,iz3)= (Uw_scale/U_scale)*cos(mmm*z3/2.)
+
+         if(cos_ic==1) then
+            if(z3>=0) f3s(ix,iy,iz3)=exp(-(xi_a*(z3-twopi))**2)*cos(m_ic*z3)   !Multiply the initial condition with a rapid cos
+         else
+            if(z3>=0) f3s(ix,iy,iz3)=exp(-(xi_a*(z3-twopi))**2)
+         end if
       else
          if(z1>=0) f1s(ix,iy,iz1)=0.
          if(z2>=0) f2s(ix,iy,iz2)=0.

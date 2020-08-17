@@ -1,0 +1,19 @@
+#!/bin/sh 
+
+#SBATCH --job-name="real"
+#SBATCH --output="/home/oasselin/monitor/vort.o%j.%N"
+#SBATCH --partition=compute
+#SBATCH --nodes=3
+#SBATCH --ntasks-per-node=24
+#SBATCH --export=ALL
+#SBATCH -t 06:00:00
+#SBATCH -A TG-OCE190014 
+
+#This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
+#ibrun in verbose mode will give binding detail
+
+cd /oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_dt0.01/output/                                                                                                                                                                            
+cp /oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_dt0.01/source//exec_full /oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_dt0.01/output/   
+ibrun -n 64 -v ./exec_full
+
+                                                                                                                                                        

@@ -30,6 +30,7 @@ PROGRAM main
 
   !**** C = Az and is decomposed into real and imag parts (ex.: C = CR + iCI) even though in Fourier-space both CRk and CIk are complex
   double complex,   dimension(iktx,ikty,n3h0) :: CRk, CIk
+  double precision, dimension(n1d,n2d,n3h0)   :: CRr, CIr
 
   !**** n = nonlinear advection term J(psi,B) **** r = refractive term ~ B*vort
   double complex,   dimension(iktx,ikty,n3h0) :: nBRk, nBIk, rBRk, rBIk
@@ -75,6 +76,9 @@ PROGRAM main
   equivalence(ARr,ARk)
   equivalence(AIr,AIk)
 
+  equivalence(CRr,CRk)
+  equivalence(CIr,CIk)
+
   equivalence(nBRr,nBRk)
   equivalence(nBIr,nBIk)
   equivalence(rBRr,rBRk)
@@ -99,10 +103,19 @@ PROGRAM main
 
   equivalence(u_rotr,u_rot)
 
-  integer :: unit_wke = 123451236
-  open (unit=unit_wke,file='wke.dat',action="write",status="replace")
+  !For the Eulerian frequency diagnostic only
+  double complex,   dimension(iktx,ikty,n3h0) :: dBRk, dBIk
+  double precision, dimension(n1d,n2d,n3h0)   :: dBRr, dBIr
 
+  equivalence(dBRr,dBRk)
+  equivalence(dBIr,dBIk)
 
+  !For YBJ terms magnitude only                                                                                                                            
+  double complex,   dimension(iktx,ikty,n3h0) :: dARk, dAIk
+  double precision, dimension(n1d,n2d,n3h0)   :: dARr, dAIr
+
+  equivalence(dARr,dARk)
+  equivalence(dAIr,dAIk)
 
   !********************** Initializing... *******************************!
 
@@ -117,19 +130,37 @@ PROGRAM main
 
   !Initialize fields
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
-
   call fft_r2c(psir,psik,n3h1)
+
+  if(new_vort_input==1) then   !Read the r-space vorticity file with dimensions n1=nx_leif x n2=ny_leif. Requires matching dimensions  
+     call input_vort_r2c
+  end if
+  if(leif_field==1) call init_leif(psik)         !Use Leif's realistic NISKINE flow field
+
+
+
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
+  call sumB(BRk,BIk)
 
   AIk = (0.D0,0.D0)
   BIk = (0.D0,0.D0)
-   qk = (0.D0,0.D0)
+  CRk = (0.D0,0.D0)
+  CIk = (0.D0,0.D0)
+
+  if(fixed_flow == 0) then
+     call init_q(qk,psik)
+  else
+     qk = (0.D0,0.D0)
+  end if
 
   call compute_velo(uk,vk,wk,bk,psik) 
   call generate_halo(uk,vk,wk,bk)
   call generate_halo_q(qk) 
 
+  !For Eulerian Freq onlt
+  dBRk = (0.D0,0.D0)
+  dBIk = (0.D0,0.D0)
 
  !Initial diagnostics!
  !*******************!
@@ -144,14 +175,19 @@ PROGRAM main
  if(out_etot ==1) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
  do id_field=1,nfields                                            
-    if(out_slice ==1)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
+    if(out_slice ==1)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
+ end do
+
+ do id_field=1,nfields2                                            
+    if(out_slice2==1)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
  end do
  
  do iz=1,num_spec
     if(out_hspecw ==1) call hspec_waves(BRk,BIk,CRk,CIk,iz)
  end do
 
- if(out_we   ==1) call wave_energy(BRk,BIk,CRk,CIk)
+ if(out_we   ==1) call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
+ if(out_wvave==1) call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1) call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
 
  !************************************************************************!
@@ -223,7 +259,13 @@ end if
 if(fixed_flow==0) then
  ! --- Recover the streamfunction --- !
 
- call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           ! Compute qw
+
+
+ if(no_feedback == 1) then
+    qwk = (0.D0,0.D0)
+ else
+    call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           ! Compute qw                                                                                                                     
+ end if
 
  do izh0=1,n3h0                                     ! Compute q* = q - qw
     izh1=izh0+1
@@ -251,8 +293,8 @@ if(passive_scalar==0) then
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
 
  if(ybj_plus==1) then
-    call A_solver_ybj_plus(ARk,BRkt)
-    call A_solver_ybj_plus(AIk,BIkt)
+    call A_solver_ybj_plus(ARk,BRkt,CRk)
+    call A_solver_ybj_plus(AIk,BIkt,CIk)
  else   !Normal YBJ solver 
     call compute_sigma(sigma,nBRk, nBIk, rBRk, rBIk)              !Compute the sum of A
     call compute_A(ARk,AIK,BRkt,BIkt,CRk,CIK,sigma)               !Compute A!
@@ -306,6 +348,7 @@ end if
        rBIk = (0.D0,0.D0)
      end if
 
+
      !Compute q^n+1 and B^n+1 using leap-frog
      do izh0=1,n3h0
         izh1=izh0+1
@@ -327,6 +370,12 @@ end if
            enddo
         enddo
      enddo
+
+     !For diagnostic of Eulerian Frequency only!
+     !d(LA)/dt = [LA^(n+1)-LA^(n-1)]/2dt
+     dBRk=(BRtempk-BRok)/(2.*delt)
+     dBIk=(BItempk-BIok)/(2.*delt)
+     !*****************************************!
 
 
      !Apply Robert-Asselin filter to damp the leap-frog computational mode
@@ -360,7 +409,11 @@ BIk = BItempk
 if(fixed_flow==0) then
  ! --- Recover the streamfunction --- !                                                                                                                   
 
- call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           !Compute qw                                                                                          
+ if(no_feedback == 1) then
+    qwk = (0.D0,0.D0)
+ else
+    call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           ! Compute qw                                                                                                                     
+ end if
 
  do izh0=1,n3h0                                     ! Compute q* = q - qw                                                                                 
     izh1=izh0+1
@@ -389,8 +442,8 @@ if(passive_scalar==0) then
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
 
  if(ybj_plus==1) then
-    call A_solver_ybj_plus(ARk,BRkt)
-    call A_solver_ybj_plus(AIk,BIkt)
+    call A_solver_ybj_plus(ARk,BRkt,CRk)
+    call A_solver_ybj_plus(AIk,BIkt,CIk)
  else   !Normal YBJ solver 
     call compute_sigma(sigma,nBRk, nBIk, rBRk, rBIk)              !Compute the sum of A
     call compute_A(ARk,AIK,BRkt,BIkt,CRk,CIK,sigma)               !Compute A!
@@ -418,31 +471,29 @@ end if
  
 if(out_etot ==1 .and. mod(iter,freq_etot )==0) call diag_zentrum(uk,vk,wk,bk,wak,psik,u_rot)
 
- do id_field=1,nfields
-    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,BRk,BIk,BRr,BIr,CRk,CIk,id_field)
- end do
+do id_field=1,nfields
+   if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice(id_field)<max_slices)  call slices(ARk,AIK,ARr,AIr,BRk,BIk,BRr,BIr,CRk,CIk,CRr,CIr,dBRk,dBIk,dBRr,dBIr,id_field)
+end do
 
+do id_field=1,nfields3
+   if(out_slice3==1 .and. mod(iter,freq_slice3)==0 .and. count_slice3(id_field)<max_slices)  call slices3(ARk,AIK,ARr,AIr,dBRk,dBIk,dBRr,dBIr,nBRk,nBIk,nBRr,nBIr,rBRk,rBIk,rBRr,rBIr,id_field)
+end do
+
+do id_field=1,nfields2
+   if(out_slice2==1 .and. mod(iter,freq_slice2)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
+end do
+                                                                          
  do iz=1,num_spec
     if(out_hspecw ==1  .and. mod(iter,freq_hspecw)==0 ) call hspec_waves(BRk,BIk,CRk,CIk,iz)
  end do
 
- if(out_we ==1   .and. mod(iter,freq_we   )==0)  call wave_energy(BRk,BIk,CRk,CIk)
+ if(out_we ==1   .and. mod(iter,freq_we   )==0)  call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
+ if(out_wvave==1 .and. mod(iter,freq_wvave)==0)  call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1 .and. mod(iter,freq_conv )==0)  call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+ if(out_gamma==1 .and. mod(iter,freq_gamma )==0) call gamma_conversion(ARk, AIk, BRk, BIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
 
 
-
-
- !***** Print time series of WKE at the core of the bottom left vortex *****!
-
- call fft_c2r(BRk,BRr,n3h0)
- call fft_c2r(BIk,BIr,n3h0)
-
- if(mype==(npe-1)) then
-    write(unit_wke,fmt=*) time,time/(twopi*Ro),0.5*(BRr(n1/4,n2/4,n3h0)**2+BIr(n1/4,n2/4,n3h0)**2)*U_scale*U_scale
- end if
-
- call fft_r2c(BRr,BRk,n3h0)
- call fft_r2c(BIr,BIk,n3h0)
+ 
 
  !**************************************************************************!
 

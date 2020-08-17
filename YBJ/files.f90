@@ -10,17 +10,27 @@ MODULE files
   !********************!                                                                          
                                                                          
   !unit no of files for output                                                                                                                            
+  integer, parameter :: unit_slices  = 1
+  integer, parameter :: unit_slicesv = 2
+  integer, parameter :: unit_slices2 = 3
+  integer, parameter :: unit_slices2v= 4
+  integer, parameter :: unit_slices3 = 5
+  integer, parameter :: unit_slices3v= 6
   integer, parameter :: unit_energy =50
 !  integer, parameter :: unit_etrop  =51
 !  integer, parameter :: unit_estra  =52
   integer, parameter :: unit_energyr=53
-  integer, parameter :: unit_we=544
-  integer, parameter :: unit_conv=545
+  integer, parameter :: unit_we=5441235
+  integer, parameter :: unit_ce=5441234
+  integer, parameter :: unit_conv=5451234
+  integer, parameter :: unit_gamma=5461234
 
 !  integer, parameter :: unit_hbot   =61
 !  integer, parameter :: unit_hmid   =62
 !  integer, parameter :: unit_htop   =63
   integer, parameter :: unit_ez     =64
+  integer, parameter :: unit_wz     =65
+  integer, parameter :: unit_wvave  =66
 
   integer, parameter :: unit_rco    =67
   integer, parameter :: unit_bs     =68
@@ -123,9 +133,12 @@ MODULE files
       !Energy
       if(mype==0) open (unit=unit_energy   ,file="energy.dat"   ,action="write",status="replace")
       if(mype==0) open (unit=unit_ez       ,file="ez.dat"       ,action="write",status="replace")
+      if(mype==0) open (unit=unit_wz       ,file="wz.dat"       ,action="write",status="replace")
       if(mype==0) open (unit=unit_energyr  ,file="erot.dat"   ,action="write",status="replace")
       if(mype==0) open (unit=unit_we       ,file="we.dat"   ,action="write",status="replace")
+      if(mype==0) open (unit=unit_ce       ,file="ce.dat"   ,action="write",status="replace")
       if(mype==0) open (unit=unit_conv     ,file="conv.dat"  ,action="write",status="replace")
+      if(mype==0) open (unit=unit_gamma     ,file="gamma.dat"  ,action="write",status="replace")
 
 !      if(mype==0) open (unit=unit_hbot     ,file="hbot.dat"     ,action="write",status="replace")
 !      if(mype==0) open (unit=unit_hmid     ,file="hmid.dat"     ,action="write",status="replace")
