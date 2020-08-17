@@ -2263,7 +2263,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     if( bot_height > mype*n3h0 .AND. bot_height <= (mype+1)*n3h0 ) then
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehbot",id_field,count_slice(id_field),".dat"
-       write (fname, "(A10,I1,I2,A4)") "slice2hbot",id_field,count_slice2(id_field),".dat"
+       write (fname, "(A10,I1,I3,A4)") "slice2hbot",id_field,count_slice2(id_field),".dat"
        open (unit=unit_slices2,file=fname,action="write",status="replace")
        
        iz=bot_height - mype*n3h0 + hlvl2(id_field)
@@ -2284,7 +2284,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     if( mid_height > mype*n3h0 .AND. mid_height <= (mype+1)*n3h0 ) then
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehmid",id_field,count_slice(id_field),".dat"
-       write (fname, "(A10,I1,I2,A4)") "slice2hmid",id_field,count_slice2(id_field),".dat"
+       write (fname, "(A10,I1,I3,A4)") "slice2hmid",id_field,count_slice2(id_field),".dat"
        open (unit=unit_slices2,file=fname,action="write",status="replace")
        
        iz=mid_height - mype*n3h0 + hlvl2(id_field)
@@ -2304,7 +2304,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     if( top_height > mype*n3h0 .AND. top_height <= (mype+1)*n3h0 ) then
        
        !          write (fname, "(A9,I1,I1,A4)") "slicehtop",id_field,count_slice(id_field),".dat"
-       write (fname, "(A10,I1,I2,A4)") "slice2htop",id_field,count_slice2(id_field),".dat"
+       write (fname, "(A10,I1,I3,A4)") "slice2htop",id_field,count_slice2(id_field),".dat"
        open (unit=unit_slices2,file=fname,action="write",status="replace")
        
        iz=top_height - mype*n3h0 + hlvl2(id_field)
@@ -2327,7 +2327,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
        if(mype==0) then
 !          write (fname, "(A6,I1,I1,A4)") "slicev",id_field,count_slice(id_field),".dat"
-          write (fname, "(A7,I1,I2,A4)") "slice2v",id_field,count_slice2(id_field),".dat"
+          write (fname, "(A7,I1,I3,A4)") "slice2v",id_field,count_slice2(id_field),".dat"
           open (unit=unit_slices2v,file=fname,action="write",status="replace")
 
           !Copy ur slice on XY_slice (NOTICE IT'S NOT ON XY_slice_p)                                                                                                                                                                      

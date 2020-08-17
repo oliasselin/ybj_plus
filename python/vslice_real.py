@@ -22,8 +22,8 @@ folder = 'leif/'#double_gaussian/'#'leif/'
 
 iy_transect = 0#-int(256/4)
 ix_offset   = int(iy_transect/2)
-run = 'new_input/N2_1e-5/'#'strain/N2_1e-5_y_n2-4_noadv_nodisp'#'real/ml_1024_uwz'
-zoom=''#'_zoom'#''
+run = 'new_n2/tg/'#'strain/N2_1e-5_y_n2-4_noadv_nodisp'#'real/ml_1024_uwz'
+zoom='zoom'#'_zoom'#''
 
 
 location = scratch_location+folder+run
@@ -35,9 +35,9 @@ Dx,Dz,L_scale,H_scale,U_scale,h_thermo = find_scales(location)
 
 depth = 1000  #m
 #Range in x'
-xpl = -35000#-350000#-35000#5000#
-xpr = 35000#20000#
-ts_list=[50]#np.arange(0,151,1)
+xpl = -10000#-350000#-35000#5000#
+xpr = 10000#20000#
+ts_list=[125]#np.arange(0,151,1)
 
 
 field='dudz'#'dudz'#'dudz'
@@ -45,6 +45,9 @@ field='dudz'#'dudz'#'dudz'
 if(field=='dudz'):
     vmin = -0.0008
     vmax = 0.0008
+    if(zoom=='zoom'):
+        vmin = -0.0001
+        vmax = 0.0001
 elif(field=='wke'):
     vmin = 0.#0.001#-0.0008
     vmax = 0.001#0.0008

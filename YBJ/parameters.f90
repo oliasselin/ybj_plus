@@ -2,7 +2,7 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=256, n2=256, n3=256!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
+    integer, parameter :: n1=256, n2=256, n3=1024!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
     integer, parameter :: npe=64
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
@@ -19,7 +19,7 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = 120000                             !Horizontal domain size (in m)
+    double precision, parameter :: dom_x = 70000                             !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
@@ -31,7 +31,7 @@ MODULE parameters
     integer, parameter :: passive_scalar = 0    !1: Set A and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     
     !Gaussian wave initial condition
-    double precision, parameter :: delta_a = 50.
+    double precision, parameter :: delta_a = 30.
     double precision, parameter :: xi_a = dom_z/(L3*delta_a)
 
     integer, parameter :: cos_ic = 0                      !If 1: multiply the initial wave gaussian by cos(2pi*z_dim/lambda_a) = cos(z_model*m_a)
@@ -42,8 +42,8 @@ MODULE parameters
     !-------------------!
 
     integer, parameter :: ybj_plus = 1                                                                                                                                                                                                                                                                                                                                                                                           !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation   
-
-    integer, parameter :: no_dispersion=0
+    integer, parameter :: no_feedback=1
+    integer, parameter :: no_dispersion=1
     integer, parameter :: linear=0                      !1: set the nonlinear terms (advection) to 0. 
     integer, parameter :: inviscid=0                    !1: No dissipation, otherwise: dissipation
     integer, parameter :: init_wageo=0                  !1: Initialize wk with Ro*wak
@@ -77,9 +77,9 @@ MODULE parameters
     integer, parameter :: ny_leif = 60
     integer, parameter :: iktx_leif= nx_leif/2+1, ikty_leif=ny_leif
     integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
-    integer, parameter :: leif_field = 1                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
+    integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =1                !Do the xz slices along x=-y (if = 0, then x = y transect)
-    integer, parameter :: y_trans = 0!-n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
+    integer, parameter :: y_trans = 0!48!0!n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
 
     character(len = 64), parameter :: leif_vort_r ='leif_vorticity2.dat'
     character(len = 64), parameter :: leif_vort_k ='leif_vorticity2k.dat'
@@ -104,8 +104,8 @@ MODULE parameters
     !Base-state!
     !----------!
 
-    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5
-    integer, parameter :: stratification = double_gaussian_ml_min !constant_N!double_gaussian_ml_min
+    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5, triple_gaussian=6
+    integer, parameter :: stratification = constant_N!triple_gaussian !double_gaussian_ml_min !constant_N!double_gaussian_ml_min
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -118,12 +118,12 @@ MODULE parameters
     double precision, parameter :: N2_scale = 0.75D0   !N^2 ~ exp(N2_scale*(z-z0) 
 
     !Stratification = constant_N!
-!    double precision, parameter :: N0 = sqrt(5.e-6) !(25./8.)*twopi*cor!/sqrt(3.)
+    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
 
     !Stratification = double_gaussian!
 
     !Fit with 100m moving average
-    double precision, parameter ::  N0        = 0.008296674078884
+!    double precision, parameter ::  N0        = 0.008296674078884
     double precision, parameter ::  N02_dg    = 0.014151935877189
     double precision, parameter ::  N12_dg    = 0.985477432969191
     double precision, parameter ::  N22_dg    = 0.135018428653046
@@ -143,6 +143,19 @@ MODULE parameters
 !    double precision, parameter ::  z1_dg     = twopi
 !    double precision, parameter ::  z2_dg     = 5.215043804959056
 !    double precision, parameter ::  z3_dg     = sigma1_dg/3.
+
+    !Stratification = triple_gaussian! Comes from matlab script fit_n2_triple.m
+!    double precision, parameter ::  N0        = 0.004233211887783
+    double precision, parameter ::  N02_tg    = 0.054243347777314 
+    double precision, parameter ::  N12_tg    = 0.954968343329660
+    double precision, parameter ::  N22_tg    = 0.497080384250686
+    double precision, parameter ::  N32_tg    = 2.277563667723201
+    double precision, parameter ::  sigma1_tg = 0.195999707189878
+    double precision, parameter ::  sigma2_tg = 0.481636895221260
+    double precision, parameter ::  sigma3_tg = 0.039449152606833
+    double precision, parameter ::  z1_tg     = 6.223559686712099
+    double precision, parameter ::  z2_tg     = 5.194517338524803
+    double precision, parameter ::  z3_tg     = 6.209896251239539
 
 
    ! USEFUL INDEX !                                                                                                                          
@@ -191,7 +204,7 @@ MODULE parameters
     double precision, parameter :: H_scale=dom_z/L3          !Actual H in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
     double precision, parameter :: cor=1.24e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
-    double precision, parameter :: U_scale = 0.5                                                                                                                         !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
+    double precision, parameter :: U_scale = 0.23696549362367206!0.696388389424669!0.23696549362367206 !0.696388389424669 !0.23696549362367206!0.5     !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: Uw_scale= 0.1                       !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
     double precision, parameter :: Ar2 = (H_scale/L_scale)**2                                   !(1./64.)**2!(1./10.)**2 !0.01     !Aspect ratio squared = (H/L)^2     
     double precision, parameter :: Ro  = U_scale/(cor*L_scale)                                  !Rossby number  U/fL
@@ -237,8 +250,8 @@ MODULE parameters
     !Output!
     !------!
 
-    integer, parameter :: out_etot   = 1, freq_etot   = INT(0.1*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
-    integer, parameter :: out_we     = 1, freq_we     = INT(0.1*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
+    integer, parameter :: out_etot   = 1, freq_etot   = INT(0.01*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
+    integer, parameter :: out_we     = 1, freq_we     = INT(0.01*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
     integer, parameter :: out_conv   = 1, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_gamma  = 1, freq_gamma  = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_hspec  = 1, freq_hspec  = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
@@ -300,8 +313,8 @@ MODULE parameters
     integer :: hlvl2(nfields2)=[2,2,1,1,1,1,1,1,1]                                 
     integer :: hlvl3(nfields)=[0,0,0,0,0,0,0,0]                                     
 
-    integer, parameter :: bot_height = INT(n3*(1-400/dom_z))
-    integer, parameter :: mid_height = INT(n3*(1-200/dom_z))
+    integer, parameter :: bot_height = INT(n3*(1-30/dom_z))
+    integer, parameter :: mid_height = INT(n3*(1-15/dom_z))
     integer, parameter :: top_height = n3!INT(n3*(1-400/dom_z))
 
     integer, parameter :: out_slab = 0, freq_slab = 1
@@ -312,6 +325,7 @@ MODULE parameters
     integer :: id_field                       !dummy index to differenciate fields plotted  
 
     integer, parameter :: out_slice   = 1, freq_slice =  1* freq_etot
+    integer, parameter :: out_slice2  = 1, freq_slice2=  1* freq_etot
     integer, parameter :: out_slice3  = 1, freq_slice3=  1* freq_etot
     integer, parameter :: out_eta     = 0, freq_eta   =  freq_hspec
     integer, parameter :: out_tspec   = 0

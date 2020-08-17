@@ -137,6 +137,8 @@ PROGRAM main
   end if
   if(leif_field==1) call init_leif(psik)         !Use Leif's realistic NISKINE flow field
 
+
+
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
   call sumB(BRk,BIk)
@@ -145,7 +147,12 @@ PROGRAM main
   BIk = (0.D0,0.D0)
   CRk = (0.D0,0.D0)
   CIk = (0.D0,0.D0)
-   qk = (0.D0,0.D0)
+
+  if(fixed_flow == 0) then
+     call init_q(qk,psik)
+  else
+     qk = (0.D0,0.D0)
+  end if
 
   call compute_velo(uk,vk,wk,bk,psik) 
   call generate_halo(uk,vk,wk,bk)
@@ -172,7 +179,7 @@ PROGRAM main
  end do
 
  do id_field=1,nfields2                                            
-    if(out_slice ==1)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
+    if(out_slice2==1)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
  end do
  
  do iz=1,num_spec
@@ -252,7 +259,13 @@ end if
 if(fixed_flow==0) then
  ! --- Recover the streamfunction --- !
 
- call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           ! Compute qw
+
+
+ if(no_feedback == 1) then
+    qwk = (0.D0,0.D0)
+ else
+    call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           ! Compute qw                                                                                                                     
+ end if
 
  do izh0=1,n3h0                                     ! Compute q* = q - qw
     izh1=izh0+1
@@ -396,7 +409,11 @@ BIk = BItempk
 if(fixed_flow==0) then
  ! --- Recover the streamfunction --- !                                                                                                                   
 
- call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           !Compute qw                                                                                          
+ if(no_feedback == 1) then
+    qwk = (0.D0,0.D0)
+ else
+    call compute_qw(qwk,BRk,BIk,qwr,BRr,BIr)           ! Compute qw                                                                                                                     
+ end if
 
  do izh0=1,n3h0                                     ! Compute q* = q - qw                                                                                 
     izh1=izh0+1
@@ -462,10 +479,10 @@ do id_field=1,nfields3
    if(out_slice3==1 .and. mod(iter,freq_slice3)==0 .and. count_slice3(id_field)<max_slices)  call slices3(ARk,AIK,ARr,AIr,dBRk,dBIk,dBRr,dBIr,nBRk,nBIk,nBRr,nBIr,rBRk,rBIk,rBRr,rBIr,id_field)
 end do
 
-! do id_field=1,nfields2
-!    if(out_slice ==1 .and. mod(iter,freq_slice)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
-! end do
-
+do id_field=1,nfields2
+   if(out_slice2==1 .and. mod(iter,freq_slice2)==0 .and. count_slice2(id_field)<max_slices)  call slices2(uk,vk,wak,bk,psik,ur,vr,war,br,psir,id_field)
+end do
+                                                                          
  do iz=1,num_spec
     if(out_hspecw ==1  .and. mod(iter,freq_hspecw)==0 ) call hspec_waves(BRk,BIk,CRk,CIk,iz)
  end do
