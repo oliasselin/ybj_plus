@@ -1,11 +1,11 @@
 #!/bin/bash
 
-number_of_nodes=3
-number_of_tasks=64
-ntasks_per_node=24
+number_of_nodes=1
+number_of_tasks=16
+ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_nodisp_dt0.01/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/leif/small_dipole/N2_1e-5_nodisp_dt0.01/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/luwei/test0/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/luwei/test0/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -16,13 +16,13 @@ cd $sourdir
 cat > EXEC_STEP << EXEC
 #!/bin/sh 
 
-#SBATCH --job-name="real"
-#SBATCH --output="/home/oasselin/monitor/vort.o%j.%N"
+#SBATCH --job-name="test"
+#SBATCH --output="/home/oasselin/monitor/test.o%j.%N"
 #SBATCH --partition=compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t 06:00:00
+#SBATCH -t 00:30:00
 #SBATCH -A TG-OCE190014 
 
 #This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
@@ -69,5 +69,5 @@ COMPILE
 
 chmod 755 COMPILE_STEP
 ./COMPILE_STEP
-sbatch EXEC_STEP
+#sbatch EXEC_STEP
 
