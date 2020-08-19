@@ -2,8 +2,8 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=256, n2=256, n3=1024!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
-    integer, parameter :: npe=64
+    integer, parameter :: n1=256, n2=256, n3=128!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
+    integer, parameter :: npe=16
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
     integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4
@@ -19,7 +19,7 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = 70000                             !Horizontal domain size (in m)
+    double precision, parameter :: dom_x = 120000                             !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
@@ -27,7 +27,7 @@ MODULE parameters
     real, parameter :: ktrunc_x = twopi/L1 * float(n1)/3.           ! dimensional truncation wavenumber (x)
     real, parameter :: ktrunc_z = twopi/L3 * float(n3)/3.           ! dimensional truncation wavenumber (x)
 
-    integer, parameter :: fixed_flow = 1        !1: Skip the psi-inversion steps
+    integer, parameter :: fixed_flow = 0        !1: Skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set A and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     
     !Gaussian wave initial condition
@@ -43,7 +43,7 @@ MODULE parameters
 
     integer, parameter :: ybj_plus = 1                                                                                                                                                                                                                                                                                                                                                                                           !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation   
     integer, parameter :: no_feedback=1
-    integer, parameter :: no_dispersion=1
+    integer, parameter :: no_dispersion=0
     integer, parameter :: linear=0                      !1: set the nonlinear terms (advection) to 0. 
     integer, parameter :: inviscid=0                    !1: No dissipation, otherwise: dissipation
     integer, parameter :: init_wageo=0                  !1: Initialize wk with Ro*wak
@@ -77,7 +77,7 @@ MODULE parameters
     integer, parameter :: ny_leif = 60
     integer, parameter :: iktx_leif= nx_leif/2+1, ikty_leif=ny_leif
     integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
-    integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
+    integer, parameter :: leif_field = 1                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =1                !Do the xz slices along x=-y (if = 0, then x = y transect)
     integer, parameter :: y_trans = 0!48!0!n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
 

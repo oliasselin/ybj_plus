@@ -1,11 +1,11 @@
 #!/bin/bash
 
-number_of_nodes=3
-number_of_tasks=64
-ntasks_per_node=24
+number_of_nodes=1
+number_of_tasks=16
+ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/luwei/test4/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/luwei/test4/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -16,8 +16,8 @@ cd $sourdir
 cat > EXEC_STEP << EXEC
 #!/bin/sh 
 
-#SBATCH --job-name="real"
-#SBATCH --output="/home/oasselin/monitor/real.o%j.%N"
+#SBATCH --job-name="test"
+#SBATCH --output="/home/oasselin/monitor/test.o%j.%N"
 #SBATCH --partition=compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
@@ -44,9 +44,9 @@ cat > COMPILE_STEP << COMPILE
                                                                                                                                                        
 
 cd $sourdir
-cp $HOME/leif/YBJ/*.f90 .
+cp $HOME/luwei/YBJ/*.f90 .
 cd $datadir
-cp $HOME/leif/YBJ/input_vort/*.dat .
+cp $HOME/luwei/YBJ/input_vort/*.dat .
 cd $sourdir
 
 PARA=parameters.f90
@@ -62,12 +62,13 @@ SPEC=special.f90
 
 
 #Compile with MPIf90                                                                                                                                       
-mpif90 -mkl parameters.f90 mpi.f90 fft.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 main_waqg.f90 -o exec_full
+#mpif90 -mkl parameters.f90 mpi.f90 fft.f90 IO_basic.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 main_waqg.f90 -o exec_full 
 
+mpif90 -mkl parameters.f90 mpi.f90 fft.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 -I$NETCDFHOME/include -I$HDF5HOME/include -L$NETCDFHOME/lib -L$HDF5HOME/lib IO_psi.f90  main_waqg.f90 -o exec_full -lnetcdf -lnetcdff
 
 COMPILE
 
 chmod 755 COMPILE_STEP
 ./COMPILE_STEP
-sbatch EXEC_STEP
+#sbatch EXEC_STEP
 
