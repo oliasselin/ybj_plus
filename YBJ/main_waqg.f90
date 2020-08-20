@@ -139,10 +139,10 @@ PROGRAM main
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
   call fft_r2c(psir,psik,n3h1)
 
-  if(test_pt==1) then
- !     call ncreadin(psik,psir)
+  if(test_IO_pt==1) then
+     call ncreadin(psik,psir)
      call ncdumpout(psik,psir,time,dump_count)
-     itermax=0
+!     itermax=0
   end if
 
 

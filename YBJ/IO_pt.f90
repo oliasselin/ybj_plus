@@ -29,7 +29,7 @@ subroutine ncdumpout(psik,psir,time,dump_count)
   integer, dimension(3) :: nccount,ncstart
 
 
-  character *9 :: file_name
+  character *13 :: file_name
   real :: time
   real :: time_seconds        !Print time in seconds => nondimensional time * L_scale/U_scale
   
@@ -64,17 +64,18 @@ subroutine ncdumpout(psik,psir,time,dump_count)
 
 !!! prep restart file (output) (define the variables and dims)
   !Set file name
-  write(file_name,"(A3,I0.3,A3)") "psi",dump_count,".nc"
+  write(file_name,"(A3,I0.3,A7)") "psi",dump_count,".out.nc"
   if (mype.eq.0)  print*,'Yo! dumping in netcdf restart file:',file_name
 
   ! Create the netCDF file. The nf90_clobber parameter tells netCDF,
   call check( nf90_create(file_name,ior(NF90_NETCDF4,NF90_MPIIO),idout, comm = MPI_COMM_WORLD,info = MPI_INFO_NULL) )
-  
+  print*,'nf90_create',mype
+
   ! Define the dimension: kx, ky, kz. time. RI used as another dim to distinguish between real and imag parts
   call check( nf90_def_dim(idout, "x",int(n1,4),idx) )
   call check( nf90_def_dim(idout, "y",int(n2,4),idy) )
   call check( nf90_def_dim(idout, "z",int(n3,4),idz) )
-!  call check( nf90_def_dim(idout, "t",        1,idt) )
+  call check( nf90_def_dim(idout, "t",        1,idt) )
      
   ! ncdimsk array used to pass the dimension IDs to the variables
 !  ncdimsk = (/idkx,idky,idkz,idkri/)
@@ -83,6 +84,7 @@ subroutine ncdumpout(psik,psir,time,dump_count)
   ! Define the variables which are the fields that going to be stored
   call check( nf90_def_var(idout,"psi" ,NF90_FLOAT,ncdims,idpsi ) )
   call check( nf90_def_var(idout,"time",NF90_FLOAT,idt   ,idtime) )
+  print*,'nf90_create',mype
      
   ! End define mode. This tells netCDF we are done defining metadata.
   call check( nf90_enddef(idout) )
@@ -139,16 +141,17 @@ subroutine ncreadin(psik,psir)
 
   integer, dimension(3) :: nccount,ncstart
 
+  real :: time_seconds  
+
   ! Open the file. NF90_NOWRITE tells netCDF we want read-only access                                                            
   print*,'Yo! reading from netcdf restart file, BTW im mype',mype
-  call check( nf90_open('psi_pout.ncf', NF90_NOWRITE,idin) )
-  print*,'Yo! just opened netcdf restart file, BTW im mype',mype
+  call check( nf90_open('psi000.in.nc', NF90_NOWRITE,idin) )
 
   ! Get the dimensions IDs based on their name                                                                                   
   call check( nf90_inq_dimid(idin, "x", idx) )
   call check( nf90_inq_dimid(idin, "y", idy) )
   call check( nf90_inq_dimid(idin, "z", idz) )
-!  call check( nf90_inq_dimid(idin, "t", idt) )
+  call check( nf90_inq_dimid(idin, "t", idt) )
 
   ! Get the dimension length and check if the grid resolution matches                                                   
   call check( nf90_inquire_dimension(idin,idx,len=n1in))
@@ -161,7 +164,7 @@ subroutine ncreadin(psik,psir)
   endif
 
   ! Get the variables IDs                                                                                                                                                      
-!  call check( nf90_inq_varid(idin,"time",idtime))
+  call check( nf90_inq_varid(idin,"time",idtime))
   call check( nf90_inq_varid(idin, "psi",idpsi) )
 
   ! prepare for reading variables                                                                                                                                              
@@ -172,9 +175,11 @@ subroutine ncreadin(psik,psir)
   ncstart(3)= int(mype*n3h0+1)
 
   !Get variables
-!  call check(  nf90_get_var(idin,idtime,ts))
+  call check(  nf90_get_var(idin,idtime,time_seconds))
   call check( nf90_get_var(idin,idpsi,psi_clean,ncstart,nccount))
-  
+
+  !Print time
+  if (mype.eq.0) print*,"File read starts at t = ",time_seconds,"s"
   !Back to psik!
   psir = 0.D0
   do izh0=1,n3h0

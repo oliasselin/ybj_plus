@@ -4,8 +4,8 @@ number_of_nodes=1
 number_of_tasks=16
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/luwei/test0/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/luwei/test0/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/luwei/test_read/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/luwei/test_read/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -47,10 +47,10 @@ cat > COMPILE_STEP << COMPILE
 
 cd $sourdir
 cp $HOME/luwei/YBJ/*.f90 .
-cp $HOME/luwei/YBJ/*.ncf .
+cp $HOME/luwei/YBJ/*.nc .
 cd $datadir
 cp $HOME/luwei/YBJ/input_vort/*.dat .
-cp $HOME/luwei/YBJ/*.ncf .                                                                                                                                                                                                      
+cp $HOME/luwei/YBJ/*.nc .                                                                                                                                                                                                      
 cd $sourdir
 
 PARA=parameters.f90
