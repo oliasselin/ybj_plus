@@ -8,7 +8,7 @@ PROGRAM main
   USE elliptic
   USE diagnostics
   USE files
-  USE IO_psi
+  USE IO_pt
 
   !********************** Declaring variables *****************************!
 
@@ -118,6 +118,9 @@ PROGRAM main
   equivalence(dARr,dARk)
   equivalence(dAIr,dAIk)
 
+  !NetCDF count
+  integer :: dump_count=0
+
   !********************** Initializing... *******************************!
 
 
@@ -128,11 +131,6 @@ PROGRAM main
   call init_base_state
   if(mype==0)  call validate_run
 
-  if(test_IO_psi==1) then
-     call ncreadin(psik,psir)
-     call ncdumpout(psik,psir)
-     itermax=0
-  end if
 
 
 
@@ -140,6 +138,13 @@ PROGRAM main
   !Initialize fields
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
   call fft_r2c(psir,psik,n3h1)
+
+  if(test_pt==1) then
+ !     call ncreadin(psik,psir)
+     call ncdumpout(psik,psir,time,dump_count)
+     itermax=0
+  end if
+
 
 !  if(test_IO_psi==1) then
 !     call ncreadin(psik,psir,time)
