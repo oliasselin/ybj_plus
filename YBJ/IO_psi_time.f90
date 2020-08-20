@@ -14,7 +14,7 @@ module IO_psi
 
 CONTAINS
   
-subroutine ncdumpout(psik,psir)
+subroutine ncdumpout(psik,psir,ts)
   !! Create netcdf files and write the fields for restart (output)
   !! Only psir is dumped in a netcdf file
   implicit none
@@ -25,7 +25,7 @@ subroutine ncdumpout(psik,psir)
   double precision,    dimension(iktx,ikty,n3h1) :: psi_save
   real, dimension(n1,n2,n3h0) :: psi_clean             !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double)
 
-
+  real,    intent(in)   :: ts
   integer, dimension(3) :: ncdims
   integer, dimension(3) :: nccount,ncstart
 
@@ -63,7 +63,7 @@ subroutine ncdumpout(psik,psir)
   call check( nf90_def_dim(idout, "x",int(n1,4),idx) )
   call check( nf90_def_dim(idout, "y",int(n2,4),idy) )
   call check( nf90_def_dim(idout, "z",int(n3,4),idz) )
-!  call check( nf90_def_dim(idout, "t",        1,idt) )
+  call check( nf90_def_dim(idout, "t",        1,idt) )
      
   ! ncdimsk array used to pass the dimension IDs to the variables
 !  ncdimsk = (/idkx,idky,idkz,idkri/)
@@ -71,7 +71,7 @@ subroutine ncdumpout(psik,psir)
   
   ! Define the variables which are the fields that going to be stored
   call check( nf90_def_var(idout,"psi" ,NF90_FLOAT,ncdims,idpsi ) )
-!  call check( nf90_def_var(idout,"time",NF90_FLOAT,idt   ,idtime) )
+  call check( nf90_def_var(idout,"time",NF90_FLOAT,idt   ,idtime) )
      
   ! End define mode. This tells netCDF we are done defining metadata.
   call check( nf90_enddef(idout) )
@@ -91,9 +91,9 @@ subroutine ncdumpout(psik,psir)
 !  call check( nf90_put_var(idout, idpsi, real(psir)) )
 
   ! wrtie time (time is written only one time so just root process is used
-!  if (mype.eq.0) then 
-!     call check( nf90_put_var(idout, idtime, ts) )
-!  endif
+  if (mype.eq.0) then 
+     call check( nf90_put_var(idout, idtime, ts) )
+  endif
 
   ! in the z-direction mype=0 is in the first place
   ncstart(3) = mype*n3h0+1
@@ -119,7 +119,7 @@ end subroutine ncdumpout
 
 
 
-subroutine ncreadin(psik,psir)
+subroutine ncreadin(psik,psir,ts)
 ! Read the netcdf data from an input file (psi.in.ncf)                                                                
   implicit none
 
@@ -130,7 +130,15 @@ subroutine ncreadin(psik,psir)
 
   integer :: n1in,n2in,n3in         !dimensions read in the file. Must match n1,n2,n3 for now
 
+!  integer, dimension(3) :: ncdims
   integer, dimension(3) :: nccount,ncstart
+
+
+!  complex, intent(out),    dimension(iktx,ikty,iktzp) :: zx,zy,zz,tt
+!  real, dimension(iktx,ikty,iktzp) :: wr,wi
+  real,    intent(out) :: ts
+
+!  integer, dimension(5) :: ncstartr,ncstarti,nccount
 
   ! Open the file. NF90_NOWRITE tells netCDF we want read-only access                                                            
   print*,'Yo! reading from netcdf restart file, BTW im mype',mype

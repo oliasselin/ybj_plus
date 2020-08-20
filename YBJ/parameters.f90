@@ -2,8 +2,10 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: n1=256, n2=256, n3=128!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
-    integer, parameter :: npe=16
+    integer, parameter :: test_IO_psi=1
+
+    integer, parameter :: n1=512, n2=512, n3=512!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
+    integer, parameter :: npe=64
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
     integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4

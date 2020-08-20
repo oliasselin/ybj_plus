@@ -8,6 +8,7 @@ PROGRAM main
   USE elliptic
   USE diagnostics
   USE files
+  USE IO_psi
 
   !********************** Declaring variables *****************************!
 
@@ -127,10 +128,24 @@ PROGRAM main
   call init_base_state
   if(mype==0)  call validate_run
 
+  if(test_IO_psi==1) then
+     call ncreadin(psik,psir)
+     call ncdumpout(psik,psir)
+     itermax=0
+  end if
+
+
+
 
   !Initialize fields
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
   call fft_r2c(psir,psik,n3h1)
+
+!  if(test_IO_psi==1) then
+!     call ncreadin(psik,psir,time)
+!     call ncdumpout(psik,psir,time)
+!     itermax=0
+!  end if
 
   if(new_vort_input==1) then   !Read the r-space vorticity file with dimensions n1=nx_leif x n2=ny_leif. Requires matching dimensions  
      call input_vort_r2c
