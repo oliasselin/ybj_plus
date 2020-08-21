@@ -14,7 +14,7 @@ module IO_pt
 
 CONTAINS
   
-subroutine ncdumpout(psik,psir,time,dump_count)
+subroutine ncdumppsi(psik,psir,time,dump_count)
   !! Create netcdf files and write the fields for restart (output)
   !! Only psir is dumped in a netcdf file
   implicit none
@@ -123,7 +123,7 @@ contains
     end if
   end subroutine check
   
-end subroutine ncdumpout
+end subroutine ncdumppsi
 
 
 
