@@ -8,7 +8,7 @@ PROGRAM main
   USE elliptic
   USE diagnostics
   USE files
-  USE IO_pt
+  USE IO_ncf
 
   !********************** Declaring variables *****************************!
 
@@ -119,7 +119,8 @@ PROGRAM main
   equivalence(dAIr,dAIk)
 
   !NetCDF count
-  integer :: dump_count=0
+  integer :: dump_count_psi=0
+  integer :: dump_count_la =0
 
   !********************** Initializing... *******************************!
 
@@ -138,19 +139,6 @@ PROGRAM main
   !Initialize fields
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
   call fft_r2c(psir,psik,n3h1)
-
-  if(test_IO_pt==1) then
-     call ncreadin(psik,psir)
-     call ncdumpout(psik,psir,time,dump_count)
-!     itermax=0
-  end if
-
-
-!  if(test_IO_psi==1) then
-!     call ncreadin(psik,psir,time)
-!     call ncdumpout(psik,psir,time)
-!     itermax=0
-!  end if
 
   if(new_vort_input==1) then   !Read the r-space vorticity file with dimensions n1=nx_leif x n2=ny_leif. Requires matching dimensions  
      call input_vort_r2c
@@ -209,6 +197,9 @@ PROGRAM main
  if(out_we   ==1) call wave_energy(ARk,AIk,BRk,BIk,CRk,CIk)
  if(out_wvave==1) call we_vave(BRk,BIk,BRr,BIr)
  if(out_conv ==1) call we_conversion(ARk, AIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
+
+ if(out_psi ==1) call ncdump_psi(psik,psir,dump_count_psi)
+ if(out_la  ==1) call ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
 
  !************************************************************************!
  !*** 1st time timestep using the projection method with Forward Euler ***!
@@ -513,7 +504,11 @@ end do
  if(out_gamma==1 .and. mod(iter,freq_gamma )==0) call gamma_conversion(ARk, AIk, BRk, BIk, nBRk, nBIk, rBRk, rBIk, nBRr, nBIr, rBRr, rBIr)
 
 
- 
+if(out_psi ==1 .and. mod(iter,freq_psi)==0) call ncdump_psi(psik,psir,dump_count_psi)
+if(out_la  ==1 .and. mod(iter,freq_la )==0) call ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
+
+      
+     
 
  !**************************************************************************!
 

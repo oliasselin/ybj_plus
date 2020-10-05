@@ -13,6 +13,16 @@ module IO_pt
   integer :: idpsi,idtime    !Variable IDs
 
 CONTAINS
+
+
+  subroutine check(status)
+    integer, intent (in) :: status
+    if(status /= nf90_noerr) then 
+       print *, trim(nf90_strerror(status))
+       stop "Stopped!!!"
+    end if
+  end subroutine check
+  
   
 subroutine ncdumpout(psik,psir,time,dump_count)
   !! Create netcdf files and write the fields for restart (output)
@@ -114,15 +124,6 @@ subroutine ncdumpout(psik,psir,time,dump_count)
 
 
 
-contains
-  subroutine check(status)
-    integer, intent (in) :: status
-    if(status /= nf90_noerr) then 
-       print *, trim(nf90_strerror(status))
-       stop "Stopped!!!"
-    end if
-  end subroutine check
-  
 end subroutine ncdumpout
 
 

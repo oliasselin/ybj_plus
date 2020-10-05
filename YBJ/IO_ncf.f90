@@ -1,4 +1,4 @@
-module IO_pt
+module IO_ncf
   use parameters
   use mpi
   use fft
@@ -10,30 +10,29 @@ module IO_pt
 
   integer :: idin,idout !Files ID
   integer :: idx,idy,idz,idt !Dimension IDs
-  integer :: idpsi,idtime    !Variable IDs
+  integer :: idpsi,idlar,idlai,idtime    !Variable IDs
 
 CONTAINS
-  
-subroutine ncdumppsi(psik,psir,time,dump_count)
-  !! Create netcdf files and write the fields for restart (output)
-  !! Only psir is dumped in a netcdf file
+
+subroutine ncdump_psi(psik,psir,dump_count_psi)
+
+  !Create netcdf file and write for the geostrophic streamfunction psi (output)
+
   implicit none
 
   double complex, dimension(iktx,ikty,n3h1) ::   psik
   double precision, dimension(n1d,n2d,n3h1)   :: psir
 
-  double precision,    dimension(iktx,ikty,n3h1) :: psi_save
-  real, dimension(n1,n2,n3h0) :: psi_clean             !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double)
+  double precision,    dimension(iktx,ikty,n3h1) :: psi_save  !Save psi to avoid inverse FFT
+  real, dimension(n1,n2,n3h0) :: psi_clean                    !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double)
 
   integer, dimension(3) :: ncdims
   integer, dimension(3) :: nccount,ncstart
 
-
   character *13 :: file_name
-  real :: time
   real :: time_seconds        !Print time in seconds => nondimensional time * L_scale/U_scale
   
-  integer :: dump_count
+  integer :: dump_count_psi
 
   !Calculate time in seconds!
   time_seconds = time*L_scale/U_scale
@@ -64,11 +63,10 @@ subroutine ncdumppsi(psik,psir,time,dump_count)
 
 !!! prep restart file (output) (define the variables and dims)
   !Set file name
-  write(file_name,"(A3,I0.3,A7)") "psi",dump_count,".out.nc"
+  write(file_name,"(A3,I0.3,A7)") "psi",dump_count_psi,".out.nc"
 
   ! Create the netCDF file. The nf90_clobber parameter tells netCDF,
   call check( nf90_create(file_name,ior(NF90_NETCDF4,NF90_MPIIO),idout, comm = MPI_COMM_WORLD,info = MPI_INFO_NULL) )
-  print*,'nf90_create',mype
 
   ! Define the dimension: kx, ky, kz. time. RI used as another dim to distinguish between real and imag parts
   call check( nf90_def_dim(idout, "x",int(n1,4),idx) )
@@ -77,14 +75,12 @@ subroutine ncdumppsi(psik,psir,time,dump_count)
   call check( nf90_def_dim(idout, "t",        1,idt) )
      
   ! ncdimsk array used to pass the dimension IDs to the variables
-!  ncdimsk = (/idkx,idky,idkz,idkri/)
   ncdims = (/idx,idy,idz/)
   
   ! Define the variables which are the fields that going to be stored
   call check( nf90_def_var(idout,"psi" ,NF90_FLOAT,ncdims,idpsi ) )
   call check( nf90_def_var(idout,"time",NF90_FLOAT,idt   ,idtime) )
-  print*,'nf90_create',mype
-     
+
   ! End define mode. This tells netCDF we are done defining metadata.
   call check( nf90_enddef(idout) )
 
@@ -112,18 +108,118 @@ subroutine ncdumppsi(psik,psir,time,dump_count)
 !     CLOSING the  NETCDF FILE 
   call check (nf90_close(idout))
 
+  dump_count_psi=  dump_count_psi + 1
+
+end subroutine ncdump_psi
 
 
-contains
-  subroutine check(status)
-    integer, intent (in) :: status
-    if(status /= nf90_noerr) then 
-       print *, trim(nf90_strerror(status))
-       stop "Stopped!!!"
-    end if
-  end subroutine check
+
+
+
+subroutine ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
+
+  !Create netcdf file and write for the geostrophic streamfunction psi (output)
+
+  implicit none
+
+  double complex,   dimension(iktx,ikty,n3h0) :: BRk, BIk
+  double precision, dimension(n1d,n2d,n3h0)   :: BRr, BIr
+
+  double precision,    dimension(iktx,ikty,n3h0) :: BR_save,BI_save  !Save psi to avoid inverse FFT  
+  real, dimension(n1,n2,n3h0) :: BR_clean, BI_clean                  !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double)
+
+  integer, dimension(3) :: ncdims
+  integer, dimension(3) :: nccount,ncstart
+
+  character *12 :: file_name
+  real :: time_seconds        !Print time in seconds => nondimensional time * L_scale/U_scale
   
-end subroutine ncdumppsi
+  integer :: dump_count_la
+
+  !Calculate time in seconds!
+  time_seconds = time*L_scale/U_scale
+
+  !Move to r-space!
+  BR_save = BRk !Save to avoid inverse fft
+  BI_save = BIk !Save to avoid inverse fft
+  call fft_c2r(BRk,BRr,n3h0)
+  call fft_c2r(BIk,BIr,n3h0)
+
+  !---------------------------------------------------!
+  !Suboptimal: get rid of halos and extra x-dim values!
+
+  do izh0=1,n3h0
+     do iy=1,n2
+        do ix=1,n1
+
+           BR_clean(ix,iy,izh0) = real(BRr(ix,iy,izh0))
+           BI_clean(ix,iy,izh0) = real(BIr(ix,iy,izh0))
+
+        end do
+     end do
+  end do
+  !Recover the k-space psi without fft back
+  BRk=BR_save
+  BIk=BI_save
+  !---------------------------------------------------!
+
+!---------------------------------------------------------------------
+!     DEFINING THE OUTPUT NETCDF FILE 
+
+!!! prep restart file (output) (define the variables and dims)
+  !Set file name
+  write(file_name,"(A2,I0.3,A7)") "la",dump_count_la,".out.nc"
+
+  ! Create the netCDF file. The nf90_clobber parameter tells netCDF,
+  call check( nf90_create(file_name,ior(NF90_NETCDF4,NF90_MPIIO),idout, comm = MPI_COMM_WORLD,info = MPI_INFO_NULL) )
+
+  ! Define the dimension: kx, ky, kz. time. RI used as another dim to distinguish between real and imag parts
+  call check( nf90_def_dim(idout, "x",int(n1,4),idx) )
+  call check( nf90_def_dim(idout, "y",int(n2,4),idy) )
+  call check( nf90_def_dim(idout, "z",int(n3,4),idz) )
+  call check( nf90_def_dim(idout, "t",        1,idt) )
+     
+  ! ncdimsk array used to pass the dimension IDs to the variables
+  ncdims = (/idx,idy,idz/)
+  
+  ! Define the variables which are the fields that going to be stored
+  call check( nf90_def_var(idout,"LAr" ,NF90_FLOAT,ncdims,idlar ) )
+  call check( nf90_def_var(idout,"LAi" ,NF90_FLOAT,ncdims,idlai ) )
+  call check( nf90_def_var(idout,"time",NF90_FLOAT,idt   ,idtime) )
+
+  ! End define mode. This tells netCDF we are done defining metadata.
+  call check( nf90_enddef(idout) )
+
+!---------------------------------------------------------------------
+  !     WRITING VARIABLES IN NETCDF FILE
+  
+  ! how many to count in each dimension when writing files
+  nccount(1) = n1
+  nccount(2) = n2
+  nccount(3) = n3h0
+
+  ! where to start on the output file
+  ncstart(1) = 1
+  ncstart(2) = 1
+  
+  ! write time (time is written only one time so just root process is used
+  if (mype.eq.0)     call check( nf90_put_var(idout, idtime, time_seconds) )
+
+  ! in the z-direction mype=0 is in the first place
+  ncstart(3) = mype*n3h0+1
+  call check( nf90_put_var(idout, idlar, BR_clean,ncstart,nccount))    
+  call check( nf90_put_var(idout, idlai, BI_clean,ncstart,nccount))    
+
+  
+!---------------------------------------------------------------------
+!     CLOSING the  NETCDF FILE 
+  call check (nf90_close(idout))
+
+  dump_count_la= dump_count_la+1
+
+end subroutine ncdump_la
+
+
 
 
 
@@ -197,18 +293,16 @@ subroutine ncreadin(psik,psir)
 
   call check (nf90_close(idin))
 
-contains
-  subroutine check(status)
-    integer, intent (in) :: status
-    if(status /= nf90_noerr) then
-       print *, trim(nf90_strerror(status)),'mype=',mype
-       stop "Stopped!!!"
-    end if
-  end subroutine check
-
 end subroutine ncreadin
 
+subroutine check(status)
+  integer, intent (in) :: status
+  if(status /= nf90_noerr) then 
+     print *, trim(nf90_strerror(status))
+     stop "Stopped!!!"
+  end if
+end subroutine check
 
 
 
-end module IO_pt
+end module IO_ncf

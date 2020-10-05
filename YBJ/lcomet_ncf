@@ -1,0 +1,78 @@
+#!/bin/bash
+
+number_of_nodes=1
+number_of_tasks=16
+ntasks_per_node=16
+
+sourdir=/oasis/scratch/comet/oasselin/temp_project/luwei/delete/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/luwei/delete/output/
+
+mkdir -p $sourdir
+mkdir -p $datadir
+
+cd $sourdir
+
+export MODULEPATH=/home/oasselin/modulefiles:$MODULEPATH
+module load netcdf/v4.7.4f4.5.3
+
+cat > EXEC_STEP << EXEC
+#!/bin/sh 
+
+#SBATCH --job-name="test"
+#SBATCH --output="/home/oasselin/monitor/test.o%j.%N"
+#SBATCH --partition=compute
+#SBATCH --nodes=$number_of_nodes
+#SBATCH --ntasks-per-node=$ntasks_per_node
+#SBATCH --export=ALL
+#SBATCH -t 00:30:00
+#SBATCH -A TG-OCE190014 
+
+#This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
+#ibrun in verbose mode will give binding detail
+
+cd $datadir                                                                                                                                                                            
+cp $sourdir/exec_full $datadir   
+ibrun -n $number_of_tasks -v ./exec_full
+
+                                                                                                                                                        
+EXEC
+
+
+#
+#--- Compile ---#
+#
+cat > COMPILE_STEP << COMPILE
+#!/bin/bash                                                                                                                                               
+                                                                                                                                                       
+
+cd $sourdir
+cp $HOME/luwei/YBJ/*.f90 .
+cp $HOME/luwei/YBJ/*.nc .
+cd $datadir
+cp $HOME/luwei/YBJ/input_vort/*.dat .
+cp $HOME/luwei/YBJ/*.nc .                                                                                                                                                                                                      
+cd $sourdir
+
+PARA=parameters.f90
+MAIN=main_waqg.f90
+FFT=fft.f90
+MPI=mpi.f90
+INIT=init.f90
+DERI=derivatives.f90
+FILE=files.f90
+DIAG=diagnostics.f90
+ELLI=elliptic.f90
+SPEC=special.f90
+
+
+#Compile with MPIf90                                                                                                                                       
+#mpif90 -mkl parameters.f90 mpi.f90 fft.f90 IO_basic.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 main_waqg.f90 -o exec_full 
+
+mpif90 -mkl parameters.f90 mpi.f90 fft.f90 files.f90 derivatives.f90 elliptic.f90 special.f90 diagnostics.f90 init.f90 -I$NETCDFHOME/include -I$HDF5HOME/include -L$NETCDFHOME/lib -L$HDF5HOME/lib IO_ncf.f90  main_waqg.f90 -o exec_full -lnetcdf -lnetcdff
+
+COMPILE
+
+chmod 755 COMPILE_STEP
+./COMPILE_STEP
+sbatch EXEC_STEP
+
