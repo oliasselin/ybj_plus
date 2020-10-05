@@ -139,14 +139,6 @@ PROGRAM main
   !Initialize fields
   call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
   call fft_r2c(psir,psik,n3h1)
-
-  if(new_vort_input==1) then   !Read the r-space vorticity file with dimensions n1=nx_leif x n2=ny_leif. Requires matching dimensions  
-     call input_vort_r2c
-  end if
-  if(leif_field==1) call init_leif(psik)         !Use Leif's realistic NISKINE flow field
-
-
-
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
   call sumB(BRk,BIk)

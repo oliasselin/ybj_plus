@@ -6,10 +6,9 @@ MODULE parameters
     integer, parameter :: n1=64, n2=64, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
     integer, parameter :: npe=16                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
 
-
     !Array dimensions necessary to carry out computations: do NOT change 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3                        !Full dimensiona of real-space fields
-    integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4       !Vertical dimension (including halos) of a z-parallelized field. h0=no halo, h1=1 halo at the top, 1 at the bottom, h2=2 halo at the top, 2 at the bottom
+    integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4       !Vertical dimension (including halos) of a z-parallelized field. hX where X represents the number of halo levels 
     integer, parameter :: n3d1=n3d+2*npe                                  !For transposed field in the ky direction, all z-lev + 1-lev halos stacked
     integer, parameter :: izbot1=2,izbot2=3                               !Short-hand for vertical array index of bottom for haloed fields
     integer, parameter :: iztop1=n3h1-1,iztop2=n3h2-2                     !Short-hand for vertical array index of top for haloed fields  
@@ -20,52 +19,37 @@ MODULE parameters
     double complex :: i = (0.,1.)                                         !Imaginary unit: sqrt(-1) 
     double precision, parameter :: twopi=4.D0*asin(1.D0)                  !2pi
 
-
-    !Set dimensional units of the domain (in meters) here 
-    double precision, parameter :: dom_x = twopi*5e4                          !Horizontal domain size (in m)
-    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
-
     !Nondimensional domain size: 2pi cubed. 
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
     real, parameter :: ktrunc_x = twopi/L1 * float(n1)/3.           ! dimensional truncation wavenumber (x)
     real, parameter :: ktrunc_z = twopi/L3 * float(n3)/3.           ! dimensional truncation wavenumber (x)
 
-    !Gaussian wave initial condition
-    double precision, parameter :: delta_a = 30.
-    double precision, parameter :: xi_a = dom_z/(L3*delta_a)
-    integer, parameter :: cos_ic = 0                      !If 1: multiply the initial wave gaussian by cos(2pi*z_dim/lambda_a) = cos(z_model*m_a)
-    double precision, parameter :: lambda_ic = 150.        !Wavelength (m) of the initial cosinus multiply the gaussian envelope
-    double precision, parameter :: m_ic = dom_z/lambda_ic !nondimensional vertical wavenumber of the initial envelope
-
-    !YBJp paper vertical plane wave m'
-    integer, parameter :: mmm = 8     !Nondimensional vertical wavenumber of the vertical plane wave IC
-
-
 
     !Tags to specify run!
     !-------------------!
 
+    !Set dimensional units of the domain (in meters) here   [COULD BE MOVED UP THE LIST]
+    double precision, parameter :: dom_x = twopi*5e4                          !Horizontal domain size (in m)
+    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
+
     integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
-    integer, parameter :: ybj_plus = 1                                                                                                                                                                                                                                                                                                                                                                                           !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation   
-    integer, parameter :: no_feedback=1
-    integer, parameter :: no_dispersion=0
-    integer, parameter :: linear=0                      !1: set the nonlinear terms (advection) to 0. 
-    integer, parameter :: inviscid=0                    !1: No dissipation, otherwise: dissipation
-    integer, parameter :: init_wageo=0                  !1: Initialize wk with Ro*wak
-
-    integer, parameter :: zero_aveB=1                   !1: Set B=LA vertical average to zero
-
-    integer :: dealiasing=1         ! 1: Dealias, 0: don't. May not work though...
-
-    !Should eventually plot both energies
-!    integer, parameter :: plot_energy=1      !Use 1: energy_linear (equivalent to boussinesq including variable density, 2: energy_lipps)
+    integer, parameter :: ybj_plus = 1          !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation (not recommended)  
+    integer, parameter :: no_feedback=1         !1: q^w = 0 and flow is independent of waves. 0: feedback activated (requires smaller time step) 
+    integer, parameter :: no_dispersion=0       !1: set the dispersive term to 0, 0: regular integration.
+    integer, parameter :: linear=0              !1: set the nonlinear terms (advection) to 0. 
+    integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
+    integer, parameter :: init_wageo=0          !1: Initialize the geostrophic flow with a wk with Ro*wak (makes no difference in the QG-YBJ model)
+    integer, parameter :: zero_aveB=1           !1: Set B=LA vertical average to zero for extra security (shouldn't be necessary with ybjp_plus==1)
+    integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
 
     !Initial structure!
     !-----------------!
 
+    !YBJp paper vertical plane wave m'
+    integer, parameter :: mmm = 8     !Nondimensional vertical wavenumber of the vertical plane wave IC
 
     integer, parameter :: generic=1 
     integer, parameter :: init_vertical_structure=1
@@ -79,22 +63,14 @@ MODULE parameters
 
     !Flow initialization from NISKINE data!
     !-------------------------------------!
-
-    integer, parameter :: nx_leif = 60
-    integer, parameter :: ny_leif = 60
-    integer, parameter :: iktx_leif= nx_leif/2+1, ikty_leif=ny_leif
-    integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
-    integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =0                !Do the xz slices along x=-y (if = 0, then x = y transect)
     integer, parameter :: y_trans = 0!48!0!n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
 
-    character(len = 64), parameter :: leif_vort_r ='leif_vorticity2.dat'
-    character(len = 64), parameter :: leif_vort_k ='leif_vorticity2k.dat'
 
     !Normalization at the tropopause!
     !-------------------------------!
     
-    integer, parameter :: norm_trop = 1                !Normalize (1) (or not: 0) with the RMS value of U at the tropopause (overrides normalize=1, normalization from total energy)                                                        
+    integer, parameter :: norm_trop = 1                !Normalize (1) (or not: 0) with the RMS value of U at the tropopause (overrides normalize=1, normalization from total energy)     
     integer, parameter :: trop_height = n3/2         !Position (in stag) where we want U_RMS to be computed for normalization                                                      
     double precision, parameter :: URMS = 1.D0
 
