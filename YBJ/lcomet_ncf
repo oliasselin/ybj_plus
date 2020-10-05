@@ -4,8 +4,8 @@ number_of_nodes=1
 number_of_tasks=16
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/luwei/delete/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/luwei/delete/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/ybjp_test/test0/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/ybjp_test/test0/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir

@@ -4,7 +4,7 @@ MODULE parameters
 
     integer, parameter :: test_IO_pt=1
 
-    integer, parameter :: n1=128, n2=128, n3=128!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
+    integer, parameter :: n1=64, n2=64, n3=256!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
     integer, parameter :: npe=16
 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
@@ -21,15 +21,15 @@ MODULE parameters
     double complex :: i = (0.,1.)
     double precision, parameter :: twopi=4.D0*asin(1.D0)
 
-    double precision, parameter :: dom_x = 120000                             !Horizontal domain size (in m)
-    double precision, parameter :: dom_z = 3000                               !Vertical   domain size (in m)
+    double precision, parameter :: dom_x = twopi*5e4                          !Horizontal domain size (in m)
+    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
 
     real, parameter :: ktrunc_x = twopi/L1 * float(n1)/3.           ! dimensional truncation wavenumber (x)
     real, parameter :: ktrunc_z = twopi/L3 * float(n3)/3.           ! dimensional truncation wavenumber (x)
 
-    integer, parameter :: fixed_flow = 0        !1: Skip the psi-inversion steps
+    integer, parameter :: fixed_flow = 1        !1: Skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set A and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     
     !Gaussian wave initial condition
@@ -39,6 +39,11 @@ MODULE parameters
     integer, parameter :: cos_ic = 0                      !If 1: multiply the initial wave gaussian by cos(2pi*z_dim/lambda_a) = cos(z_model*m_a)
     double precision, parameter :: lambda_ic = 150.        !Wavelength (m) of the initial cosinus multiply the gaussian envelope
     double precision, parameter :: m_ic = dom_z/lambda_ic !nondimensional vertical wavenumber of the initial envelope
+
+    !YBJp paper vertical plane wave m'
+    integer, parameter :: mmm = 8     !Nondimensional vertical wavenumber of the vertical plane wave IC
+
+
 
     !Tags to specify run!
     !-------------------!
@@ -79,7 +84,7 @@ MODULE parameters
     integer, parameter :: ny_leif = 60
     integer, parameter :: iktx_leif= nx_leif/2+1, ikty_leif=ny_leif
     integer, parameter :: new_vort_input = 0                         !Input a new real-space vorticity field and recalculate the k-space field (requires n1/2=nx/y_leif
-    integer, parameter :: leif_field = 1                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
+    integer, parameter :: leif_field = 0                             !Initialize flow (streamfunction) with Leif's realistic NISKINe field
     integer, parameter :: x_equal_minus_y_transect =1                !Do the xz slices along x=-y (if = 0, then x = y transect)
     integer, parameter :: y_trans = 0!48!0!n2/4!n2/2                              !Somewhere between 0 and n2. Shift the y = -x transect with + y_trans
 
@@ -120,7 +125,7 @@ MODULE parameters
     double precision, parameter :: N2_scale = 0.75D0   !N^2 ~ exp(N2_scale*(z-z0) 
 
     !Stratification = constant_N!
-    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
+!    double precision, parameter :: N0 = sqrt(1.e-5) !(25./8.)*twopi*cor!/sqrt(3.)
 
     !Stratification = double_gaussian!
 
@@ -205,9 +210,10 @@ MODULE parameters
 
     double precision, parameter :: H_scale=dom_z/L3          !Actual H in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
-    double precision, parameter :: cor=1.24e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
-    double precision, parameter :: U_scale = 0.23696549362367206!0.696388389424669!0.23696549362367206 !0.696388389424669 !0.23696549362367206!0.5     !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
-    double precision, parameter :: Uw_scale= 0.1                       !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
+    double precision, parameter :: cor=1e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
+    double precision, parameter :: N0 = (25./8.)*twopi*cor
+    double precision, parameter :: U_scale = 0.25            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
+    double precision, parameter :: Uw_scale= 2.5e-5          !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
     double precision, parameter :: Ar2 = (H_scale/L_scale)**2                                   !(1./64.)**2!(1./10.)**2 !0.01     !Aspect ratio squared = (H/L)^2     
     double precision, parameter :: Ro  = U_scale/(cor*L_scale)                                  !Rossby number  U/fL
     double precision, parameter :: Fr  = U_scale/(N0*H_scale)                                   !Froude number  U/N(z0)H
@@ -223,14 +229,15 @@ MODULE parameters
     integer :: iter=0
     integer :: itermax=1000000000
     real :: maxtime=100                      
-    double precision, parameter :: delt=Ro/50.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+    double precision, parameter :: delt=0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+!    double precision, parameter :: delt=Ro/50.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
     double precision, parameter :: gamma=1e-2                                  !Robert filter parameter
 
     !Other successful viscosity: 5e-2 * (10./ktrunc_x ) **2. 
     !PERFECT VISCOSITY: 0.01 * (64./(1.*n1)) **(4./3.)
     !In reality, nuh is 1/Re and nuz is 1/(Ar2*Re) with 1/Re = UL/nu
 
-    double precision, parameter :: coeff =0.01!0.4!0.4!0.1!0.075
+    double precision, parameter :: coeff =0.!0.4!0.4!0.1!0.075
     double precision, parameter :: coeffz=0.!coeff!/10.!/1000!/10.
 
     integer, parameter :: ilap = 8                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
@@ -254,8 +261,8 @@ MODULE parameters
 
     
 
-    integer, parameter :: out_etot   = 1, freq_etot   = INT(0.1*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
-    integer, parameter :: out_we     = 1, freq_we     = INT(0.1*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
+    integer, parameter :: out_etot   = 1, freq_etot   = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
+    integer, parameter :: out_we     = 1, freq_we     = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
     integer, parameter :: out_conv   = 1, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_gamma  = 1, freq_gamma  = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_hspec  = 1, freq_hspec  = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
@@ -330,7 +337,7 @@ MODULE parameters
 
     integer, parameter :: out_slice   = 1, freq_slice =  1* freq_etot
     integer, parameter :: out_slice2  = 1, freq_slice2=  1* freq_etot
-    integer, parameter :: out_slice3  = 1, freq_slice3=  1* freq_etot
+    integer, parameter :: out_slice3  = 0, freq_slice3=  1* freq_etot
     integer, parameter :: out_eta     = 0, freq_eta   =  freq_hspec
     integer, parameter :: out_tspec   = 0
 
