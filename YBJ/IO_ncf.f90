@@ -42,14 +42,14 @@ subroutine ncdump_psi(psik,psir,dump_count_psi)
   call fft_c2r(psik,psir,n3h1)
 
   !---------------------------------------------------!
-  !Suboptimal: get rid of halos and extra x-dim values!
+  !Suboptimal: get rid of halos and extra x-dim values, and make dimensional!
 
   do izh0=1,n3h0
      izh1=izh0+1
      do iy=1,n2
         do ix=1,n1
 
-           psi_clean(ix,iy,izh0) = real(psir(ix,iy,izh1))
+           psi_clean(ix,iy,izh0) = real(psir(ix,iy,izh1)*U_scale*L_scale)
 
         end do
      end do
@@ -146,14 +146,14 @@ subroutine ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
   call fft_c2r(BIk,BIr,n3h0)
 
   !---------------------------------------------------!
-  !Suboptimal: get rid of halos and extra x-dim values!
+  !Suboptimal: get rid of halos and extra x-dim values and make dimensional!
 
   do izh0=1,n3h0
      do iy=1,n2
         do ix=1,n1
 
-           BR_clean(ix,iy,izh0) = real(BRr(ix,iy,izh0))
-           BI_clean(ix,iy,izh0) = real(BIr(ix,iy,izh0))
+           BR_clean(ix,iy,izh0) = real(BRr(ix,iy,izh0)*Uw_scale)
+           BI_clean(ix,iy,izh0) = real(BIr(ix,iy,izh0)*Uw_scale)
 
         end do
      end do
