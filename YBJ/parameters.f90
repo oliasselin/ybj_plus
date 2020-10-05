@@ -2,40 +2,38 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    integer, parameter :: test_IO_pt=1
+    !Set resolution and number of processors here
+    integer, parameter :: n1=64, n2=64, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
+    integer, parameter :: npe=16                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
 
-    integer, parameter :: n1=64, n2=64, n3=256!1024 !n1=60, n2=60, n3=32!n1=256, n2=256, n3=32
-    integer, parameter :: npe=16
 
-    integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3
-    integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4
-    integer, parameter :: n3d1=n3d+2*npe                !for transposed f, all z-lev + 1-lev halos stacked
+    !Array dimensions necessary to carry out computations: do NOT change 
+    integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3                        !Full dimensiona of real-space fields
+    integer, parameter :: n3h0=n3/npe, n3h1=n3/npe+2, n3h2=n3/npe+4       !Vertical dimension (including halos) of a z-parallelized field. h0=no halo, h1=1 halo at the top, 1 at the bottom, h2=2 halo at the top, 2 at the bottom
+    integer, parameter :: n3d1=n3d+2*npe                                  !For transposed field in the ky direction, all z-lev + 1-lev halos stacked
+    integer, parameter :: izbot1=2,izbot2=3                               !Short-hand for vertical array index of bottom for haloed fields
+    integer, parameter :: iztop1=n3h1-1,iztop2=n3h2-2                     !Short-hand for vertical array index of top for haloed fields  
+    integer, parameter :: ktx = n1/2,  kty =n2/2                          !Truncation wavenumbers 
+    integer, parameter :: iktx= ktx+1, ikty=n2, iktyp=n2/npe              !Dimensions of k-space fields
 
-    integer, parameter :: izbot1=2,izbot2=3
-    integer, parameter :: iztop1=n3h1-1,iztop2=n3h2-2
-    
+    !Useful constants
+    double complex :: i = (0.,1.)                                         !Imaginary unit: sqrt(-1) 
+    double precision, parameter :: twopi=4.D0*asin(1.D0)                  !2pi
 
-    integer, parameter :: ktx = n1/2,  kty =n2/2
-    integer, parameter :: iktx= ktx+1, ikty=n2, iktyp=n2/npe
 
-    double complex :: i = (0.,1.)
-    double precision, parameter :: twopi=4.D0*asin(1.D0)
-
+    !Set dimensional units of the domain (in meters) here 
     double precision, parameter :: dom_x = twopi*5e4                          !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
+
+    !Nondimensional domain size: 2pi cubed. 
     double precision, parameter :: L1=twopi, L2=twopi, L3=twopi               !Domain size
     double precision, parameter :: dx=L1/n1,dy=L2/n2,dz=L3/n3                 !Cell dimensions  
-
     real, parameter :: ktrunc_x = twopi/L1 * float(n1)/3.           ! dimensional truncation wavenumber (x)
     real, parameter :: ktrunc_z = twopi/L3 * float(n3)/3.           ! dimensional truncation wavenumber (x)
 
-    integer, parameter :: fixed_flow = 1        !1: Skip the psi-inversion steps
-    integer, parameter :: passive_scalar = 0    !1: Set A and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
-    
     !Gaussian wave initial condition
     double precision, parameter :: delta_a = 30.
     double precision, parameter :: xi_a = dom_z/(L3*delta_a)
-
     integer, parameter :: cos_ic = 0                      !If 1: multiply the initial wave gaussian by cos(2pi*z_dim/lambda_a) = cos(z_model*m_a)
     double precision, parameter :: lambda_ic = 150.        !Wavelength (m) of the initial cosinus multiply the gaussian envelope
     double precision, parameter :: m_ic = dom_z/lambda_ic !nondimensional vertical wavenumber of the initial envelope
@@ -48,6 +46,8 @@ MODULE parameters
     !Tags to specify run!
     !-------------------!
 
+    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
+    integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     integer, parameter :: ybj_plus = 1                                                                                                                                                                                                                                                                                                                                                                                           !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation   
     integer, parameter :: no_feedback=1
     integer, parameter :: no_dispersion=0
@@ -261,12 +261,12 @@ MODULE parameters
 
     
 
-    integer, parameter :: out_etot   = 1, freq_etot   = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
-    integer, parameter :: out_we     = 1, freq_we     = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
-    integer, parameter :: out_conv   = 1, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
-    integer, parameter :: out_gamma  = 1, freq_gamma  = freq_we      !Conversion terms in the potential energy equation.
-    integer, parameter :: out_hspec  = 1, freq_hspec  = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
-    integer, parameter :: out_hspecw = 1, freq_hspecw = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
+    integer, parameter :: out_etot   = 0, freq_etot   = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
+    integer, parameter :: out_we     = 0, freq_we     = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
+    integer, parameter :: out_conv   = 0, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
+    integer, parameter :: out_gamma  = 0, freq_gamma  = freq_we      !Conversion terms in the potential energy equation.
+    integer, parameter :: out_hspec  = 0, freq_hspec  = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
+    integer, parameter :: out_hspecw = 0, freq_hspecw = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 
     integer, parameter :: out_hg     = 0                 !Output geostrophic horizontal spectrum as well?
     integer, parameter :: out_vspec  = 0, freq_vspec =  freq_hspec
     integer, parameter :: out_vbuoy  = 0, freq_vbuoy =  freq_hspec
@@ -275,8 +275,8 @@ MODULE parameters
     integer, parameter :: out_pv     = 0, freq_pv    =  3*n3!freq_etot*10
 
     integer, parameter :: out_ez     = 0, freq_ez    =  freq_etot        !E(z) (freq has to be a multiple of that of etot) 
-    integer, parameter :: out_wz     = 1, freq_wz    =  freq_we          !WE(z) (freq has to be a multiple of that of we)
-    integer, parameter :: out_wvave  = 1, freq_wvave =  freq_we          !WE(z) (freq has to be a multiple of that of we)
+    integer, parameter :: out_wz     = 0, freq_wz    =  freq_we          !WE(z) (freq has to be a multiple of that of we)
+    integer, parameter :: out_wvave  = 0, freq_wvave =  freq_we          !WE(z) (freq has to be a multiple of that of we)
     integer, parameter :: out_rotz   = 0, freq_rotz  =  freq_etot 
     integer, parameter :: out_ensz   = 0, freq_ensz  =  3*n3!freq_ens
     integer, parameter :: out_pvz    = 0, freq_pvz   =  freq_pv
@@ -324,8 +324,8 @@ MODULE parameters
     integer :: hlvl2(nfields2)=[2,2,1,1,1,1,1,1,1]                                 
     integer :: hlvl3(nfields)=[0,0,0,0,0,0,0,0]                                     
 
-    integer, parameter :: bot_height = INT(n3*(1-30/dom_z))
-    integer, parameter :: mid_height = INT(n3*(1-15/dom_z))
+    integer, parameter :: bot_height = 1!INT(n3*(1-30/dom_z))
+    integer, parameter :: mid_height = INT(n3/3)!INT(n3*(1-15/dom_z))
     integer, parameter :: top_height = n3!INT(n3*(1-400/dom_z))
 
     integer, parameter :: out_slab = 0, freq_slab = 1
@@ -335,8 +335,8 @@ MODULE parameters
                                               !halo levels (u=2,zz=1...)                                                                                                                                                     
     integer :: id_field                       !dummy index to differenciate fields plotted  
 
-    integer, parameter :: out_slice   = 1, freq_slice =  1* freq_etot
-    integer, parameter :: out_slice2  = 1, freq_slice2=  1* freq_etot
+    integer, parameter :: out_slice   = 0, freq_slice =  1* freq_etot
+    integer, parameter :: out_slice2  = 0, freq_slice2=  1* freq_etot
     integer, parameter :: out_slice3  = 0, freq_slice3=  1* freq_etot
     integer, parameter :: out_eta     = 0, freq_eta   =  freq_hspec
     integer, parameter :: out_tspec   = 0

@@ -152,8 +152,8 @@ subroutine ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
      do iy=1,n2
         do ix=1,n1
 
-           BR_clean(ix,iy,izh0) = real(BRr(ix,iy,izh0)*Uw_scale)
-           BI_clean(ix,iy,izh0) = real(BIr(ix,iy,izh0)*Uw_scale)
+           BR_clean(ix,iy,izh0) = real(BRr(ix,iy,izh0)*U_scale)
+           BI_clean(ix,iy,izh0) = real(BIr(ix,iy,izh0)*U_scale)
 
         end do
      end do
