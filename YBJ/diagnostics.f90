@@ -1692,7 +1692,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        end if
     end do
 
-    !LAR
+    !LAR with nabla A removed
     if(id_field==1) then
        Rmemk = BRk
        if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Akv/ Bu
@@ -1713,7 +1713,7 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        end if
        call fft_c2r(BRk,BRr,n3h0)
        field = Uw_scale*BRr
-    !LAI
+    !LAI with nabla A removed 
     elseif(id_field==2) then
        Imemk = BIk
        if(ybj_plus==1) then  !In YBJ+, B = L^+ A = LA + 0.25 nabla(A), or in nondimensional k-space, Bk = LAk - 0.25 k_h^2 Ak /Bu. Here we transform Bk into LAk by adding 0.25 kh2 Ak / Bu
@@ -1735,11 +1735,16 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
        call fft_c2r(BIk,BIr,n3h0)
        field = Uw_scale*BIr
 
+    !Re(L+A) for comparing to netCDF
     elseif(id_field==3) then
-       field = 0.
-
+       Rmemk = BRk
+       call fft_c2r(BRk,BRr,n3h0)
+       field = Uw_scale*BRr       
+    !Im(L+A) for comparing to netCDF
     elseif(id_field==4) then
-       field = 0.
+       Imemk = BIk
+       call fft_c2r(BIk,BIr,n3h0)
+       field = Uw_scale*BIr
 
        !LAR_x
     elseif(id_field==5) then
@@ -1961,6 +1966,10 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
           if(id_field==1)    then 
              BRk=Rmemk
           elseif(id_field==2)    then 
+             BIk=Imemk
+          elseif(id_field==3)    then
+             BRk=Rmemk
+          elseif(id_field==4)    then
              BIk=Imemk
           elseif(id_field==5)    then
              BRk=Rmemk
