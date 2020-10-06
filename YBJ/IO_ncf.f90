@@ -5,9 +5,6 @@ module IO_ncf
   use netcdf
   implicit none
   
-!  integer :: idink,idoutk,idkx,idky,idkz,idkri,idktm,istat
-!  integer :: idzxk,idzyk,idzzk,idttk,idtimek 
-
   integer :: idin,idout !Files ID
   integer :: idx,idy,idz,idt !Dimension IDs
   integer :: idpsi,idlar,idlai,idtime    !Variable IDs
@@ -17,22 +14,21 @@ CONTAINS
 subroutine ncdump_psi(psik,psir,dump_count_psi)
 
   !Create netcdf file and write for the geostrophic streamfunction psi (output)
-
   implicit none
 
   double complex, dimension(iktx,ikty,n3h1) ::   psik
   double precision, dimension(n1d,n2d,n3h1)   :: psir
 
   double precision,    dimension(iktx,ikty,n3h1) :: psi_save  !Save psi to avoid inverse FFT
-  real, dimension(n1,n2,n3h0) :: psi_clean                    !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double)
+  real, dimension(n1,n2,n3h0) :: psi_clean                    !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double). Dimensional units (m^2/s)
 
   integer, dimension(3) :: ncdims
   integer, dimension(3) :: nccount,ncstart
 
-  character *13 :: file_name
-  real :: time_seconds        !Print time in seconds => nondimensional time * L_scale/U_scale
+  character *13 :: file_name                                  !Name of the netCDF file 
+  real :: time_seconds                                        !Print time in seconds => nondimensional time * L_scale/U_scale
   
-  integer :: dump_count_psi
+  integer :: dump_count_psi                                   !Count the number of psi files printed for numbering netCDF file
 
   !Calculate time in seconds!
   time_seconds = time*L_scale/U_scale
@@ -68,7 +64,7 @@ subroutine ncdump_psi(psik,psir,dump_count_psi)
   ! Create the netCDF file. The nf90_clobber parameter tells netCDF,
   call check( nf90_create(file_name,ior(NF90_NETCDF4,NF90_MPIIO),idout, comm = MPI_COMM_WORLD,info = MPI_INFO_NULL) )
 
-  ! Define the dimension: kx, ky, kz. time. RI used as another dim to distinguish between real and imag parts
+  ! Define the dimensions: x, y, z. time. 
   call check( nf90_def_dim(idout, "x",int(n1,4),idx) )
   call check( nf90_def_dim(idout, "y",int(n2,4),idy) )
   call check( nf90_def_dim(idout, "z",int(n3,4),idz) )
@@ -170,7 +166,7 @@ subroutine ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
   !Set file name
   write(file_name,"(A2,I0.3,A7)") "la",dump_count_la,".out.nc"
 
-  ! Create the netCDF file. The nf90_clobber parameter tells netCDF,
+  ! Create the netCDF file. 
   call check( nf90_create(file_name,ior(NF90_NETCDF4,NF90_MPIIO),idout, comm = MPI_COMM_WORLD,info = MPI_INFO_NULL) )
 
   ! Define the dimension: kx, ky, kz. time. RI used as another dim to distinguish between real and imag parts
@@ -223,24 +219,23 @@ end subroutine ncdump_la
 
 
 
-subroutine ncreadin(psik,psir)
+subroutine ncread_psi(psik,psir)
 ! Read the netcdf data from an input file (psi.in.ncf)                                                                
   implicit none
 
-  double complex, dimension(iktx,ikty,n3h1) ::   psik
-  double precision, dimension(n1d,n2d,n3h1)   :: psir
+  double complex, dimension(iktx,ikty,n3h1) ::   psik   !k-space, model-usable streamfunciton with halos
+  double precision, dimension(n1d,n2d,n3h1)   :: psir   !r-space version
 
-  real, dimension(n1,n2,n3h0) :: psi_clean   !Directly from the read file
+  real, dimension(n1,n2,n3h0) :: psi_clean              !Dimensional psi directly from the read file
 
-  integer :: n1in,n2in,n3in         !dimensions read in the file. Must match n1,n2,n3 for now
+  integer :: n1in,n2in,n3in                             !Dimensions read in the file. Must match n1,n2,n3 for now
+  integer, dimension(3) :: nccount,ncstart              !Number of values to read for each dimension and where to start
 
-  integer, dimension(3) :: nccount,ncstart
-
-  real :: time_seconds  
+  real :: time_seconds                                  !Time in seconds. For now we ignore this and start at time=0
 
   ! Open the file. NF90_NOWRITE tells netCDF we want read-only access                                                            
   print*,'Yo! reading from netcdf restart file, BTW im mype',mype
-  call check( nf90_open('psi000.in.nc', NF90_NOWRITE,idin) )
+  call check( nf90_open('psi000.in.nc', NF90_NOWRITE,idin) )        
 
   ! Get the dimensions IDs based on their name                                                                                   
   call check( nf90_inq_dimid(idin, "x", idx) )
@@ -275,25 +270,107 @@ subroutine ncreadin(psik,psir)
 
   !Print time
   if (mype.eq.0) print*,"File read starts at t = ",time_seconds,"s"
-  !Back to psik!
+
+  !Back to the streamfunction: get its real-space, non dimensional version first!
   psir = 0.D0
   do izh0=1,n3h0
      izh1=izh0+1
      do iy=1,n2
         do ix=1,n1
 
-          psir(ix,iy,izh1) =  psi_clean(ix,iy,izh0) 
+          psir(ix,iy,izh1) =  psi_clean(ix,iy,izh0)/(U_scale*L_scale) 
 
         end do
      end do
   end do
-  call fft_r2c(psir,psik,n3h1)
-  call generate_halo_q(psik)
+  call fft_r2c(psir,psik,n3h1)   !Move to k-space
+  call generate_halo_q(psik)     !Generate 1-lvl halo
   !------------!
 
   call check (nf90_close(idin))
 
-end subroutine ncreadin
+end subroutine ncread_psi
+
+
+
+
+subroutine ncread_la(BRk,BRr,BIk,BIr)
+! Read the netcdf data from an input file (psi.in.ncf)                                                                
+  implicit none
+
+  double complex,   dimension(iktx,ikty,n3h0) :: BRk, BIk            !k-space, model-usable L+A with halos
+  double precision, dimension(n1d,n2d,n3h0)   :: BRr, BIr            !r-space version
+  real, dimension(n1,n2,n3h0) :: BR_clean, BI_clean                  !suboptimal: de-haloed, de-extra x-dim values version of psi, real (not double)    
+
+  integer :: n1in,n2in,n3in                             !Dimensions read in the file. Must match n1,n2,n3 for now
+  integer, dimension(3) :: nccount,ncstart              !Number of values to read for each dimension and where to start
+
+  real :: time_seconds                                  !Time in seconds. For now we ignore this and start at time=0
+
+  ! Open the file. NF90_NOWRITE tells netCDF we want read-only access                                                            
+  print*,'Yo! reading from netcdf restart file for LA, BTW im mype',mype
+  call check( nf90_open('la000.in.nc', NF90_NOWRITE,idin) )        
+
+  ! Get the dimensions IDs based on their name                                                                                   
+  call check( nf90_inq_dimid(idin, "x", idx) )
+  call check( nf90_inq_dimid(idin, "y", idy) )
+  call check( nf90_inq_dimid(idin, "z", idz) )
+  call check( nf90_inq_dimid(idin, "t", idt) )
+
+  ! Get the dimension length and check if the grid resolution matches                                                   
+  call check( nf90_inquire_dimension(idin,idx,len=n1in))
+  call check( nf90_inquire_dimension(idin,idy,len=n2in))
+  call check( nf90_inquire_dimension(idin,idz,len=n3in))
+
+  if (n1in.ne.n1 .or. n2in.ne.n2 .or. n3in.ne.n3) then
+    print*,'Sorry, do not know how to change resolution.'
+    stop
+  endif
+
+  ! Get the variables IDs                                                                                                                                                      
+  call check( nf90_inq_varid(idin,"time",idtime))
+  call check( nf90_inq_varid(idin, "LAr",idlar) )
+  call check( nf90_inq_varid(idin, "LAi",idlai) )
+
+
+  ! prepare for reading variables                                                                                                                                              
+  ncstart    = 1
+  nccount(1) = n1
+  nccount(2) = n2
+  nccount(3) = n3h0
+  ncstart(3)= int(mype*n3h0+1)
+
+  !Get variables
+  call check( nf90_get_var(idin,idtime,time_seconds))
+  call check( nf90_get_var(idin,idlar,BR_clean,ncstart,nccount))
+  call check( nf90_get_var(idin,idlai,BI_clean,ncstart,nccount))
+
+  !Print time
+  if (mype.eq.0) print*,"File read starts at t = ",time_seconds,"s"
+
+  !Back to the streamfunction: get its real-space, non dimensional version first!
+  BRr = 0.D0
+  BIr = 0.D0
+  do izh0=1,n3h0
+     do iy=1,n2
+        do ix=1,n1
+
+          BRr(ix,iy,izh0) =  BR_clean(ix,iy,izh0)/(U_scale) 
+          BIr(ix,iy,izh0) =  BI_clean(ix,iy,izh0)/(U_scale) 
+
+        end do
+     end do
+  end do
+  call fft_r2c(BRr,BRk,n3h0)   !Move to k-space
+  call fft_r2c(BIr,BIk,n3h0)   !Move to k-space
+  !------------!
+
+  call check (nf90_close(idin))
+
+end subroutine ncread_la
+
+
+
 
 subroutine check(status)
   integer, intent (in) :: status

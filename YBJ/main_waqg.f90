@@ -23,7 +23,7 @@ PROGRAM main
   double complex,   dimension(iktx,ikty,n3h1) :: qok          !Old q 
   double complex,   dimension(iktx,ikty,n3h1) :: qtempk        
 
-  !**** B = LA, and both A and B are decomposed into their real and imag parts (ex.: A = AR + iAI)
+  !**** B = L+A, and both A and B are decomposed into their real and imag parts (ex.: A = AR + iAI)
   double complex,   dimension(iktx,ikty,n3h0) :: BRk, BIk, ARk, AIk
   double precision, dimension(n1d,n2d,n3h0)   :: BRr, BIr, ARr, AIr
   double complex,   dimension(iktx,ikty,n3h0) :: BRok, BIok            !B at the old time step
