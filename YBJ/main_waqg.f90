@@ -148,6 +148,12 @@ PROGRAM main
   if(init_ncf_psi==1) call ncread_psi(psik,psir) 
   if(init_ncf_la ==1) call ncread_la(BRk,BRr,BIk,BIr)
 
+  !TO DELETE:LOAD PSIK FROM EADY PROBLEM
+  if(restart==1) then
+     call read_restart(psik)
+     call generate_halo_q(psik)
+  end if
+
   !Set q from psi, or set to 0 in the case of fixed flow (such that q = 0 for all times)
   if(fixed_flow == 0) then
      call init_q(qk,psik)

@@ -4479,6 +4479,76 @@ SUBROUTINE cond_wz(wak)
 
 
 
+!Temporary routine to convert eady streamfunction into a ncf file
+ subroutine read_restart(field)
+
+    double complex, dimension(iktx,ikty,n3h1) :: field
+
+    integer :: unit
+    integer :: level
+    character(len = 64) :: fname                !future file name                                                                                                                                                                                                                                                             
+    character(len = 64) :: fname1                !future file name                                                                                                                                                                                                                                                            
+    character(len = 64) :: fname2                !future file name                                                                                                                                                                                                                                                            
+
+
+    if(restart_no<10) then
+       write (fname1, "(A9,I1)") "restart_0",restart_no
+    elseif(restart_no>=10 .and. restart<100) then
+       write (fname1, "(A8,I2)") "restart_",restart_no
+    else
+       write(*,*) "Restart_no out of bounds!"
+       stop
+    end if
+
+    !Suboptimal but simple: print a horizontal slice per vertical level.                                                                                                                                                                                                                                                      
+    do izh0=1,n3h0
+       izh1=izh0+1
+
+       level = izh0+mype*n3h0
+
+
+       !Name the second part of the file!                                                                                                                                                                                                                                                                                     
+       if(level<10) then
+          write (fname2, "(A3,I1,A4)") "_00",level,".dat"
+!          write (fname, "(A13,I1,A4)") "restart_00_00",izh0+mype*n3h0,".dat"                                                                                                                                                                                                                                                 
+!          write (fname, "(A31,I1,A4)") "../../dump/output/restart_00_00",izh0+mype*n3h0,".dat"                                                                                                                                                                                                                               
+       elseif(level<100 .and. level >= 10) then
+          write (fname2, "(A2,I2,A4)") "_0",level,".dat"
+!          write (fname, "(A12,I2,A4)") "restart_00_0",izh0+mype*n3h0,".dat"                                                                                                                                                                                                                                                  
+!          write (fname, "(A30,I2,A4)") "../../dump/output/restart_00_0",izh0+mype*n3h0,".dat"                                                                                                                                                                                                                                
+       elseif(level<1000 .and. level >= 100) then
+          write (fname2, "(A1,I3,A4)") "_",level,".dat"
+!          write (fname, "(A11,I3,A4)") "restart_00_",izh0+mype*n3h0,".dat"                                                                                                                                                                                                                                                   
+!          write (fname, "(A29,I3,A4)") "../../dump/output/restart_00_",izh0+mype*n3h0,".dat"                                                                                                                                                                                                                                 
+       else
+          write(*,*) "Vertical resolution too large for dump!"
+          stop
+       end if
+
+       fname = trim(floc)//trim(fname1)//trim(fname2)
+
+       open (unit=2,file=fname,action="read",status="old")
+
+       do iky=1,ikty
+          do ikx=1,iktx
+             read(unit=2,fmt=335) field(ikx,iky,izh1)
+          end do
+       end do
+335    format(1x,E24.17,1x,E24.17)
+       close (unit=2)
+
+    end do
+
+
+
+
+  end subroutine read_restart
+
+
+
+
+
+
 
 
   END MODULE diagnostics

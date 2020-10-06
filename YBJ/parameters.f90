@@ -6,11 +6,21 @@ MODULE parameters
     !Set domain size, resolution, number of processors and which equation to solve!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    integer, parameter :: n1=256, n2=256, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
-    integer, parameter :: npe=64                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
+!    integer, parameter :: n1=256, n2=256, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
+!    integer, parameter :: npe=64                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
+!    double precision, parameter :: dom_x = 6.28318530718*5e4                          !Horizontal domain size (in m)
+!    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
 
-    double precision, parameter :: dom_x = 6.28318530718*5e4                          !Horizontal domain size (in m)
-    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
+    integer, parameter :: n1=512, n2=512, n3=512      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
+    integer, parameter :: npe=128                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
+    double precision, parameter :: dom_x = 222000                          !Horizontal domain size (in m)
+    double precision, parameter :: dom_z = 3000                                !Vertical   domain size (in m)
+
+
+    integer, parameter :: test_AY2020=1
+    integer, parameter :: restart = 1                            !restart = 1 start from file                                                                                                                                                                                                                                
+    integer, parameter :: restart_no = 15                         !Restart file number (from 0 to 99)                                                                                                                                                                                                                        
+    character(len = 64), parameter :: floc='../../dE60_dt0.01_512_7/output/'   !Location of the restart file (when restarting only: dumping in local output/ folder)
 
     integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
@@ -22,8 +32,8 @@ MODULE parameters
     integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
     !Initial condition!
-    integer, parameter :: init_ncf_la =1                                 !1: Initialize L+A with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
-    integer, parameter :: init_ncf_psi=1                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
+    integer, parameter :: init_ncf_la =0                                 !1: Initialize L+A with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
+    integer, parameter :: init_ncf_psi=0                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
     character *11, parameter :: init_ncf_la_filename  = 'la000.in.nc'    !File name containing initial condition for L+A. Must be in r-space with dimensions n1 x n2 x n3. Must contain both real and imaginary parts of L+A
     character *12, parameter :: init_ncf_psi_filename = 'psi000.in.nc'   !File name containing initial condition for psi. Must be in r-space with dimensions n1 x n2 x n3.
 
@@ -59,6 +69,12 @@ MODULE parameters
 
     !YBJp paper vertical plane wave m'
     integer, parameter :: mmm = 8     !Nondimensional vertical wavenumber of the vertical plane wave IC
+
+
+    !To reproduce AY2020: Gaussian wave initial condition                                                                                                                                                                                                                                                              
+    double precision, parameter :: delta_a = 50.
+    double precision, parameter :: xi_a = dom_z/(L3*delta_a)
+
 
     integer, parameter :: generic=1 
     integer, parameter :: init_vertical_structure=1
@@ -197,7 +213,8 @@ MODULE parameters
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
     double precision, parameter :: cor=1e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
     double precision, parameter :: N0 = (25./8.)*twopi*cor
-    double precision, parameter :: U_scale = 0.25            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
+!    double precision, parameter :: U_scale = 0.25            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
+    double precision, parameter :: U_scale = 0.01            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: Uw_scale= 2.5e-5          !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
     double precision, parameter :: Ar2 = (H_scale/L_scale)**2                                   !(1./64.)**2!(1./10.)**2 !0.01     !Aspect ratio squared = (H/L)^2     
     double precision, parameter :: Ro  = U_scale/(cor*L_scale)                                  !Rossby number  U/fL
@@ -320,8 +337,8 @@ MODULE parameters
                                               !halo levels (u=2,zz=1...)                                                                                                                                                     
     integer :: id_field                       !dummy index to differenciate fields plotted  
 
-    integer, parameter :: out_slice   = 0, freq_slice =  1* freq_etot
-    integer, parameter :: out_slice2  = 0, freq_slice2=  1* freq_etot
+    integer, parameter :: out_slice   = 1, freq_slice =  1* freq_etot
+    integer, parameter :: out_slice2  = 1, freq_slice2=  1* freq_etot
     integer, parameter :: out_slice3  = 0, freq_slice3=  1* freq_etot
     integer, parameter :: out_eta     = 0, freq_eta   =  freq_hspec
     integer, parameter :: out_tspec   = 0
