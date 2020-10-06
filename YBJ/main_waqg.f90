@@ -294,7 +294,7 @@ end if
 if(passive_scalar==0) then
  ! --- Recover A from B --- !
 
- if(zero_aveB==1 .and. ybj_plus==0) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
+ if(ybj_plus==0) call sumB(BRk,BIk)                            !Resets the vertical sum of B to zero
 
  call mpitranspose(BRk,iktx,ikty,n3h0,BRkt,n3,iktyp)           !Transpose BR to iky-parallelized space 
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
@@ -443,7 +443,7 @@ end if
 if(passive_scalar==0) then
  ! --- Recover A from B --- !                                                                                                                                 
 
- if(zero_aveB==1 .and. ybj_plus==0) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
+ if(ybj_plus==0) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
 
  call mpitranspose(BRk,iktx,ikty,n3h0,BRkt,n3,iktyp)           !Transpose BR to iky-parallelized space 
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 

@@ -1100,21 +1100,20 @@ MODULE derivatives
 
       aveB = aveB/n3
 
-      if(zero_aveB==1) then
-         do izh0=1,n3h0
-            do iky=1,ikty
-               ky = kya(iky)
-               do ikx=1,iktx
-                  kx = kxa(ikx)
-                  kh2 = kx*kx + ky*ky
-                  if ((L(ikx,iky).eq.1) .and. kh2 > 0) then
-                     BRk(ikx,iky,izh0) = BRk(ikx,iky,izh0) - aveB(ikx,iky,1)
-                     BIk(ikx,iky,izh0) = BIk(ikx,iky,izh0) - aveB(ikx,iky,2)
-                  endif
-               enddo
+      do izh0=1,n3h0
+         do iky=1,ikty
+            ky = kya(iky)
+            do ikx=1,iktx
+               kx = kxa(ikx)
+               kh2 = kx*kx + ky*ky
+               if ((L(ikx,iky).eq.1) .and. kh2 > 0) then
+                  BRk(ikx,iky,izh0) = BRk(ikx,iky,izh0) - aveB(ikx,iky,1)
+                  BIk(ikx,iky,izh0) = BIk(ikx,iky,izh0) - aveB(ikx,iky,2)
+               endif
             enddo
          enddo
-      end if
+      enddo
+   
          
     END SUBROUTINE sumB
 
