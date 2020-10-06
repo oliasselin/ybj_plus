@@ -2,9 +2,31 @@ MODULE parameters
 
    IMPLICIT NONE
 
-    !Set resolution and number of processors here
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !Set domain size, resolution, number of processors and which equation to solve!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     integer, parameter :: n1=64, n2=64, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
     integer, parameter :: npe=16                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
+
+    double precision, parameter :: dom_x = 6.28318530718*5e4                          !Horizontal domain size (in m)
+    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
+
+    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
+    integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
+    integer, parameter :: ybj_plus = 1          !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation (not recommended)  
+    integer, parameter :: no_feedback=1         !1: q^w = 0 and flow is independent of waves. 0: feedback activated (requires smaller time step) 
+    integer, parameter :: no_dispersion=0       !1: set the dispersive term to 0, 0: regular integration.
+    integer, parameter :: linear=0              !1: set the nonlinear terms (advection) to 0. 
+    integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
+    integer, parameter :: init_wageo=0          !1: Initialize the geostrophic flow with a wk with Ro*wak (makes no difference in the QG-YBJ model)
+    integer, parameter :: zero_aveB=1           !1: Set B=LA vertical average to zero for extra security (shouldn't be necessary with ybjp_plus==1)
+    integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
+
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !Don't touch: necessary arrays!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     !Array dimensions necessary to carry out computations: do NOT change 
     integer, parameter :: n1d=n1+2, n2d=n2, n3d=n3                        !Full dimensiona of real-space fields
@@ -26,27 +48,11 @@ MODULE parameters
     real, parameter :: ktrunc_z = twopi/L3 * float(n3)/3.           ! dimensional truncation wavenumber (x)
 
 
-    !Tags to specify run!
-    !-------------------!
-
-    !Set dimensional units of the domain (in meters) here   [COULD BE MOVED UP THE LIST]
-    double precision, parameter :: dom_x = twopi*5e4                          !Horizontal domain size (in m)
-    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
-
-    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
-    integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
-    integer, parameter :: ybj_plus = 1          !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation (not recommended)  
-    integer, parameter :: no_feedback=1         !1: q^w = 0 and flow is independent of waves. 0: feedback activated (requires smaller time step) 
-    integer, parameter :: no_dispersion=0       !1: set the dispersive term to 0, 0: regular integration.
-    integer, parameter :: linear=0              !1: set the nonlinear terms (advection) to 0. 
-    integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
-    integer, parameter :: init_wageo=0          !1: Initialize the geostrophic flow with a wk with Ro*wak (makes no difference in the QG-YBJ model)
-    integer, parameter :: zero_aveB=1           !1: Set B=LA vertical average to zero for extra security (shouldn't be necessary with ybjp_plus==1)
-    integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
 
-    !Initial structure!
-    !-----------------!
+
+    !Initial Conditions!
+    !------------------!
 
     !YBJp paper vertical plane wave m'
     integer, parameter :: mmm = 8     !Nondimensional vertical wavenumber of the vertical plane wave IC
