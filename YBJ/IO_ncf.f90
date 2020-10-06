@@ -234,8 +234,8 @@ subroutine ncread_psi(psik,psir)
   real :: time_seconds                                  !Time in seconds. For now we ignore this and start at time=0
 
   ! Open the file. NF90_NOWRITE tells netCDF we want read-only access                                                            
-  print*,'Yo! reading from netcdf restart file, BTW im mype',mype
-  call check( nf90_open('psi000.in.nc', NF90_NOWRITE,idin) )        
+  print*,'Yo! reading from netcdf restart file for psi, BTW im mype',mype
+  call check( nf90_open(init_ncf_psi_filename, NF90_NOWRITE,idin) )        
 
   ! Get the dimensions IDs based on their name                                                                                   
   call check( nf90_inq_dimid(idin, "x", idx) )
@@ -309,7 +309,7 @@ subroutine ncread_la(BRk,BRr,BIk,BIr)
 
   ! Open the file. NF90_NOWRITE tells netCDF we want read-only access                                                            
   print*,'Yo! reading from netcdf restart file for LA, BTW im mype',mype
-  call check( nf90_open('la000.in.nc', NF90_NOWRITE,idin) )        
+  call check( nf90_open(init_ncf_la_filename, NF90_NOWRITE,idin) )        
 
   ! Get the dimensions IDs based on their name                                                                                   
   call check( nf90_inq_dimid(idin, "x", idx) )

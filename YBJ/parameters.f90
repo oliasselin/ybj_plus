@@ -6,8 +6,8 @@ MODULE parameters
     !Set domain size, resolution, number of processors and which equation to solve!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    integer, parameter :: n1=64, n2=64, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
-    integer, parameter :: npe=16                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
+    integer, parameter :: n1=256, n2=256, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
+    integer, parameter :: npe=64                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
 
     double precision, parameter :: dom_x = 6.28318530718*5e4                          !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
@@ -23,6 +23,11 @@ MODULE parameters
     integer, parameter :: zero_aveB=1           !1: Set B=LA vertical average to zero for extra security (shouldn't be necessary with ybjp_plus==1)
     integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
+    !Initial condition!
+    integer, parameter :: init_ncf_la =1                                 !1: Initialize L+A with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
+    integer, parameter :: init_ncf_psi=1                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
+    character *11, parameter :: init_ncf_la_filename  = 'la000.in.nc'    !File name containing initial condition for L+A. Must be in r-space with dimensions n1 x n2 x n3. Must contain both real and imaginary parts of L+A
+    character *12, parameter :: init_ncf_psi_filename = 'psi000.in.nc'   !File name containing initial condition for psi. Must be in r-space with dimensions n1 x n2 x n3.
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !Don't touch: necessary arrays!
@@ -211,8 +216,8 @@ MODULE parameters
     integer :: iter=0
     integer :: itermax=1000000000
     real :: maxtime=100                      
-    double precision, parameter :: delt=0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
-!    double precision, parameter :: delt=Ro/50.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+!    double precision, parameter :: delt=0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+    double precision, parameter :: delt=Ro/20.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
     double precision, parameter :: gamma=1e-2                                  !Robert filter parameter
 
     !Other successful viscosity: 5e-2 * (10./ktrunc_x ) **2. 

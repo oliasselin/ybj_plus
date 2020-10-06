@@ -132,32 +132,37 @@ PROGRAM main
   call init_base_state
   if(mype==0)  call validate_run
 
-
-
-
-
-  !Initialize fields
-  call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0) 
-  call fft_r2c(psir,psik,n3h1)
+  !Initialize fields: by default manually set fields are used.
+  call generate_fields_stag(psir,n3h1,ARr,n3h0,BRr,n3h0)      !Manually initialize 3 real-space fields with analytical formulae
+  call fft_r2c(psir,psik,n3h1)                                !Transform to k-space all these manually-set r-space fields
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
-  call sumB(BRk,BIk)
+  call sumB(BRk,BIk)                                          !For extra security, sets the vertical integral of LA to zero.
 
+  !Initialize other fields to zero.
   AIk = (0.D0,0.D0)
   BIk = (0.D0,0.D0)
   CRk = (0.D0,0.D0)
   CIk = (0.D0,0.D0)
 
+  !If desired, overwrite the manual initialization of psi and B by reading netCDF inputs.
+  if(init_ncf_psi==1) call ncread_psi(psik,psir) 
+  if(init_ncf_la ==1) call ncread_la(BRk,BRr,BIk,BIr)
+
+  !Set q from psi, or set to 0 in the case of fixed flow (such that q = 0 for all times)
   if(fixed_flow == 0) then
      call init_q(qk,psik)
   else
      qk = (0.D0,0.D0)
   end if
 
+  
+  !Compute velocities and set necessary halos
   call compute_velo(uk,vk,wk,bk,psik) 
   call generate_halo(uk,vk,wk,bk)
   call generate_halo_q(qk) 
 
+  !DISPENSABLE!
   !For Eulerian Freq onlt
   dBRk = (0.D0,0.D0)
   dBIk = (0.D0,0.D0)
