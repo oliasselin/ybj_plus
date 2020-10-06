@@ -137,7 +137,6 @@ PROGRAM main
   call fft_r2c(psir,psik,n3h1)                                !Transform to k-space all these manually-set r-space fields
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
-  call sumB(BRk,BIk)                                          !For extra security, sets the vertical integral of LA to zero.
 
   !Initialize other fields to zero.
   AIk = (0.D0,0.D0)
@@ -295,7 +294,7 @@ end if
 if(passive_scalar==0) then
  ! --- Recover A from B --- !
 
- if(zero_aveB==1) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
+ if(zero_aveB==1 .and. ybj_plus==0) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
 
  call mpitranspose(BRk,iktx,ikty,n3h0,BRkt,n3,iktyp)           !Transpose BR to iky-parallelized space 
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
@@ -444,7 +443,7 @@ end if
 if(passive_scalar==0) then
  ! --- Recover A from B --- !                                                                                                                                 
 
- if(zero_aveB==1) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
+ if(zero_aveB==1 .and. ybj_plus==0) call sumB(BRk,BIk)                           !Resets the vertical sum of B to zero
 
  call mpitranspose(BRk,iktx,ikty,n3h0,BRkt,n3,iktyp)           !Transpose BR to iky-parallelized space 
  call mpitranspose(BIk,iktx,ikty,n3h0,BIkt,n3,iktyp)           !Transpose BK to iky-parallelized space 
