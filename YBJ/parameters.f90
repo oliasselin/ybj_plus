@@ -20,7 +20,7 @@ MODULE parameters
     integer, parameter :: linear=0              !1: set the nonlinear terms (advection) to 0. 
     integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
     integer, parameter :: init_wageo=0          !1: Initialize the geostrophic flow with a wk with Ro*wak (makes no difference in the QG-YBJ model)
-    integer, parameter :: zero_aveB=1           !1: Set B=LA vertical average to zero for extra security (shouldn't be necessary with ybjp_plus==1)
+    integer, parameter :: zero_aveB=0           !1: Set B=LA vertical average to zero for extra security (shouldn't be necessary with ybjp_plus==1)
     integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
     !Initial condition!

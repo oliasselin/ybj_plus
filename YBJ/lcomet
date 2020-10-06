@@ -4,8 +4,8 @@ number_of_nodes=4
 number_of_tasks=64
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/ybjp_test/test5_highres_restart/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/ybjp_test/test5_highres_restart/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/ybjp_test/test5_highres_nosumB/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/ybjp_test/test5_highres_nosumB/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -24,7 +24,7 @@ cat > EXEC_STEP << EXEC
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t 02:00:00
+#SBATCH -t 01:00:00
 #SBATCH -A TG-OCE190014 
 
 #This job runs with 2 nodes, 24 cores per node for a total of 48 cores.
