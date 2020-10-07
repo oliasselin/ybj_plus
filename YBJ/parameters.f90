@@ -253,38 +253,41 @@ MODULE parameters
     double precision, parameter :: delt=0.01*dx !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
     double precision, parameter :: gamma=1e-2                                  !Robert filter parameter
 
-    !Other successful viscosity: 5e-2 * (10./ktrunc_x ) **2. 
-    !PERFECT VISCOSITY: 0.01 * (64./(1.*n1)) **(4./3.)
-    !In reality, nuh is 1/Re and nuz is 1/(Ar2*Re) with 1/Re = UL/nu
+    
+    ! Dissipation coefficient for the flow and waves !
+    ! ---------------------------------------------- !
 
-!    double precision, parameter :: coeff =0.!0.4!0.4!0.1!0.075
-    double precision, parameter :: coeff =10.!0.4!0.4!0.1!0.075
-    double precision, parameter :: coeffz=0.!coeff!/10.!/1000!/10.
+    !For horizontal hyperdiffusion, two operators can be set for each of q (coeff1 & coeff2) and L+A (coeff1w & coeff2w)
+    double precision, parameter :: coeff1  = 0.01
+    double precision, parameter :: coeff2  = 10.
+    double precision, parameter :: coeff1w = 0.
+    double precision, parameter :: coeff2w = 10.
 
-!    integer, parameter :: ilap = 8                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
-    integer, parameter :: ilap = 6                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
+    !Exponent of the Laplacian associated with coefficients above. Regular diffusion is ilap=1.
+    integer, parameter :: ilap1  = 2
+    integer, parameter :: ilap2  = 6
+    integer, parameter :: ilap1w = 2
+    integer, parameter :: ilap2w = 6
 
-    !General dissipation! (test for hyperviscosity: see Oct 10 2014 toread)
-    double precision, parameter :: nuh  =  coeff * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap-1))             !6e-2 * (10./ktrunc_x ) **2. ! horizontal visc coeff (regular viscosity)
-    double precision, parameter :: nuz  = (coeffz* (64./(1.*n1)) **(4./3.) )                                      ! horizontal visc coeff (regular viscosity)
-    double precision, parameter :: nuth =  coeff * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap-1))             ! horizontal visc coeff (regular viscosity)
-    double precision, parameter :: nutz = (coeffz* (64./(1.*n1)) **(4./3.) )                                      ! horizontal visc coeff (regular viscosity)
+    !Automatically calculates the actual coefficient in the equation and adjust (approximately for resolution
+    double precision, parameter :: nuh1   =  coeff1  * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap1 -1))   !Dissipation operator 1, flow                                                                                                                                                                      
+    double precision, parameter :: nuh2   =  coeff2  * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap2 -1))   !Dissipation operator 2, flow                                                                                                                                                                                  
+    double precision, parameter :: nuh1w  =  coeff1w * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap1w-1))   !Dissipation operator 1, wave                                                                                                                                                                         
+    double precision, parameter :: nuh2w  =  coeff2w * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap2w-1))   !Dissipation operator 2, wave  
 
-    !"Exact" dissipation:!
-!    double precision, parameter :: nuh  =  0.015 * sqrt(Ar2) * (64./(1.*n1)) **(4./3.)              !6e-2 * (10./ktrunc_x ) **2. ! horizontal visc coeff (regular viscosity)
-!    double precision, parameter :: nuz  = (0.015 * sqrt(Ar2) * (64./(1.*n1)) **(4./3.) )/Ar2       ! horizontal visc coeff (regular viscosity)
-!    double precision, parameter :: nuth =  0.015 * sqrt(Ar2) * (64./(1.*n1)) **(4./3.)              ! horizontal visc coeff (regular viscosity)
-!    double precision, parameter :: nutz = (0.015 * sqrt(Ar2) * (64./(1.*n1)) **(4./3.) )/Ar2       ! horizontal visc coeff (regular viscosity)
+    !Regular (nonhyper) vertical diffusion for q only (vertical diffusion for waves not currently available.
+    double precision, parameter :: coeffz = 0.                                                                    
+    double precision, parameter :: nuz  = (coeffz* (64./(1.*n1)) **(4./3.) )                               !vertical visc coeff for q only  (regular viscosity)
 
 
 
     !Output!
     !------!
 
-    
-
-    integer, parameter :: out_etot   = 0, freq_etot   = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
-    integer, parameter :: out_we     = 0, freq_we     = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
+!    integer, parameter :: out_etot   = 0, freq_etot   = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
+!    integer, parameter :: out_we     = 0, freq_we     = INT(1.*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
+    integer, parameter :: out_etot   = 0, freq_etot   = INT(1.705*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                    
+    integer, parameter :: out_we     = 0, freq_we     = INT(1.705*twopi*Ro/delt)!50!346!n3/64!n3!64!n3!50*n3/64      !Total energy                                                   
     integer, parameter :: out_conv   = 0, freq_conv   = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_gamma  = 0, freq_gamma  = freq_we      !Conversion terms in the potential energy equation.
     integer, parameter :: out_hspec  = 0, freq_hspec  = 1*freq_etot!n3/64!n3!freq_etot*10     !Horizontal energy spectrum at various heights 

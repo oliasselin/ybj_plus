@@ -58,6 +58,8 @@ PROGRAM main
 
   double complex, dimension(iktx,ikty,2) :: sigma    !Vertial integral of A(kx,ky), 1=real part, 2=imag part
 
+  !Integrating factor to account for horizontal hyperdiffusion. One for the flow, one for the waves (w)                                                                                                                                                   
+  double precision :: int_factor,int_factor_w
 
   equivalence(ur,uk)
   equivalence(vr,vk)
@@ -94,9 +96,6 @@ PROGRAM main
   equivalence(fr_even,fk_even)
   equivalence(fr_odd ,fk_odd )
   equivalence(array2dr,array2di)
-
-  !For implicit dissipation
-  double precision :: diss             ! nu_H * kH**(2*ilap) delt
 
   !Rotational part of u for slice...                                                                                                                                                                                                         
   double complex, dimension(iktx,ikty,n3h1) :: u_rot
@@ -252,11 +251,15 @@ end if
        do ikx=1,iktx
           kx = kxa(ikx)
           kh2=kx*kx+ky*ky
-          diss = nuh*delt*(1.*kh2)**(1.*ilap)              !This does not work !!!!! diss = nuh*(kh2**ilap)*delt 
+
+          !Integrating factor for horizontal diffusion                                                                                                                                                                                                                                                                       
+          int_factor   = delt* ( nuh1 *((1.*kx)**(2.*ilap1 ) + (1.*ky)**(2.*ilap1 )) + nuh2 *((1.*kx)**(2.*ilap2 ) + (1.*ky)**(2.*ilap2 )) )
+          int_factor_w = delt* ( nuh1w*((1.*kx)**(2.*ilap1w) + (1.*ky)**(2.*ilap1w)) + nuh2w*((1.*kx)**(2.*ilap2w) + (1.*ky)**(2.*ilap2w)) )
+
           if (L(ikx,iky).eq.1) then
-             qk(ikx,iky,izh1) = (  qok(ikx,iky,izh1) - delt* nqk(ikx,iky,izh0)  + delt*dqk(ikx,iky,izh0) )*exp(-diss)
-            BRk(ikx,iky,izh0) = ( BRok(ikx,iky,izh0) - delt*nBRk(ikx,iky,izh0)  - delt*(0.5/(Bu*Ro))*kh2*AIk(ikx,iky,izh0) + delt*0.5*rBIk(ikx,iky,izh0) )*exp(-diss)
-            BIk(ikx,iky,izh0) = ( BIok(ikx,iky,izh0) - delt*nBIk(ikx,iky,izh0)  + delt*(0.5/(Bu*Ro))*kh2*ARk(ikx,iky,izh0) - delt*0.5*rBRk(ikx,iky,izh0) )*exp(-diss)
+             qk(ikx,iky,izh1) = (  qok(ikx,iky,izh1) - delt* nqk(ikx,iky,izh0)  + delt*dqk(ikx,iky,izh0) )*exp(-int_factor)
+            BRk(ikx,iky,izh0) = ( BRok(ikx,iky,izh0) - delt*nBRk(ikx,iky,izh0)  - delt*(0.5/(Bu*Ro))*kh2*AIk(ikx,iky,izh0) + delt*0.5*rBIk(ikx,iky,izh0) )*exp(-int_factor_w)
+            BIk(ikx,iky,izh0) = ( BIok(ikx,iky,izh0) - delt*nBIk(ikx,iky,izh0)  + delt*(0.5/(Bu*Ro))*kh2*ARk(ikx,iky,izh0) - delt*0.5*rBRk(ikx,iky,izh0) )*exp(-int_factor_w)
           else
              qk(ikx,iky,izh1) = (0.D0,0.D0)
             BRk(ikx,iky,izh0) = (0.D0,0.D0)
@@ -371,11 +374,15 @@ end if
            do ikx=1,iktx
               kx = kxa(ikx)
               kh2=kx*kx+ky*ky
-              diss = nuh*delt*(1.*kh2)**(1.*ilap)
+
+              !Integrating factor for horizontal diffusion                                                                                                                                                                                                                                                             
+              int_factor   = delt* ( nuh1 *((1.*kx)**(2.*ilap1 ) + (1.*ky)**(2.*ilap1 )) + nuh2 *((1.*kx)**(2.*ilap2 ) + (1.*ky)**(2.*ilap2 )) )
+              int_factor_w = delt* ( nuh1w*((1.*kx)**(2.*ilap1w) + (1.*ky)**(2.*ilap1w)) + nuh2w*((1.*kx)**(2.*ilap2w) + (1.*ky)**(2.*ilap2w)) )
+
               if (L(ikx,iky).eq.1) then
-                 qtempk(ikx,iky,izh1) =  qok(ikx,iky,izh1)*exp(-2*diss) - 2*delt*nqk(ikx,iky,izh0)*exp(-diss)  + 2*delt*dqk(ikx,iky,izh0)*exp(-2*diss)
-                BRtempk(ikx,iky,izh0) = BRok(ikx,iky,izh0)*exp(-2*diss) - 2*delt*(nBRk(ikx,iky,izh0) + (0.5/(Bu*Ro))*kh2*AIk(ikx,iky,izh0) - 0.5*rBIk(ikx,iky,izh0) )*exp(-diss)
-                BItempk(ikx,iky,izh0) = BIok(ikx,iky,izh0)*exp(-2*diss) - 2*delt*(nBIk(ikx,iky,izh0) - (0.5/(Bu*Ro))*kh2*ARk(ikx,iky,izh0) + 0.5*rBRk(ikx,iky,izh0) )*exp(-diss)
+                 qtempk(ikx,iky,izh1) =  qok(ikx,iky,izh1)*exp(-2*int_factor) - 2*delt*nqk(ikx,iky,izh0)*exp(-int_factor)  + 2*delt*dqk(ikx,iky,izh0)*exp(-2*int_factor)
+                BRtempk(ikx,iky,izh0) = BRok(ikx,iky,izh0)*exp(-2*int_factor_w) - 2*delt*(nBRk(ikx,iky,izh0) + (0.5/(Bu*Ro))*kh2*AIk(ikx,iky,izh0) - 0.5*rBIk(ikx,iky,izh0) )*exp(-int_factor_w)
+                BItempk(ikx,iky,izh0) = BIok(ikx,iky,izh0)*exp(-2*int_factor_w) - 2*delt*(nBIk(ikx,iky,izh0) - (0.5/(Bu*Ro))*kh2*ARk(ikx,iky,izh0) + 0.5*rBRk(ikx,iky,izh0) )*exp(-int_factor_w)
               else
                  qtempk(ikx,iky,izh1) = (0.D0,0.D0)
                 BRtempk(ikx,iky,izh0) = (0.D0,0.D0)

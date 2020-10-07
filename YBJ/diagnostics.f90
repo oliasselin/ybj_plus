@@ -1209,8 +1209,8 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
                kx = kxa(ikx)
                kh2=kx*kx+ky*ky
 
-               tRk(ikx,iky,izh0) =  - 0.5*( nuh*((1.*kx)**(2.*ilap) + (1.*ky)**(2.*ilap)) )*BRk(ikx,iky,izh0)
-               tIk(ikx,iky,izh0) =  - 0.5*( nuh*((1.*kx)**(2.*ilap) + (1.*ky)**(2.*ilap)) )*BIk(ikx,iky,izh0)
+               tRk(ikx,iky,izh0) =  - 0.5*( nuh1w*((1.*kx)**(2.*ilap1w) + (1.*ky)**(2.*ilap1w)) + nuh2w*((1.*kx)**(2.*ilap2w) + (1.*ky)**(2.*ilap2w)) )*BRk(ikx,iky,izh0)
+               tIk(ikx,iky,izh0) =  - 0.5*( nuh1w*((1.*kx)**(2.*ilap1w) + (1.*ky)**(2.*ilap1w)) + nuh2w*((1.*kx)**(2.*ilap2w) + (1.*ky)**(2.*ilap2w)) )*BIk(ikx,iky,izh0)
 
             enddo
          enddo
@@ -2705,24 +2705,12 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 !    if(base_state <3) write(*,*) "GW=",sqrt(Ar2)*Fr 
     
 
-    !In nondim, stability of GW requires condition on Ar*Fr/(r1*r2) instead of 1/N
-!    if(base_state >= linear_prof .and. delt >= (sqrt(Ar2)*Fr/( sqrt(r_1st(n3/2+1)*r_2st(n3/2+1) ) )))then
-    if(delt >= U_scale/(L_scale*sqrt(N_2_stra)) )then          !Equivalently dt must be < U/NL. Worst case with max(N)=Ns
-       write(*,*) "Can't resolve GW, min(Fr_H)=",U_scale/(L_scale*sqrt(N_2_stra))
-!       stop
-    elseif(delt >= (sqrt(Ar2)*Fr)  )then
-       write(*,*) "Can't resolve GW"
-!       stop
-    end if
        !In nondim, stability for inertial waves becomes 1/Ro instead of f...
     if(delt >= Ro) then
        write(*,*) "Can't resolve inertial waves, Ro=",Ro
 !       stop
     elseif( (normalize==1 .and.   delt >= dz/sqrt(k_init+p_init)) .or. (norm_trop==1) .and. delt >= dz/URMS  ) then   !Approximate CFL depending on the normalization process. Watch out if no normalization!  
        write(*,*) "CFL fails"
-       stop
-    elseif( (ilap==1 .and. delt >= dz*dz/nuh) .or. delt >= dz*dz/nuz) then
-       write(*,*) "Dissipation unstable"
        stop
     end if
        
@@ -2755,8 +2743,8 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     write(unit_run,*)
     write(unit_run,*) "Viscosity"
     write(unit_run,*)
-    write(unit_run,*) "Laplacian order =",ilap
-    write(unit_run,*) "Hor. coeff=",coeff
+    write(unit_run,*) "Laplacian order =",ilap1,ilap2,ilap1w,ilap2w
+    write(unit_run,*) "Hor. coeffs=",coeff1,coeff2,coeff1w,coeff2w
     write(unit_run,*) "Ver. coeff=",coeffz
    
 
