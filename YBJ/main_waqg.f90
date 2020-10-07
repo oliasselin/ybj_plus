@@ -136,6 +136,7 @@ PROGRAM main
   call fft_r2c(psir,psik,n3h1)                                !Transform to k-space all these manually-set r-space fields
   call fft_r2c(ARr,ARk,n3h0)
   call fft_r2c(BRr,BRk,n3h0)
+  call sumB(BRk, BIk)                                         !Call only if the wave initial condition is horizontally uniform: this routine forces int(L+A)=0. Shouldn't be performed if A has horizontal structure
 
   !Initialize other fields to zero.
   AIk = (0.D0,0.D0)
@@ -146,12 +147,6 @@ PROGRAM main
   !If desired, overwrite the manual initialization of psi and B by reading netCDF inputs.
   if(init_ncf_psi==1) call ncread_psi(psik,psir) 
   if(init_ncf_la ==1) call ncread_la(BRk,BRr,BIk,BIr)
-
-  !TO DELETE:LOAD PSIK FROM EADY PROBLEM
-  if(restart==1) then
-     call read_restart(psik)
-     call generate_halo_q(psik)
-  end if
 
   !Set q from psi, or set to 0 in the case of fixed flow (such that q = 0 for all times)
   if(fixed_flow == 0) then
