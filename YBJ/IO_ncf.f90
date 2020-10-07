@@ -8,6 +8,7 @@ module IO_ncf
   integer :: idin,idout !Files ID
   integer :: idx,idy,idz,idt !Dimension IDs
   integer :: idpsi,idlar,idlai,idtime    !Variable IDs
+  integer :: idn2
 
 CONTAINS
 
@@ -369,6 +370,66 @@ subroutine ncread_la(BRk,BRr,BIk,BIr)
 
 end subroutine ncread_la
 
+
+
+
+subroutine ncdump_N2
+
+  !Create netcdf file and write for the geostrophic streamfunction psi (output)
+  implicit none
+
+  integer, dimension(1) :: ncdims
+  integer, dimension(1) :: nccount,ncstart
+
+  character *9 :: file_name                                  !Name of the netCDF file 
+
+!---------------------------------------------------------------------
+!     DEFINING THE OUTPUT NETCDF FILE 
+
+!!! prep restart file (output) (define the variables and dims)
+  !Set file name
+  write(file_name,"(A9)") "N2.out.nc"
+
+  ! Create the netCDF file. The nf90_clobber parameter tells netCDF,
+  call check( nf90_create(file_name,ior(NF90_NETCDF4,NF90_MPIIO),idout, comm = MPI_COMM_WORLD,info = MPI_INFO_NULL) )
+
+  ! Define the dimensions: x, y, z. time. 
+  call check( nf90_def_dim(idout, "z",int(n3,4),idz) )
+     
+  ! ncdimsk array used to pass the dimension IDs to the variables
+  ncdims = (/idz/)
+  
+  ! Define the variables which are the fields that going to be stored
+  call check( nf90_def_var(idout,"N2" ,NF90_FLOAT,ncdims,idn2 ) )
+
+  ! End define mode. This tells netCDF we are done defining metadata.
+  call check( nf90_enddef(idout) )
+
+!---------------------------------------------------------------------
+  !     WRITING VARIABLES IN NETCDF FILE
+  
+  ! how many to count in each dimension when writing files
+  nccount(1) = n3
+
+  ! where to start on the output file
+  ncstart(1) = 1
+  
+  ! write time (time is written only one time so just root process is used
+!  if (mype.eq.0)     call check( nf90_put_var(idout, idtime, time_seconds) )
+
+  ! in the z-direction mype=0 is in the first place
+!  ncstart(3) = mype*n3h0+1
+!  call check( nf90_put_var(idout, idpsi, psi_clean,ncstart,nccount))    
+
+  if(mype .eq. 0)  call check( nf90_put_var(idout, idn2, r_2st*N0*N0,ncstart,nccount))    
+  
+!---------------------------------------------------------------------
+!     CLOSING the  NETCDF FILE 
+  call check (nf90_close(idout))
+
+
+
+end subroutine ncdump_N2
 
 
 

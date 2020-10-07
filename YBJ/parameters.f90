@@ -223,16 +223,21 @@ MODULE parameters
 
     double precision, parameter :: H_scale=dom_z/L3          !Actual H in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
-    double precision, parameter :: cor=1e-4                  !Actual f = 0.0001 s^-1 (real value of planet Earth)
+!    double precision, parameter :: cor=1e-4                 !Actual f = 0.0001 s^-1 (real value of planet Earth)
+    double precision, parameter :: cor=1.2419D-04            !Actual f = 0.0001 s^-1 (real value of planet Earth)
 !    double precision, parameter :: N0 = (25./8.)*twopi*cor
 !    double precision, parameter :: U_scale = 0.25            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: U_scale = 0.01            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
-    double precision, parameter :: Uw_scale= 2.5e-5          !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
+!    double precision, parameter :: Uw_scale= 2.5e-5          !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
+    double precision, parameter :: Uw_scale= 0.1          !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
+
+
+    !Nondimensional parameters (calculated automatically)
     double precision, parameter :: Ar2 = (H_scale/L_scale)**2                                   !(1./64.)**2!(1./10.)**2 !0.01     !Aspect ratio squared = (H/L)^2     
     double precision, parameter :: Ro  = U_scale/(cor*L_scale)                                  !Rossby number  U/fL
     double precision, parameter :: Fr  = U_scale/(N0*H_scale)                                   !Froude number  U/N(z0)H
     double precision, parameter :: W2F = (Uw_scale/U_scale)**2                                  ! wave to flow velocity magnitude squared
-    double precision, parameter :: Bu  = Fr*Fr/(Ro*Ro)                                          ! (Fr/Ro)^2 = Burger number 
+    double precision, parameter :: Bu  = Fr*Fr/(Ro*Ro)                                          !Note that the Burger number, as usual conceived, is 1/Bu... My bad   
 
 
 
@@ -252,10 +257,12 @@ MODULE parameters
     !PERFECT VISCOSITY: 0.01 * (64./(1.*n1)) **(4./3.)
     !In reality, nuh is 1/Re and nuz is 1/(Ar2*Re) with 1/Re = UL/nu
 
-    double precision, parameter :: coeff =0.!0.4!0.4!0.1!0.075
+!    double precision, parameter :: coeff =0.!0.4!0.4!0.1!0.075
+    double precision, parameter :: coeff =10.!0.4!0.4!0.1!0.075
     double precision, parameter :: coeffz=0.!coeff!/10.!/1000!/10.
 
-    integer, parameter :: ilap = 8                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
+!    integer, parameter :: ilap = 8                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
+    integer, parameter :: ilap = 6                   !horizontal viscosity = nuh nabla^(2*ilap). So ilap =1 is regular viscosity. ilap>1 is hyperviscosity
 
     !General dissipation! (test for hyperviscosity: see Oct 10 2014 toread)
     double precision, parameter :: nuh  =  coeff * (64./(1.*n1)) **(4./3.) * (3./n1)**(2*(ilap-1))             !6e-2 * (10./ktrunc_x ) **2. ! horizontal visc coeff (regular viscosity)
@@ -301,8 +308,10 @@ MODULE parameters
     integer, parameter :: out_condwz = 0, freq_condwz=  freq_omega!*10        !Plot the w_z condition (requires out_omega = 1)
     integer, parameter :: out_cont   = 0, freq_cont  =  freq_etot!*10        !Plot the anelastic divergence (should be 0 because of the proj method)
 
+    !NetCDF dump parameters
     integer, parameter :: out_psi   = 1, freq_psi  = freq_etot
     integer, parameter :: out_la    = 1, freq_la   = freq_we
+    integer, parameter :: out_n2    = 1
     
 
     !For conditions:

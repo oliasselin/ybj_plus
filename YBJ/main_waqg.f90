@@ -202,6 +202,7 @@ PROGRAM main
 
  if(out_psi ==1) call ncdump_psi(psik,psir,dump_count_psi)
  if(out_la  ==1) call ncdump_la(BRk,BRr,BIk,BIr,dump_count_la)
+ if(out_n2  ==1) call ncdump_n2
 
  !************************************************************************!
  !*** 1st time timestep using the projection method with Forward Euler ***!
