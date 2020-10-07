@@ -18,22 +18,24 @@ MODULE parameters
 
 
     integer, parameter :: test_AY2020=1
-    integer, parameter :: restart = 1                            !restart = 1 start from file                                                                                                                                                                                                                                
-    integer, parameter :: restart_no = 15                         !Restart file number (from 0 to 99)                                                                                                                                                                                                                        
-    character(len = 64), parameter :: floc='../../dE60_dt0.01_512_7/output/'   !Location of the restart file (when restarting only: dumping in local output/ folder)
+    integer, parameter :: restart = 0                            !restart = 1 start from file                                                                                                                                                                                                                             
+    integer, parameter :: restart_no = 15                         !Restart file number (from 0 to 99)                                                                                                                                                                                                                   
+    character(len = 64), parameter :: floc='../../dE60_dt0.01_512_7/output/'   !Location of the restart file (when restarting only: dumping in local output/ folder
 
-    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
+!    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
+    integer, parameter :: fixed_flow = 0        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     integer, parameter :: ybj_plus = 1          !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation (not recommended)  
     integer, parameter :: no_feedback=1         !1: q^w = 0 and flow is independent of waves. 0: feedback activated (requires smaller time step) 
     integer, parameter :: no_dispersion=0       !1: set the dispersive term to 0, 0: regular integration.
     integer, parameter :: linear=0              !1: set the nonlinear terms (advection) to 0. 
-    integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
+!    integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
+    integer, parameter :: inviscid=0            !1: No dissipation, otherwise: dissipation
     integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
     !Initial condition!
-    integer, parameter :: init_ncf_la =0                                 !1: Initialize L+A with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
-    integer, parameter :: init_ncf_psi=0                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
+    integer, parameter :: init_ncf_la =1                                 !1: Initialize L+A with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
+    integer, parameter :: init_ncf_psi=1                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
     character *11, parameter :: init_ncf_la_filename  = 'la000.in.nc'    !File name containing initial condition for L+A. Must be in r-space with dimensions n1 x n2 x n3. Must contain both real and imaginary parts of L+A
     character *12, parameter :: init_ncf_psi_filename = 'psi000.in.nc'   !File name containing initial condition for psi. Must be in r-space with dimensions n1 x n2 x n3.
 
@@ -75,7 +77,7 @@ MODULE parameters
     double precision, parameter :: delta_a = 50.
     double precision, parameter :: xi_a = dom_z/(L3*delta_a)
 
-
+    !Dispensable!
     integer, parameter :: generic=1 
     integer, parameter :: init_vertical_structure=1
     integer, parameter :: linear_vert_structure=0          !1: LINEAR psi as in SB2013      2: kz=1 for all k's       OTHERWISE: kz consistent with QG.  
@@ -112,8 +114,9 @@ MODULE parameters
     !Base-state!
     !----------!
 
-    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5, triple_gaussian=6
-    integer, parameter :: stratification = constant_N!triple_gaussian !double_gaussian_ml_min !constant_N!double_gaussian_ml_min
+    integer, parameter :: tropopause=1, exponential=2, constant_N=3, double_gaussian=4, double_gaussian_ml_min=5, triple_gaussian=6, skewed_gaussian=7
+!    integer, parameter :: stratification = constant_N
+    integer, parameter :: stratification = skewed_gaussian
 
     !Stratification = tropopause!
     integer, parameter :: fraction=128                   !If h#=150m, then fraction=133.333333~128
@@ -165,6 +168,15 @@ MODULE parameters
     double precision, parameter ::  z2_tg     = 5.194517338524803
     double precision, parameter ::  z3_tg     = 6.209896251239539
 
+    !Stratification = skewed gaussian!                                                                                                                                                                                                                                                                      
+    double precision, parameter :: N0 = 0.001550529072004        !Surface value of the fitted N2                                                                                                                                                                                                                             
+    double precision, parameter :: N02_sg = 0.537713935783168
+    double precision, parameter :: N12_sg = 2.684198470106461
+    double precision, parameter :: sigma_sg = 0.648457170048730
+    double precision, parameter :: z0_sg = 6.121537923499139
+    double precision, parameter :: alpha_sg = -5.338431587899242
+!    double precision, parameter :: Xi = 0.155309488603754   !1./int_N2_nd        !Nondimensional parameter in front of the vQy term in Eady: H Ns2/ int(N^2) for the skewed gaussian   
+
 
    ! USEFUL INDEX !                                                                                                                          
    ! ------------ !                                                                                                                         
@@ -211,8 +223,8 @@ MODULE parameters
 
     double precision, parameter :: H_scale=dom_z/L3          !Actual H in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Actual L in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
-    double precision, parameter :: cor=1e-4!0.00000000001!0.0005 !0.0001                           !Actual f = 0.0001 s^-1 (real value of planet Earth)
-    double precision, parameter :: N0 = (25./8.)*twopi*cor
+    double precision, parameter :: cor=1e-4                  !Actual f = 0.0001 s^-1 (real value of planet Earth)
+!    double precision, parameter :: N0 = (25./8.)*twopi*cor
 !    double precision, parameter :: U_scale = 0.25            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: U_scale = 0.01            !Actual U in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: Uw_scale= 2.5e-5          !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
@@ -232,7 +244,8 @@ MODULE parameters
     integer :: itermax=1000000000
     real :: maxtime=100                      
 !    double precision, parameter :: delt=0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
-    double precision, parameter :: delt=Ro/20.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+!    double precision, parameter :: delt=Ro/20.!0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
+    double precision, parameter :: delt=0.01*dx !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) !0.25/ktrunc_x !0.5*Bu*Ro/(2.*ktrunc_x*ktrunc_x) 
     double precision, parameter :: gamma=1e-2                                  !Robert filter parameter
 
     !Other successful viscosity: 5e-2 * (10./ktrunc_x ) **2. 

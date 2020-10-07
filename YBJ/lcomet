@@ -4,8 +4,8 @@ number_of_nodes=8
 number_of_tasks=128
 ntasks_per_node=16
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/niskine/skewdy/storm5_fake2/source/
-datadir=/oasis/scratch/comet/oasselin/temp_project/niskine/skewdy/storm5_fake2/output/
+sourdir=/oasis/scratch/comet/oasselin/temp_project/niskine/skewdy/storm5_fake3/source/
+datadir=/oasis/scratch/comet/oasselin/temp_project/niskine/skewdy/storm5_fake3/output/
 
 mkdir -p $sourdir
 mkdir -p $datadir
@@ -47,9 +47,9 @@ cat > COMPILE_STEP << COMPILE
 
 cd $sourdir
 cp $HOME/luwei/YBJ/*.f90 .
-cp $HOME/luwei/YBJ/init_test1_highres/* .
+cp $HOME/luwei/YBJ/init_AY2020/* .
 cd $datadir
-cp $HOME/luwei/YBJ/init_test1_highres/* .                                                                                                                                                                                                      
+cp $HOME/luwei/YBJ/init_AY2020/* .                                                                                                                                                                                                      
 cd $sourdir
 
 PARA=parameters.f90

@@ -174,7 +174,7 @@ END SUBROUTINE init_arrays
 
 
 
-subroutine init_base_state
+subroutine init_base_state !This subroutine defines the staggered and unstaggered versions of the base-state buoyancy profile N^2.
 
   double precision :: N2_nd(n3h2),N2_nds(n3h2),N2_ndst,N2_ndut   !nondimensional N^2, (un)staggered and (un)transposed
 
@@ -201,6 +201,9 @@ subroutine init_base_state
      else if(stratification==triple_gaussian) then
         N2_nd(izh2)   = N02_tg + N12_tg*exp(-((z -z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((z -z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((z -z3_tg)**2)/(sigma3_tg**2))
         N2_nds(izh2)  = N02_tg + N12_tg*exp(-((zs-z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((zs-z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((zs-z3_tg)**2)/(sigma3_tg**2))
+     else if(stratification==skewed_gaussian) then
+        N2_nd(izh2)   = N12_sg*exp(-((z -z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(z -z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
+        N2_nds(izh2)  = N12_sg*exp(-((zs-z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(zs-z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
      else
         write(*,*) "Undefined stratification profile. Aborting."
         stop
@@ -257,6 +260,9 @@ subroutine init_base_state
      else if(stratification==triple_gaussian) then
         N2_ndut = N02_tg + N12_tg*exp(-((z -z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((z -z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((z -z3_tg)**2)/(sigma3_tg**2))
         N2_ndst = N02_tg + N12_tg*exp(-((zs-z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((zs-z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((zs-z3_tg)**2)/(sigma3_tg**2))
+     else if(stratification==skewed_gaussian) then
+        N2_ndut  = N12_sg*exp(-((z -z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(z -z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
+        N2_ndst  = N12_sg*exp(-((zs-z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(zs-z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
      else
         write(*,*) "Undefined stratification profile. Aborting."
         stop
@@ -883,7 +889,7 @@ do ix=1,n1d
 
       if(ix<=n1) then
          
-         !Set fields here
+         !Set fields here. for fX, one must use the vertical index zX. ex. f2s(ix,iy,iz2)=cos(mmm*z2)  
          if(test_AY2020==1) then
             if(z1>=0) f1s(ix,iy,iz1)=0.
             if(z2>=0) f2s(ix,iy,iz2)=0.
