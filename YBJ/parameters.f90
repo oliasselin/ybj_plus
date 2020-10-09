@@ -16,11 +16,7 @@ MODULE parameters
     double precision, parameter :: dom_x = 222000                          !Horizontal domain size (in m)
     double precision, parameter :: dom_z = 3000                                !Vertical   domain size (in m)
 
-
     integer, parameter :: test_AY2020=1
-    integer, parameter :: restart = 0                            !restart = 1 start from file                                       
-    integer, parameter :: restart_no = 15                         !Restart file number (from 0 to 99)                                                                                                                                                                                                                   
-    character(len = 64), parameter :: floc='../../dE60_dt0.01_512_7/output/'   !Location of the restart file (when restarting only: dumping in local output/ folder
 
 !    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
     integer, parameter :: fixed_flow = 0        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
@@ -38,6 +34,8 @@ MODULE parameters
     integer, parameter :: init_ncf_psi=1                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
     character *11, parameter :: init_ncf_la_filename  = 'la000.in.nc'    !File name containing initial condition for L+A. Must be in r-space with dimensions n1 x n2 x n3. Must contain both real and imaginary parts of L+A
     character *12, parameter :: init_ncf_psi_filename = 'psi000.in.nc'   !File name containing initial condition for psi. Must be in r-space with dimensions n1 x n2 x n3.
+    integer :: dump_count_psi=0                                          !Index counting the netCDF files dumped. Initialized to 0.
+    integer :: dump_count_la =0                                          !Index counting the netCDF files dumped. Initialized to 0.
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !Don't touch: necessary arrays!

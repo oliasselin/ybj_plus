@@ -4,8 +4,8 @@ number_of_tasks=128    #total number of processors: must match npe in parameters
 ntasks_per_node=16     #number of processors per node. 
 number_of_nodes=8      #number of nodes*ntasks_per_node >= number_of_tasks
 
-sourdir=/oasis/scratch/comet/oasselin/temp_project/niskine/skewdy/storm5_fake8/source/   #Directory for the source
-datadir=/oasis/scratch/comet/oasselin/temp_project/niskine/skewdy/storm5_fake8/output/   #Direction for the output
+sourdir=/oasis/scratch/comet/oasselin/temp_project/test2/source/   #Directory for the source
+datadir=/oasis/scratch/comet/oasselin/temp_project/test2/output/   #Direction for the output
 
 #Create those directorues is non existent
 mkdir -p $sourdir
@@ -22,13 +22,13 @@ module load netcdf/v4.7.4f4.5.3
 cat > EXEC_STEP << EXEC
 #!/bin/sh 
 
-#SBATCH --job-name="test"
-#SBATCH --output="/home/oasselin/monitor/test.o%j.%N"
+#SBATCH --job-name="test2"
+#SBATCH --output="/home/oasselin/monitor/test2.o%j.%N"
 #SBATCH --partition=compute
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t 02:00:00              
+#SBATCH -t 01:00:00              
 #SBATCH -A TG-OCE190014 
 
 cd $datadir                                                                                                                                                                            
@@ -44,9 +44,9 @@ cat > COMPILE_STEP << COMPILE
 #Copy all source files to source directory in scratch space                                                                                                                                                       
 cd $sourdir
 cp $HOME/luwei/YBJ/*.f90 .            #Keeps a record of source files used
-cp $HOME/luwei/YBJ/init_AY2020/* .    #Keeps a record of source files used
+cp $HOME/luwei/YBJ/init_test2/* .    #Keeps a record of source files used
 cd $datadir
-cp $HOME/luwei/YBJ/init_AY2020/* .    #Bring initial fields for initialization                                                                                                                                                                                                 
+cp $HOME/luwei/YBJ/init_test2/* .    #Bring initial fields for initialization                                                                                                                                                                                                 
 cd $sourdir
 
 #Compile with MPIf90                                                                                                                                       
@@ -56,4 +56,4 @@ COMPILE
 
 chmod 755 COMPILE_STEP         #Allow compilation
 ./COMPILE_STEP                 #Compile
-sbatch EXEC_STEP               #Comment this line if you want to compile code without executing
+#sbatch EXEC_STEP               #Comment this line if you want to compile code without executing
