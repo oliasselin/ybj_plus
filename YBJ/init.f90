@@ -183,24 +183,9 @@ subroutine init_base_state !This subroutine defines the staggered and unstaggere
      z=zah2(izh2)     !Unstaggered fields
      zs=zash2(izh2)   !Staggered   fields
      
-     if(stratification==tropopause) then
-        N2_nd(izh2)   =  (gamma_N1*tanh( (z -z0)/H_N) + 1.)**2
-        N2_nds(izh2)  =  (gamma_N1*tanh( (zs-z0)/H_N) + 1.)**2        
-     else if(stratification==exponential) then
-        N2_nd(izh2)   = exp( N2_scale*(z -z0) )
-        N2_nds(izh2)  = exp( N2_scale*(zs-z0) )
-     else if(stratification==constant_N) then
+     if(stratification==constant_N) then
         N2_nd(izh2)   = 1.D0
         N2_nds(izh2)  = 1.D0
-     else if(stratification==double_gaussian) then
-        N2_nd(izh2)   = N02_dg + N12_dg*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
-        N2_nds(izh2)  = N02_dg + N12_dg*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
-     else if(stratification==double_gaussian_ml_min) then
-        N2_nd(izh2)   = N02_dg + N12_dg*(-(z -z1_dg-z3_dg)/sigma1_dg)*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
-        N2_nds(izh2)  = N02_dg + N12_dg*(-(zs-z1_dg-z3_dg)/sigma1_dg)*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
-     else if(stratification==triple_gaussian) then
-        N2_nd(izh2)   = N02_tg + N12_tg*exp(-((z -z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((z -z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((z -z3_tg)**2)/(sigma3_tg**2))
-        N2_nds(izh2)  = N02_tg + N12_tg*exp(-((zs-z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((zs-z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((zs-z3_tg)**2)/(sigma3_tg**2))
      else if(stratification==skewed_gaussian) then
         N2_nd(izh2)   = N12_sg*exp(-((z -z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(z -z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
         N2_nds(izh2)  = N12_sg*exp(-((zs-z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(zs-z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
@@ -242,24 +227,9 @@ subroutine init_base_state !This subroutine defines the staggered and unstaggere
      zs = zas(iz)
      
      
-     if(stratification==tropopause) then
-        N2_ndut =  (gamma_N1*tanh( (z -z0)/H_N) + 1.)**2
-        N2_ndst =  (gamma_N1*tanh( (zs-z0)/H_N) + 1.)**2
-     else if(stratification==exponential) then
-        N2_ndut =  exp( N2_scale*(z -z0) )
-        N2_ndst =  exp( N2_scale*(zs-z0) )
-     else if(stratification==constant_N) then
+     if(stratification==constant_N) then
         N2_ndut = 1.D0
         N2_ndst = 1.D0
-     else if(stratification==double_gaussian) then
-        N2_ndut = N02_dg + N12_dg*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
-        N2_ndst = N02_dg + N12_dg*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
-     else if(stratification==double_gaussian_ml_min) then
-        N2_ndut = N02_dg + N12_dg*(-(z -z1_dg-z3_dg)/sigma1_dg)*exp(-((z -z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((z -z2_dg)**2)/(sigma2_dg**2))
-        N2_ndst = N02_dg + N12_dg*(-(zs-z1_dg-z3_dg)/sigma1_dg)*exp(-((zs-z1_dg)**2)/(sigma1_dg**2)) + N22_dg*exp(-((zs-z2_dg)**2)/(sigma2_dg**2))
-     else if(stratification==triple_gaussian) then
-        N2_ndut = N02_tg + N12_tg*exp(-((z -z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((z -z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((z -z3_tg)**2)/(sigma3_tg**2))
-        N2_ndst = N02_tg + N12_tg*exp(-((zs-z1_tg)**2)/(sigma1_tg**2)) + N22_tg*exp(-((zs-z2_tg)**2)/(sigma2_tg**2)) + N32_tg*exp(-((zs-z3_tg)**2)/(sigma3_tg**2))
      else if(stratification==skewed_gaussian) then
         N2_ndut  = N12_sg*exp(-((z -z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(z -z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
         N2_ndst  = N12_sg*exp(-((zs-z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(zs-z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
@@ -890,17 +860,10 @@ do ix=1,n1d
       if(ix<=n1) then
          
          !Set fields here. for fX, one must use the vertical index zX. ex. f2s(ix,iy,iz2)=cos(mmm*z2)  
-         if(test_AY2020==1) then
-            if(z1>=0) f1s(ix,iy,iz1)=0.
-            if(z2>=0) f2s(ix,iy,iz2)=0.
-            if(z3>=0) f3s(ix,iy,iz3)=exp(-(xi_a*(z3-twopi))**2)
-         else
-            if(z1>=0) f1s(ix,iy,iz1)=sin(x)*sin(y)
-            if(z2>=0) f2s(ix,iy,iz2)=0.
-            if(z3>=0) f3s(ix,iy,iz3)= cos(mmm*z3/2.)
-         end if
-
-
+         if(z1>=0) f1s(ix,iy,iz1)=sin(x)*sin(y)
+         if(z2>=0) f2s(ix,iy,iz2)=0.
+         if(z3>=0) f3s(ix,iy,iz3)= cos(8*z3/2.)
+         
       else
          if(z1>=0) f1s(ix,iy,iz1)=0.
          if(z2>=0) f2s(ix,iy,iz2)=0.

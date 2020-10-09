@@ -2,11 +2,6 @@ MODULE parameters
 
    IMPLICIT NONE
 
-!    integer, parameter :: n1=256, n2=256, n3=256      !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
-!    integer, parameter :: npe=64                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
-!    double precision, parameter :: dom_x = 6.28318530718*5e4                          !Horizontal domain size (in m)
-!    double precision, parameter :: dom_z = 4e3                                !Vertical   domain size (in m)
-
    !Free parameters: resolution, number of processors and domain size!
     integer, parameter :: n1=512, n2=512, n3=512                     !Resolution in the horizontal (n1=n2) and vertical (n3) dimensions
     integer, parameter :: npe=128                                    !Number of processors. Must be such that npe<=min(n3/2,n2) and npe must be a multiple of both n3/2 and n2.   
@@ -24,14 +19,12 @@ MODULE parameters
     !Special cases!
     !-------------!
 
-!    integer, parameter :: fixed_flow = 1        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
     integer, parameter :: fixed_flow = 0        !1: Leave the flox fixed during integration of YBJ, i.e. skip the psi-inversion steps
     integer, parameter :: passive_scalar = 0    !1: Set dispersion and refraction to 0 and skip the LA -> A inversion. BR and BI become two (independent) passive scalars.
     integer, parameter :: ybj_plus = 1          !1: B is L+A and A is recovered from B like psi is recovered from q (exception of the 1/4 factor). 0: Regular YBJ equation (not recommended)  
     integer, parameter :: no_feedback=1         !1: q^w = 0 and flow is independent of waves. 0: feedback activated (requires smaller time step) 
     integer, parameter :: no_dispersion=0       !1: set the dispersive term to 0, 0: regular integration.
     integer, parameter :: linear=0              !1: set the nonlinear terms (advection) to 0. 
-!    integer, parameter :: inviscid=1            !1: No dissipation, otherwise: dissipation
     integer, parameter :: inviscid=0            !1: No dissipation, otherwise: dissipation
     integer :: dealiasing=1                     !1: Dealias, 0: no dealiasing. I wouldn't try...
 
@@ -39,35 +32,20 @@ MODULE parameters
     !Initial Conditions!
     !------------------!
 
-    !Initial condition from analytical functions (via init.f90)
-    integer, parameter :: test_AY2020=1
-
-    !YBJp paper vertical plane wave m'
-    integer, parameter :: mmm = 8     !Nondimensional vertical wavenumber of the vertical plane wave IC
-
-    !To reproduce AY2020: Gaussian wave initial condition                                                                                                                                                                                                                                                              
-    double precision, parameter :: delta_a = 50.
-    double precision, parameter :: xi_a = dom_z/(L3*delta_a)
-
     !Initial condition from NetCDF!
     integer, parameter :: init_ncf_la =1                                 !1: Initialize L+A with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
     integer, parameter :: init_ncf_psi=1                                 !1: Initialize psi with a provided netcdf file (set name below). 0: Manually set analytical field via generate_fields_stag in init.f90
     character *11, parameter :: init_ncf_la_filename  = 'la000.in.nc'    !File name containing initial condition for L+A. Must be in r-space with dimensions n1 x n2 x n3. Must contain both real and imaginary parts of L+A
     character *12, parameter :: init_ncf_psi_filename = 'psi000.in.nc'   !File name containing initial condition for psi. Must be in r-space with dimensions n1 x n2 x n3.
 
-
     !Scaling parameters!
     !------------------!
 
     double precision, parameter :: H_scale=dom_z/L3          !Characteristic vertical scale in m ( z_real = H z' where z' in [0:L3]  is the nondim z.)
     double precision, parameter :: L_scale=dom_x/L1          !Characteristic horizontal scale in m ( x_real = L x' where x' in [0:2pi] is the nondim x.)
-!    double precision, parameter :: cor=1e-4                 !Coriolis parameter f in s^-1 
     double precision, parameter :: cor=1.2419D-04            !Coriolis parameter f in s^-1 
-!    double precision, parameter :: N0 = (25./8.)*twopi*cor  !Characteristic value of N
     double precision, parameter :: N0 = 0.001550529072004    !Characteristic value of N
-!    double precision, parameter :: U_scale = 0.25           !Characteristic flow veolcity in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
     double precision, parameter :: U_scale = 0.01            !Characteristic flow veolcity in m/s (u_real = U u' where u' is the nondim velocity ur implemented in the code)
-!    double precision, parameter :: Uw_scale= 2.5e-5         !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
     double precision, parameter :: Uw_scale= 0.1             !Characteristic magnitude of wave velocity (wave counterpart to U_scale for flow)
 
     !Base-state stratification profile (nondimensionalized by N0)!
@@ -103,7 +81,6 @@ MODULE parameters
     integer :: itermax=1000000000      !Maximum number of iterations before stopping loop
     real :: maxtime=100                !Maximum nondimensional time before stopping loop
 
-!    double precision, parameter :: delt=Ro/20.              !Nondimensional time step
     double precision, parameter :: delt=0.01*dx              !Nondimensional time step
     double precision, parameter :: gamma=1e-3                !Robert filter parameter (for damping leap-frog computational mode)
 
@@ -133,14 +110,12 @@ MODULE parameters
     double precision, parameter :: coeffz = 0.                                                                    
     double precision, parameter :: nuz  = (coeffz* (64./(1.*n1)) **(4./3.) )                               !vertical visc coeff for q only  (regular viscosity)
 
-
-
     !Output!
     !------!
 
     !NetCDF output parameters
-    real, parameter :: psi_every_XIP = 1.705                                              !Dump psi every 'psi_every_XIP' inertial period
-    real, parameter :: la_every_XIP  = 1.705                                              !Dump L+A every 'la_every_XIP'  inertial period
+    real, parameter :: psi_every_XIP = 1.70649749702                                      !Dump psi every 'psi_every_XIP' inertial period (this value is for output every day given the parameters)
+    real, parameter :: la_every_XIP  = 1.70649749702                                      !Dump L+A every 'la_every_XIP'  inertial period (this value is for output every day given the parameters)
     integer, parameter :: out_psi    = 1, freq_psi  = INT(psi_every_XIP*twopi*Ro/delt)    !1: output psi with ncf
     integer, parameter :: out_la     = 1, freq_la   = INT( la_every_XIP*twopi*Ro/delt)    !1: output L+A with ncf
     integer, parameter :: out_n2     = 1                                                  !1: output N^2 with ncf

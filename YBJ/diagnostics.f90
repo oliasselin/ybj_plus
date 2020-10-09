@@ -2709,9 +2709,9 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     if(delt >= Ro) then
        write(*,*) "Can't resolve inertial waves, Ro=",Ro
 !       stop
-    elseif( (normalize==1 .and.   delt >= dz/sqrt(k_init+p_init)) .or. (norm_trop==1) .and. delt >= dz/URMS  ) then   !Approximate CFL depending on the normalization process. Watch out if no normalization!  
-       write(*,*) "CFL fails"
-       stop
+!    elseif( (normalize==1 .and.   delt >= dz/sqrt(k_init+p_init)) .or. (norm_trop==1) .and. delt >= dz/URMS  ) then   !Approximate CFL depending on the normalization process. Watch out if no normalization! 
+!       write(*,*) "CFL fails"
+!       stop
     end if
        
  
@@ -2730,10 +2730,10 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
     !4 Accurate resolving of all the horizontal wavenumbers (see A Note on the Numerical Representation ... Tulloch & Smith 2009)
 
-    if( (4./3.)*n3 < sqrt(N_2_stra)*sqrt(Ar2)*(1.*n1)/cor) then  !N3 is NOT > (N0/f) Ar N1.  (I choose N0 is N_s, the max N)  !Relax this to 1.5*N3 is NOT > ...
-       write(*,*) "Insufficient vertical resolution: sig*Ar=",sqrt(N_2_stra*Ar2)/cor
+ !   if( (4./3.)*n3 < sqrt(N_2_stra)*sqrt(Ar2)*(1.*n1)/cor) then  !N3 is NOT > (N0/f) Ar N1.  (I choose N0 is N_s, the max N)  !Relax this to 1.5*N3 is NOT > ...
+ !      write(*,*) "Insufficient vertical resolution: sig*Ar=",sqrt(N_2_stra*Ar2)/cor
        !stop
-    end if
+ !   end if
 
 
     !5. Monitoring parameters...
@@ -2751,17 +2751,17 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
     write(unit_run,*) "Stratification=",stratification
     write(unit_run,*)
-    write(unit_run,*) "N_troposphere  = ",real(sqrt(N_2_trop))
-    write(unit_run,*) "N_stratosphere = ",real(sqrt(N_2_stra))
+!    write(unit_run,*) "N_troposphere  = ",real(sqrt(N_2_trop))
+!    write(unit_run,*) "N_stratosphere = ",real(sqrt(N_2_stra))
     write(unit_run,*)
-    write(unit_run,*) "h = ",real(H_scale*H_N),"meters"
-    write(unit_run,*) "h_NONDIM = 2pi/",fraction," or ",real(1.*n3/(1.*fraction)),"dz"
-    write(unit_run,*) "z0=",z0
-    write(unit_run,*) "where_bz=",where_bz
-    write(unit_run,*) "norm_trop=",norm_trop
+ !   write(unit_run,*) "h = ",real(H_scale*H_N),"meters"
+ !   write(unit_run,*) "h_NONDIM = 2pi/",fraction," or ",real(1.*n3/(1.*fraction)),"dz"
+ !   write(unit_run,*) "z0=",z0
+ !   write(unit_run,*) "where_bz=",where_bz
+ !   write(unit_run,*) "norm_trop=",norm_trop
     
 
-    write(unit_run,*)  "Vertial structure = ", init_vertical_structure
+ !   write(unit_run,*)  "Vertial structure = ", init_vertical_structure
 
     write(unit_run,*)  
     write(unit_run,*)
@@ -2776,33 +2776,33 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
 
 
 
-    write(unit_run,*) "N/f = ",real(sqrt(N_2_trop)/cor)," in the troposphere"
-    write(unit_run,*) "N/f = ",real(sqrt(N_2_stra)/cor)," in the stratosphere"
+ !   write(unit_run,*) "N/f = ",real(sqrt(N_2_trop)/cor)," in the troposphere"
+ !   write(unit_run,*) "N/f = ",real(sqrt(N_2_stra)/cor)," in the stratosphere"
     write(unit_run,*) "Ar = H/L = 1/",L_scale/H_scale
     write(unit_run,*) "Ro = ",Ro,"   Fr = ",Fr,"   Bu = ",Bu    !Average Fr
     
-    write(unit_run,*) "Transition wavelengths (DIM)"
+ !   write(unit_run,*) "Transition wavelengths (DIM)"
+ !   write(unit_run,*)  
+
+ !   write(unit_run,*) "lambda_D = 2pi/kD = ",real(twopi*0.5*(sqrt(N_2_trop)+sqrt(N_2_stra))*10000/cor)            ,"meters"          !kD = f/ND with D is the depth of the domain = 10000m 
+ !   write(unit_run,*) "lambda_J = 2pi/kJ = ",real(twopi*0.5*(sqrt(N_2_trop)+sqrt(N_2_stra))*real(H_scale*H_N)/cor),"meters"          !kD = f/ND with D is the depth of the domain = 10000m 
+
+    write(unit_run,*)  
     write(unit_run,*)  
 
-    write(unit_run,*) "lambda_D = 2pi/kD = ",real(twopi*0.5*(sqrt(N_2_trop)+sqrt(N_2_stra))*10000/cor)            ,"meters"          !kD = f/ND with D is the depth of the domain = 10000m 
-    write(unit_run,*) "lambda_J = 2pi/kJ = ",real(twopi*0.5*(sqrt(N_2_trop)+sqrt(N_2_stra))*real(H_scale*H_N)/cor),"meters"          !kD = f/ND with D is the depth of the domain = 10000m 
+ !   write(unit_run,*) "Transition wavenumbers (NONDIM) - for SQG behavior, kD << kh << kJ" 
+ !   write(unit_run,*) 
 
-    write(unit_run,*)  
-    write(unit_run,*)  
+ !   write(unit_run,*) "kD = ",sqrt(Bu)/(0.5*twopi)   !fL/NH *1/D' where D' is the nondim dist between tropopause and bot or top.
+ !   write(unit_run,*) "kJ = ",sqrt(Bu)/H_N
+ !   write(unit_run,*) "kT = N/3 = ",n1/3          !This is the max well-resolved wavenumber
 
-    write(unit_run,*) "Transition wavenumbers (NONDIM) - for SQG behavior, kD << kh << kJ" 
-    write(unit_run,*) 
-
-    write(unit_run,*) "kD = ",sqrt(Bu)/(0.5*twopi)   !fL/NH *1/D' where D' is the nondim dist between tropopause and bot or top.
-    write(unit_run,*) "kJ = ",sqrt(Bu)/H_N
-    write(unit_run,*) "kT = N/3 = ",n1/3          !This is the max well-resolved wavenumber
-
-    write(unit_run,*) "Numerical Stability"
-    write(unit_run,*)      
+ !   write(unit_run,*) "Numerical Stability"
+ !   write(unit_run,*)      
     write(unit_run,*) "dt  =",delt 
-    write(unit_run,*) "CFL =",dz/sqrt(k_init+p_init)
-    write(unit_run,*) "GW  =",U_scale/(L_scale*sqrt(N_2_stra))
-    write(unit_run,*) "IW  =",Ro
+ !   write(unit_run,*) "CFL =",dz/sqrt(k_init+p_init)
+  !  write(unit_run,*) "GW  =",U_scale/(L_scale*sqrt(N_2_stra))
+  !  write(unit_run,*) "IW  =",Ro
 
     write(unit_run,*)      
     write(unit_run,*)      
@@ -2811,29 +2811,29 @@ SUBROUTINE plot_wz(ks,ku,ps)    !Exact copy of plot_ez (I just changed the name 
     write(unit_run,*)      
 
     
-    write(unit_run,*) "Location of horizontal spectra"
+!    write(unit_run,*) "Location of horizontal spectra"
     
-    write(unit_run,*) 
+!    write(unit_run,*) 
 
  
-    write(unit_run,*) "Distance in h units from z0 [ Dist = (z-z0)/h ]"
+ !   write(unit_run,*) "Distance in h units from z0 [ Dist = (z-z0)/h ]"
 
-    do dummy_count=1,num_spec
-           write(unit_run,*) "spec,dist=",dummy_count-1, (zas(height(dummy_count))-z0)/H_N 
-    end do
+ !   do dummy_count=1,num_spec
+ !          write(unit_run,*) "spec,dist=",dummy_count-1, (zas(height(dummy_count))-z0)/H_N 
+ !   end do
 
-    write(unit_run,*) 
-    write(unit_run,*) 
+ !   write(unit_run,*) 
+!    write(unit_run,*) 
 
-    write(unit_run,*) "Location of horizontal slices"
+!    write(unit_run,*) "Location of horizontal slices"
     
-    write(unit_run,*) 
+!    write(unit_run,*) 
  
-    write(unit_run,*) "Distance in h units from z0 [ Dist = (z-z0)/h ]"
+!    write(unit_run,*) "Distance in h units from z0 [ Dist = (z-z0)/h ]"
 
-    write(unit_run,*) "bot=", (zas(bot_height)-z0)/H_N 
-    write(unit_run,*) "mid=", (zas(mid_height)-z0)/H_N 
-    write(unit_run,*) "top=", (zas(top_height)-z0)/H_N 
+!    write(unit_run,*) "bot=", (zas(bot_height)-z0)/H_N 
+!    write(unit_run,*) "mid=", (zas(mid_height)-z0)/H_N 
+!    write(unit_run,*) "top=", (zas(top_height)-z0)/H_N 
     
 
     write(unit_run,*) 
