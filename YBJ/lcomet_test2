@@ -28,7 +28,7 @@ cat > EXEC_STEP << EXEC
 #SBATCH --nodes=$number_of_nodes
 #SBATCH --ntasks-per-node=$ntasks_per_node
 #SBATCH --export=ALL
-#SBATCH -t 01:00:00              
+#SBATCH -t 02:00:00              
 #SBATCH -A TG-OCE190014 
 
 cd $datadir                                                                                                                                                                            
