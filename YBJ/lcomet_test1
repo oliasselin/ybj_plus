@@ -44,9 +44,9 @@ cat > COMPILE_STEP << COMPILE
 #Copy all source files to source directory in scratch space                                                                                                                                                       
 cd $sourdir
 cp $HOME/luwei/YBJ/*.f90 .            #Keeps a record of source files used
-#cp $HOME/luwei/YBJ/init_test1/* .    #Keeps a record of source files used
+cp $HOME/luwei/YBJ/init_test1/* .    #Keeps a record of source files used
 cd $datadir
-#cp $HOME/luwei/YBJ/init_test1/* .    #Bring initial fields for initialization                                                                                                                                                                                                 
+cp $HOME/luwei/YBJ/init_test1/* .    #Bring initial fields for initialization                                                                                                                                                                                                 
 cd $sourdir
 
 #Compile with MPIf90                                                                                                                                       
