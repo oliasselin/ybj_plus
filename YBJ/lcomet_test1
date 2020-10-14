@@ -56,4 +56,4 @@ COMPILE
 
 chmod 755 COMPILE_STEP         #Allow compilation
 ./COMPILE_STEP                 #Compile
-sbatch EXEC_STEP               #Comment this line if you want to compile code without executing
+#sbatch EXEC_STEP               #Comment this line if you want to compile code without executing

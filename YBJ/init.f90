@@ -176,7 +176,7 @@ END SUBROUTINE init_arrays
 
 subroutine init_base_state !This subroutine defines the staggered and unstaggered versions of the base-state buoyancy profile N^2.
 
-  double precision :: N2_nd(n3h2),N2_nds(n3h2),N2_ndst,N2_ndut   !nondimensional N^2, (un)staggered and (un)transposed
+  double precision :: N2_nd,N2_nds,N2_ndst,N2_ndut   !nondimensional N^2, (un)staggered and (un)transposed
 
   do izh2=1,n3h2
    
@@ -184,11 +184,11 @@ subroutine init_base_state !This subroutine defines the staggered and unstaggere
      zs=zash2(izh2)   !Staggered   fields
      
      if(stratification==constant_N) then
-        N2_nd(izh2)   = 1.D0
-        N2_nds(izh2)  = 1.D0
+        N2_nd   = 1.D0
+        N2_nds  = 1.D0
      else if(stratification==skewed_gaussian) then
-        N2_nd(izh2)   = N12_sg*exp(-((z -z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(z -z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
-        N2_nds(izh2)  = N12_sg*exp(-((zs-z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(zs-z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
+        N2_nd   = N12_sg*exp(-((z -z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(z -z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
+        N2_nds  = N12_sg*exp(-((zs-z0_sg)**2)/(sigma_sg**2))*(1.+erf( alpha_sg*(zs-z0_sg)/(sigma_sg*sqrt(2.))))+N02_sg
      else
         write(*,*) "Undefined stratification profile. Aborting."
         stop
@@ -196,11 +196,11 @@ subroutine init_base_state !This subroutine defines the staggered and unstaggere
 
      r_1(izh2)     =  1.D0
      r_1s(izh2)    =  1.D0
-     r_2(izh2)     =  N2_nd(izh2)
-     r_2s(izh2)    =  N2_nds(izh2)
+     r_2(izh2)     =  N2_nd
+     r_2s(izh2)    =  N2_nds
 
-     a_ell_u(izh2) = Bu/N2_nd(izh2)
-     a_ell(izh2)   = Bu/N2_nds(izh2)
+     a_ell_u(izh2) = Bu/N2_nd
+     a_ell(izh2)   = Bu/N2_nds
      
      rho_u(izh2)   = 1.D0
      rho_s(izh2)   = 1.D0
